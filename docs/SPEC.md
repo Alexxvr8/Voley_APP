@@ -129,7 +129,7 @@ React + Vite como PWA, Supabase como backend y Vercel como hosting, todo en plan
 **Estructura modular del código**
 
 ```
-src/
+frontend/src/
   core/          # auth, sesión, supabase client, sync offline, layout
   modules/
     teams/       # equipos, roles, códigos de acceso
@@ -184,6 +184,11 @@ La fase 2 es la crítica: el offline se diseña desde la fase 0 (estructura de d
 | 2026-10-24 | Stack: React + Vite (PWA), Supabase, Vercel |
 | 2026-10-24 | Plan por set con sistema, rotación, líbero y cambios previstos, editable entre sets |
 | 2026-10-24 | Modo partido y plan por set funcionan sin conexión |
+| 2026-10-26 | Proyecto Supabase propio `voley-app` (eu-central-1) en la organización Alexxvr8 |
+| 2026-10-26 | Repositorio separado en `frontend/` (PWA) y `backend/` (Supabase: migraciones, RLS, RPC), cada uno con su README |
+| 2026-10-26 | Email interno de Auth: `usuario@voley.local`; confirmación de email desactivada |
+| 2026-10-26 | Crear equipo, unirse con código y regenerar códigos van por funciones RPC (`create_team`, `join_team`, `regenerate_join_code`), no por inserts directos |
+| 2026-10-26 | Hasta resolver el tema abierto, los planes por set solo los ven entrenador y segundo (RLS) |
 
 **Temas abiertos**
 
