@@ -1,4 +1,5 @@
 // List of planned substitutions for the set, with a small form to add new ones.
+// First you pick who leaves; then only players who can cover that position are offered.
 import { useState } from 'react'
 import type { Player } from '@/shared/domain/types'
 import { Card } from '@/shared/ui/Card'
@@ -10,8 +11,8 @@ interface PlannedSubsCardProps {
   subs: PlannedSub[]
   /** Players who can leave the court. */
   onCourt: Player[]
-  /** Players who can come in. */
-  bench: Player[]
+  /** Bench players allowed to replace the given player (same position, or setter ↔ opposite). */
+  substitutesFor: (outId: string) => Player[]
   /** All players, to show names of subs whose players are no longer on court or bench. */
   allPlayers: Player[]
   onChange: (subs: PlannedSub[]) => void
@@ -19,13 +20,18 @@ interface PlannedSubsCardProps {
 
 const EMPTY_DRAFT: PlannedSub = { outId: '', inId: '', note: '' }
 
-export function PlannedSubsCard({ subs, onCourt, bench, allPlayers, onChange }: PlannedSubsCardProps) {
+export function PlannedSubsCard({ subs, onCourt, substitutesFor, allPlayers, onChange }: PlannedSubsCardProps) {
   // The substitution being typed in the form; only added to the plan when confirmed.
   const [draft, setDraft] = useState<PlannedSub>(EMPTY_DRAFT)
 
   const nameOf = (playerId: string) => {
     const player = allPlayers.find((p) => p.id === playerId)
     return player ? playerName(player) : ''
+  }
+
+  function chooseOutgoing(outId: string | undefined) {
+    // A different outgoing player may need a different position, so the incoming one resets.
+    setDraft({ ...draft, outId: outId ?? '', inId: '' })
   }
 
   function addDraft() {
@@ -59,17 +65,12 @@ export function PlannedSubsCard({ subs, onCourt, bench, allPlayers, onChange }: 
       ))}
 
       <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-3 text-sm">
+        <PlayerSelect players={onCourt} value={draft.outId || undefined} onChange={chooseOutgoing} placeholder="Sale…" />
         <PlayerSelect
-          players={onCourt}
-          value={draft.outId || undefined}
-          onChange={(id) => setDraft({ ...draft, outId: id ?? '' })}
-          placeholder="Sale…"
-        />
-        <PlayerSelect
-          players={bench}
+          players={draft.outId ? substitutesFor(draft.outId) : []}
           value={draft.inId || undefined}
           onChange={(id) => setDraft({ ...draft, inId: id ?? '' })}
-          placeholder="Entra…"
+          placeholder={draft.outId ? 'Entra…' : 'Elige antes quién sale'}
         />
         <input
           value={draft.note}

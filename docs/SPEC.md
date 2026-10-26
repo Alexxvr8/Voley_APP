@@ -80,8 +80,9 @@ Para cada set se guarda un plan independiente:
 
 - **Sistema:** 5-1, 6-0, 4-2, 6-2 o 4-2 con posiciones delanteras. Por defecto el del equipo o el del set anterior.
 - **Rotación inicial:** campo con zonas 1–6 coloreadas por rol (colocador, receptor, central, opuesto, líbero). Cada zona solo ofrece convocados con esa posición, con opción de "mostrar todos".
-- **Líbero:** quién entra y por quién.
-- **Cambios previstos:** pares sale → entra, con nota opcional ("si falla recepción", "en rotación 3").
+- **R inicial:** junto al sistema se elige en qué R empieza el set. La R es la zona donde está el colocador que coloca: R1–R6 en 5-1, R2–R4 en 4-2 (coloca el delantero), R1/R5/R6 en 6-2 (coloca el zaguero). En 6-0 todos son receptores y no hay R.
+- **Líberos:** hasta dos casillas grises bajo la pista, solo si hay jugadores que puedan jugar de líbero. No se indica por quién entran.
+- **Cambios previstos:** pares sale → entra, solo entre jugadores de la misma posición (colocador y opuesto se pueden cruzar para pasar de una R a otra), con nota opcional ("si falla recepción", "en rotación 3").
 - **Copiar plan de otro set** para no empezar de cero.
 
 ### 6. Modo partido (entrenador, funciona offline)
@@ -156,7 +157,7 @@ La pieza clave es `team_members`: une usuario, equipo y rol, y todas las reglas 
 | `matches` | id, team_id, opponent, date, warmup_time, match_time, venue, maps_url, home_away, status, sets_result, notes | status: scheduled / played / cancelled |
 | `availability` | match_id, player_id, status, comment, updated_at | status: yes / no / maybe |
 | `callups` | match_id, player_id | Convocados |
-| `set_plans` | id, match_id, set_number, system, rotation, libero_id, libero_replaces, planned_subs, updated_at, updated_by | rotation = zona 1–6 → player_id |
+| `set_plans` | id, match_id, set_number, system, start_rotation, rotation, libero_id, second_libero_id, planned_subs, updated_at, updated_by | rotation = zona 1–6 → player_id |
 | `league_table` | team_id, rows, updated_at | Tabla no oficial, filas en JSON |
 
 Posiciones como valores fijos: `setter` (colocador), `outside` (receptor), `middle` (central), `opposite` (opuesto), `libero`. Los nombres en pantalla van en español.
@@ -186,6 +187,8 @@ La fase 2 es la crítica: el offline se diseña desde la fase 0 (estructura de d
 | 2026-10-24 | Modo partido y plan por set funcionan sin conexión |
 | 2026-10-26 | Proyecto Supabase propio `voley-app` (eu-central-1) en la organización Alexxvr8 |
 | 2026-10-26 | Repositorio separado en `frontend/` (PWA) y `backend/` (Supabase: migraciones, RLS, RPC), cada uno con su README |
+| 2026-10-27 | Plan por set: R inicial junto al sistema, hasta dos líberos sin \"entra por\", cambios previstos limitados a la misma posición (colocador ↔ opuesto permitido). En 6-0 todas las zonas son receptores |
+| 2026-10-27 | La pestaña del plan se llama \"Rotaciones\" en el menú |
 | 2026-10-26 | Email interno de Auth: `usuario@voley.local`; confirmación de email desactivada |
 | 2026-10-26 | Crear equipo, unirse con código y regenerar códigos van por funciones RPC (`create_team`, `join_team`, `regenerate_join_code`), no por inserts directos |
 | 2026-10-26 | Hasta resolver el tema abierto, los planes por set solo los ven entrenador y segundo (RLS) |

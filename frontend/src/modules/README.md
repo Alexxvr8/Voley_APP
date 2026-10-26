@@ -6,7 +6,7 @@ Cada carpeta es una funcionalidad independiente que un equipo puede activar o de
 | --- | --- | --- | --- |
 | `matches/` | Próximos partidos, detalle, disponibilidad y convocatoria | Jugador | No |
 | `roster/` | Plantilla del equipo | Segundo entrenador | No |
-| `lineup/` | Plan por set: sistema, rotación, líbero y cambios. En la fase 2, modo partido | Segundo entrenador | Sí |
+| `lineup/` | Rotaciones por set: sistema, R inicial, alineación, líberos y cambios. En la fase 2, modo partido | Segundo entrenador | Sí |
 
 Previstos: `teams/` (equipos y códigos de acceso) y `results/` (resultados y tabla).
 
@@ -37,14 +37,13 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 
 | Fichero | Qué hace |
 | --- | --- |
-| `SetPlanPage.tsx` | Guarda el plan de cada set y calcula quién está en pista, en el banquillo y quién puede ser líbero |
-| `setPlan.ts` | `SetPlan`, `PlannedSub`, `newSetPlan` (hereda el sistema del set anterior), `canPlay` |
-| `systems.ts` | Orden de zonas en la pista y rol esperado por zona en cada sistema |
+| `SetPlanPage.tsx` | Guarda el plan de cada set y calcula quién está en pista, en el banquillo y quién puede entrar por quién |
+| `setPlan.ts` | `SetPlan`, `PlannedSub`, `newSetPlan` (hereda el sistema del set anterior), `canPlay`, `replacementPositions` (misma posición, o colocador ↔ opuesto) |
+| `systems.ts` | Plantilla de roles por zona de cada sistema y cómo gira. La R es la zona del colocador que coloca (`availableRotations`: R1–R6 en 5-1, R2–R4 en 4-2, R1/R5/R6 en 6-2, ninguna en 6-0). `zoneRoles` da el rol de cada zona en una R y `rotatePlayers` mueve la alineación al cambiar de R |
 | `components/SetTabs.tsx` | Pestañas Set 1–5 |
-| `components/SystemPicker.tsx` | Selector de sistema y "copiar de otro set" |
-| `components/Court.tsx` | Pista con las 6 zonas; cada zona ofrece solo a quien puede jugar ese rol, salvo con "mostrar todos" |
-| `components/LiberoCard.tsx` | Quién entra de líbero y por quién |
-| `components/PlannedSubsCard.tsx` | Lista de cambios previstos y formulario para añadir |
+| `components/SystemPicker.tsx` | Selector de sistema, de rotación inicial (R1, R2…) y "copiar de otro set" |
+| `components/Court.tsx` | Pista con las 6 zonas coloreadas según sistema y R, y dos casillas grises para líberos (solo si hay alguien que pueda jugar de líbero). Cada casilla ofrece solo a quien puede jugar ese rol, salvo con "mostrar todos" |
+| `components/PlannedSubsCard.tsx` | Cambios previstos. Primero se elige quién sale; después solo se ofrecen jugadores de su posición (colocador y opuesto se pueden cruzar para cambiar de R) |
 
 ## Ficheros del módulo `matches`
 

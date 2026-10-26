@@ -9,7 +9,7 @@ export const lineupModule: ModuleDefinition = {
     { path: '/plan', component: SetPlanPage },
     { path: '/partidos/:matchId/plan', component: SetPlanPage },
   ],
-  menu: { label: 'Plan', path: '/plan' },
+  menu: { label: 'Rotaciones', path: '/plan' },
   minRole: 'assistant',
   offline: true,
 }

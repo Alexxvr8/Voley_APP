@@ -26,6 +26,7 @@ Cada cambio en la base de datos es un fichero SQL nuevo en `supabase/migrations/
 | --- | --- |
 | `20261026000000_initial_schema.sql` | Todas las tablas, funciones auxiliares, RPC y políticas RLS |
 | `20261026000100_restrict_function_grants.sql` | Impide que usuarios sin sesión llamen a funciones internas |
+| `20261027000000_set_plan_rotation_and_liberos.sql` | Añade la R inicial y un segundo líbero a `set_plans`; quita "líbero entra por" |
 
 Se aplican al proyecto con el conector de Supabase (`apply_migration`) o con la CLI (`supabase db push`, desde `backend/`).
 
@@ -43,7 +44,7 @@ La pieza central es `team_members`: une usuario, equipo y rol, y todas las regla
 | `matches` | Partidos: rival, fecha, horas, pabellón, estado, resultado por sets | `sets_result` = `[{"us": 25, "them": 20}, …]` |
 | `availability` | Respuesta de cada jugador a cada partido (`yes`, `no`, `maybe`) | |
 | `callups` | Convocados de cada partido | |
-| `set_plans` | Plan de cada set: sistema, rotación, líbero, cambios previstos | `rotation` = `{"1": player_id, …, "6": player_id}`; `planned_subs` = `[{"out", "in", "note"}]` |
+| `set_plans` | Plan de cada set: sistema, rotación inicial, alineación, líberos, cambios previstos | `start_rotation` = 1–6 (R1…R6); `rotation` = `{"1": player_id, …, "6": player_id}`; `libero_id` y `second_libero_id`; `planned_subs` = `[{"out", "in", "note"}]` |
 | `league_table` | Tabla de liga no oficial, rellenada a mano | Filas en JSON |
 
 Los valores fijos (posiciones, roles, sistemas, estados) se validan con `check` en la propia tabla.
