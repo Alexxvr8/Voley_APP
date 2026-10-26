@@ -26,6 +26,7 @@ src/
 - Para añadir un módulo: crear su carpeta y añadirlo al array de `src/core/modules/registry.ts`. El núcleo solo lee ese registro y los ajustes del equipo (`enabled_modules`) para decidir qué mostrar.
 - Un módulo no importa nada de otro módulo. Lo compartido va en `src/shared/` (UI/utilidades) o en `src/core/` (infraestructura).
 - Alias de importación: `@/` apunta a `src/`.
+- Provisional hasta conectar Supabase: los datos de ejemplo y su almacén en memoria viven en `src/shared/mock/`, y la sesión simulada (con selector de rol) en `src/core/session/session.tsx`.
 
 ## Convenciones
 
