@@ -9,9 +9,9 @@ export function RosterPage() {
   const sorted = [...players].sort((a, b) => a.number - b.number)
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-3 lg:max-w-3xl">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-xl font-bold text-slate-900">Plantilla</h1>
+        <h1 className="text-xl font-bold text-slate-900 lg:text-2xl">Plantilla</h1>
         <span className="text-sm text-slate-500">{players.length} jugadoras/es</span>
       </div>
       <p className="text-sm text-slate-600">

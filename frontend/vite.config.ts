@@ -24,7 +24,7 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         display: 'standalone',
-        orientation: 'portrait',
+        // No orientation lock: the installed app also runs on tablets and PCs.
         theme_color: '#1e3a8a',
         background_color: '#ffffff',
         icons: [

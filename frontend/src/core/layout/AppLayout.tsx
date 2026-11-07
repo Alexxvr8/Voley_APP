@@ -1,82 +1,37 @@
-// Shell around every screen once signed in: header, current screen and bottom navigation.
-import { NavLink, Outlet } from 'react-router'
-import { useAuth } from '@/core/auth/auth'
+// Shell around every screen once signed in. Phones: top header and bottom tabs.
+// Wide screens (lg, PC): left sidebar and a wider content area.
+import { Outlet } from 'react-router'
 import { modules } from '@/core/modules/registry'
-import type { TeamRole } from '@/core/modules/types'
+import type { ModuleMenuEntry } from '@/core/modules/types'
 import { hasRole, useSession } from '@/core/session/session'
 import { team } from '@/shared/mock/data'
-
-const ROLE_OPTIONS: { role: TeamRole; label: string }[] = [
-  { role: 'coach', label: 'Entrenador' },
-  { role: 'player', label: 'Jugador' },
-]
+import { BottomNav } from './components/BottomNav'
+import { MobileHeader } from './components/MobileHeader'
+import { SideNav } from './components/SideNav'
 
 export function AppLayout() {
-  const { role, setRole } = useSession()
-  const { user, signOut } = useAuth()
-  const menu = modules.filter(
-    (module) =>
-      module.menu && team.enabledModules.includes(module.id) && hasRole(role, module.minRole),
-  )
+  const { role } = useSession()
+  const menu: ModuleMenuEntry[] = modules
+    .filter((module) => team.enabledModules.includes(module.id) && hasRole(role, module.minRole))
+    .flatMap((module) => (module.menu ? [module.menu] : []))
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-slate-50">
-      <header className="sticky top-0 z-10 bg-blue-900 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 text-white">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-lg font-bold leading-tight">Voley APP</p>
-            <p className="text-xs text-blue-200">
-              {team.name} · {team.season}
-            </p>
-            <button type="button" onClick={signOut} className="text-xs text-blue-200 underline">
-              {user?.user_metadata.display_name ?? 'Cuenta'} · Salir
-            </button>
-          </div>
-          <div
-            className="flex rounded-full bg-blue-950/60 p-0.5 text-xs"
-            role="group"
-            aria-label="Ver como"
-          >
-            {ROLE_OPTIONS.map((option) => (
-              <button
-                key={option.role}
-                type="button"
-                onClick={() => setRole(option.role)}
-                className={`rounded-full px-3 py-1 font-semibold ${
-                  role === option.role ? 'bg-white text-blue-900' : 'text-blue-100'
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </header>
+    <div className="min-h-dvh bg-slate-50 lg:flex">
+      <SideNav menu={menu} />
 
-      <p className="bg-amber-100 px-4 py-1.5 text-center text-xs text-amber-900">
-        Prototipo con datos de ejemplo: los cambios no se guardan.
-      </p>
+      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col lg:max-w-6xl">
+        <MobileHeader />
 
-      <main className="flex-1 px-4 pt-4 pb-24">
-        <Outlet />
-      </main>
+        <p className="bg-amber-100 px-4 py-1.5 text-center text-xs text-amber-900">
+          Prototipo con datos de ejemplo: los cambios no se guardan.
+        </p>
 
-      <nav className="fixed inset-x-0 bottom-0 mx-auto max-w-md border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)]">
-        <ul className="flex">
-          {menu.map((module) => (
-            <li key={module.id} className="flex-1">
-              <NavLink
-                to={module.menu!.path}
-                className={({ isActive }) =>
-                  `block py-3.5 text-center text-sm font-semibold ${isActive ? 'text-blue-800' : 'text-slate-500'}`
-                }
-              >
-                {module.menu!.label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-      </nav>
+        <main className="flex-1 px-4 pt-4 pb-24 lg:px-10 lg:pt-8 lg:pb-10">
+          <Outlet />
+        </main>
+      </div>
+
+      <BottomNav menu={menu} />
     </div>
   )
 }

@@ -16,6 +16,7 @@ App web instalable (PWA) para gestionar equipos de voleibol: plantilla, calendar
 2. **Offline solo para las rotaciones:** ver la plantilla y trabajar con las rotaciones funciona sin conexión; todo lo demás requiere conexión.
 3. **Simple para el jugador:** ver partidos y marcar disponibilidad en dos toques; la complejidad queda en el perfil de entrenador.
 4. **Android vía PWA:** se instala desde Chrome; una APK con Capacitor queda como opción futura, sin reescribir.
+5. **También en PC:** la misma app se usa cómodamente en el ordenador (sobre todo el entrenador para planificar), con menú lateral y contenido en columnas; en el móvil no cambia nada.
 
 ## Usuarios, roles y acceso
 
@@ -217,6 +218,7 @@ Cada decisión cerrada se añade aquí con su fecha; este documento es la refere
 | 2026-11-07 | Cada equipo tiene un sistema de juego predeterminado con el que arranca cada set |
 | 2026-11-07 | `docs/especificacion.md` sustituye a `docs/SPEC.md` como única referencia (fusionadas) |
 | 2026-11-07 | Anti-pausa: GitHub Action `keep-supabase-awake.yml` consulta la base de datos cada 3 días; URL y clave publicable como variables del repositorio |
+| 2026-11-07 | Uso en PC: desde 1024 px barra lateral y pantallas a dos columnas; la app instalada no se bloquea en vertical |
 | 2026-11-07 | Calidad de código: ESLint (flat config, typescript-eslint, reglas de hooks) y Prettier en `frontend/` |
 
 **Temas abiertos**

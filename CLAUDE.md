@@ -49,6 +49,7 @@ docs/especificacion.md
 - **Idioma de la interfaz:** todo texto visible para el usuario en español.
 - Valores de dominio fijos en inglés en código y base de datos (posiciones `setter`, `outside`, `middle`, `opposite`, `libero`; roles `coach`, `assistant`, `player`), con su etiqueta en español solo en la interfaz.
 - Diseño móvil primero: los usuarios son jugadores jóvenes con poca soltura tecnológica; las acciones de jugador deben requerir dos toques como máximo.
+- También cómodo en PC (sobre todo para el entrenador): desde `lg` (1024 px) el marco usa barra lateral y las pantallas reparten el contenido en columnas con clases `lg:`. El móvil no cambia.
 - Offline: solo la plantilla (lectura) y las rotaciones (plan por set y modo partido) funcionan sin red; todo lo demás requiere conexión (ver "Funciones online y offline" en la especificación). Ten en cuenta esto al diseñar datos y estado desde el principio.
 
 ## Comandos

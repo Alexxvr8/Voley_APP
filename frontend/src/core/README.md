@@ -9,7 +9,8 @@ Infraestructura que comparten todas las pantallas. Aquí no hay pantallas de fun
 | `auth/auth.tsx` | `AuthProvider` y `useAuth()`: usuario actual, `signIn`, `signUp`, `signOut` |
 | `auth/LoginPage.tsx` | Pantalla de entrar / crear cuenta, con mensajes de error comprensibles |
 | `session/session.tsx` | Rol del usuario en el equipo actual. **Provisional:** de momento es un selector simulado; en la fase 1 se leerá de `team_members` |
-| `layout/AppLayout.tsx` | Cabecera, contenido y menú inferior. El menú se construye con los módulos visibles para el rol |
+| `layout/AppLayout.tsx` | Marco de todas las pantallas. En móvil: cabecera y menú inferior. En PC (pantallas `lg`, desde 1024 px): barra lateral y contenido más ancho. El menú se construye con los módulos visibles para el rol |
+| `layout/components/` | Piezas del marco: `MobileHeader`, `BottomNav`, `SideNav`, `RoleSwitch` (selector simulado de rol) y `AccountButton` (salir) |
 | `modules/types.ts` | `ModuleDefinition`: el contrato que cumple cada módulo |
 | `modules/registry.ts` | Lista de módulos de la app. Añadir un módulo = añadirlo aquí |
 

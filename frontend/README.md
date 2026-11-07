@@ -73,4 +73,5 @@ Así se puede activar, desactivar o borrar un módulo sin romper el resto.
 - Cada fichero empieza con un comentario que explica para qué sirve. Las props y funciones exportadas que no se entienden por su nombre llevan un comentario `/** … */`.
 - Componentes pequeños: una página orquesta el estado y delega cada bloque visual en un componente de `components/`.
 - Móvil primero: botones grandes y como máximo dos toques para las acciones de jugador.
+- Cómodo en PC: desde `lg` (1024 px) barra lateral en vez de menú inferior y contenido en columnas (`lg:grid-cols-2`…). Sin bloqueo de orientación en la app instalada.
 - Imports con el alias `@/` (apunta a `src/`).

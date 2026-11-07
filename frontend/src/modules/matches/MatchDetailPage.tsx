@@ -28,35 +28,40 @@ export function MatchDetailPage() {
 
       <div>
         <p className="text-sm font-medium capitalize text-blue-800">{formatLongDate(match.date)}</p>
-        <h1 className="text-2xl font-bold text-slate-900">vs {match.opponent}</h1>
+        <h1 className="text-2xl font-bold text-slate-900 lg:text-3xl">vs {match.opponent}</h1>
       </div>
-
-      <MatchInfoCard match={match} />
 
       {/* A linked player id means the user is viewing as a player; otherwise as staff. */}
       {playerId ? (
-        <MyAvailabilityCard
-          status={answers[playerId]?.status}
-          isCalledUp={calledUpIds.includes(playerId)}
-          onChange={(status) => setAvailability(match.id, playerId, status)}
-        />
+        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+          <MatchInfoCard match={match} />
+          <MyAvailabilityCard
+            status={answers[playerId]?.status}
+            isCalledUp={calledUpIds.includes(playerId)}
+            onChange={(status) => setAvailability(match.id, playerId, status)}
+          />
+        </div>
       ) : (
-        <>
-          <div className="grid grid-cols-2 gap-2">
-            <Link
-              to={`/partidos/${match.id}/plan`}
-              className="rounded-xl bg-blue-800 py-3 text-center text-sm font-semibold text-white"
-            >
-              Preparar partido
-            </Link>
-            {/* Match mode arrives in phase 2. */}
-            <button
-              type="button"
-              disabled
-              className="rounded-xl bg-slate-200 py-3 text-sm font-semibold text-slate-500"
-            >
-              Ir al partido
-            </button>
+        // Wide screens: match info and actions on the left, call-up list on the right.
+        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+          <div className="space-y-4">
+            <MatchInfoCard match={match} />
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                to={`/partidos/${match.id}/plan`}
+                className="rounded-xl bg-blue-800 py-3 text-center text-sm font-semibold text-white hover:bg-blue-900"
+              >
+                Preparar partido
+              </Link>
+              {/* Match mode arrives in phase 2. */}
+              <button
+                type="button"
+                disabled
+                className="rounded-xl bg-slate-200 py-3 text-sm font-semibold text-slate-500"
+              >
+                Ir al partido
+              </button>
+            </div>
           </div>
 
           <CallupList
@@ -65,7 +70,7 @@ export function MatchDetailPage() {
             calledUpIds={calledUpIds}
             onToggle={(id) => toggleCallup(match.id, id)}
           />
-        </>
+        </div>
       )}
     </section>
   )

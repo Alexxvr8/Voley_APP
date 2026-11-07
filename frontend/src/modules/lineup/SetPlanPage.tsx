@@ -91,7 +91,9 @@ export function SetPlanPage() {
         <Link to={`/partidos/${match.id}`} className="text-sm font-medium text-blue-800">
           ← Partido
         </Link>
-        <h1 className="mt-1 text-xl font-bold text-slate-900">Plan vs {match.opponent}</h1>
+        <h1 className="mt-1 text-xl font-bold text-slate-900 lg:text-2xl">
+          Plan vs {match.opponent}
+        </h1>
         <p className="text-sm capitalize text-slate-500">
           {formatShortDate(match.date)} · {calledUp.length} convocados
         </p>
@@ -99,45 +101,48 @@ export function SetPlanPage() {
 
       <SetTabs currentSet={currentSet} plans={plans} onSelect={setCurrentSet} />
 
-      <Card className="space-y-3">
-        <SystemPicker
-          system={plan.system}
-          onSystemChange={changeSystem}
-          startRotation={plan.startRotation}
-          onStartRotationChange={changeStartRotation}
-          copyableSets={copyableSets}
-          onCopyFrom={copyPlanFrom}
-        />
-        <Court
-          system={plan.system}
-          startRotation={plan.startRotation}
-          rotation={plan.rotation}
-          liberos={plan.liberos}
-          candidates={calledUp}
-          showAll={showAll}
-          onAssign={(zone, playerId) =>
-            updatePlan({ rotation: { ...plan.rotation, [zone]: playerId } })
-          }
-          onAssignLibero={assignLibero}
-        />
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          <input
-            type="checkbox"
-            checked={showAll}
-            onChange={(e) => setShowAll(e.target.checked)}
-            className="size-4 accent-blue-800"
+      {/* Wide screens: court on the left, planned substitutions beside it. */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+        <Card className="space-y-3">
+          <SystemPicker
+            system={plan.system}
+            onSystemChange={changeSystem}
+            startRotation={plan.startRotation}
+            onStartRotationChange={changeStartRotation}
+            copyableSets={copyableSets}
+            onCopyFrom={copyPlanFrom}
           />
-          Mostrar todos los convocados en cada zona
-        </label>
-      </Card>
+          <Court
+            system={plan.system}
+            startRotation={plan.startRotation}
+            rotation={plan.rotation}
+            liberos={plan.liberos}
+            candidates={calledUp}
+            showAll={showAll}
+            onAssign={(zone, playerId) =>
+              updatePlan({ rotation: { ...plan.rotation, [zone]: playerId } })
+            }
+            onAssignLibero={assignLibero}
+          />
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              checked={showAll}
+              onChange={(e) => setShowAll(e.target.checked)}
+              className="size-4 accent-blue-800"
+            />
+            Mostrar todos los convocados en cada zona
+          </label>
+        </Card>
 
-      <PlannedSubsCard
-        subs={plan.subs}
-        onCourt={onCourt}
-        substitutesFor={substitutesFor}
-        allPlayers={players}
-        onChange={(subs) => updatePlan({ subs })}
-      />
+        <PlannedSubsCard
+          subs={plan.subs}
+          onCourt={onCourt}
+          substitutesFor={substitutesFor}
+          allPlayers={players}
+          onChange={(subs) => updatePlan({ subs })}
+        />
+      </div>
     </section>
   )
 }
