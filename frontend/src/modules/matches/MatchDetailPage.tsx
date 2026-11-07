@@ -1,13 +1,22 @@
-// "Info" tab of a match: practical details. Competing players answer their availability here;
-// staff see a summary of the answers and reach Gestión and Rotación from the tabs.
-import { useParams } from 'react-router'
+// "Info" tab of a match: practical details, map and result. Competing players answer their
+// availability here; staff see a summary of the answers, record the result and edit the match.
+import { Link, useParams } from 'react-router'
 import { hasRole, useCurrentTeam, useTeamPath } from '@/core/teams/currentTeam'
 import { Card } from '@/shared/ui/Card'
+import { SECONDARY_BUTTON_CLASS } from '@/shared/ui/form'
 import { MatchHeader } from '@/shared/ui/MatchHeader'
 import { PageMessage } from '@/shared/ui/PageMessage'
-import { useAvailability, useCallups, useMatches, usePlayers, useSetAvailability } from './api'
+import {
+  useAvailability,
+  useCallups,
+  useMatches,
+  usePlayers,
+  useSetAvailability,
+  useSetMatchResult,
+} from './api'
 import { MatchInfoCard } from './components/MatchInfoCard'
 import { MyAvailabilityCard } from './components/MyAvailabilityCard'
+import { ResultEditor } from './components/ResultEditor'
 
 export function MatchDetailPage() {
   const { matchId = '' } = useParams()
@@ -18,6 +27,7 @@ export function MatchDetailPage() {
   const availability = useAvailability(matchId)
   const callups = useCallups(matchId)
   const setAvailability = useSetAvailability()
+  const setResult = useSetMatchResult(team.id, matchId)
 
   if (matches.isPending || players.isPending || availability.isPending || callups.isPending) {
     return <PageMessage>Cargando…</PageMessage>
@@ -46,23 +56,41 @@ export function MatchDetailPage() {
         <MatchInfoCard match={match} />
 
         {isStaff && (
-          <Card className="space-y-2">
-            <p className="font-semibold">Respuestas</p>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
-              <span className="text-emerald-700">
-                Sí {answers.filter((a) => a === 'yes').length}
-              </span>
-              <span className="text-rose-700">No {answers.filter((a) => a === 'no').length}</span>
-              <span className="text-amber-700">
-                Duda {answers.filter((a) => a === 'maybe').length}
-              </span>
-              <span>Sin responder {answers.filter((a) => a === undefined).length}</span>
-            </div>
-            <p className="text-sm font-semibold text-slate-800">{callups.data.length} convocados</p>
-          </Card>
+          <div className="space-y-4">
+            <Card className="space-y-2">
+              <p className="font-semibold">Respuestas</p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+                <span className="text-emerald-700">
+                  Sí {answers.filter((a) => a === 'yes').length}
+                </span>
+                <span className="text-rose-700">No {answers.filter((a) => a === 'no').length}</span>
+                <span className="text-amber-700">
+                  Duda {answers.filter((a) => a === 'maybe').length}
+                </span>
+                <span>Sin responder {answers.filter((a) => a === undefined).length}</span>
+              </div>
+              <p className="text-sm font-semibold text-slate-800">
+                {callups.data.length} convocados
+              </p>
+            </Card>
+            <ResultEditor
+              key={JSON.stringify(match.setsResult)}
+              saved={match.setsResult}
+              busy={setResult.isPending}
+              failed={setResult.isError}
+              onSave={(sets) => setResult.mutate(sets)}
+            />
+            <Link
+              to={teamPath(`partidos/${match.id}/editar`)}
+              className={`block text-center ${SECONDARY_BUTTON_CLASS}`}
+            >
+              Editar o borrar partido
+            </Link>
+          </div>
         )}
 
         {!isStaff &&
+          match.status !== 'played' &&
           (me?.competes ? (
             <MyAvailabilityCard
               status={availability.data[me.id]?.status}

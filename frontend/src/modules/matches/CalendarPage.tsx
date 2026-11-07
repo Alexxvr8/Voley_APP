@@ -55,7 +55,8 @@ export function CalendarPage() {
   const selected = eventsFor(selectedDate)
 
   function availabilityFor(match: Match) {
-    if (!playerId || !competes) return undefined
+    // Played matches no longer ask for availability.
+    if (!playerId || !competes || match.status === 'played') return undefined
     return {
       status: myAvailability.data?.[match.id],
       calledUp: myCallups.data?.includes(match.id) ?? false,
@@ -89,7 +90,8 @@ export function CalendarPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+      {/* Two columns only when there is room for a readable calendar next to the day panel. */}
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(20rem,1fr)] xl:items-start">
         <MonthCalendar
           month={month}
           onMonthChange={setMonth}

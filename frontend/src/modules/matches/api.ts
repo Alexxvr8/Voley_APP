@@ -12,7 +12,7 @@ import {
   type TrainingSlotRow,
 } from '@/shared/domain/rows'
 import { toCallup, type CallupRow } from '@/shared/domain/callups'
-import type { AvailabilityEntry, AvailabilityStatus, Callup } from '@/shared/domain/types'
+import type { AvailabilityEntry, AvailabilityStatus, Callup, SetScore } from '@/shared/domain/types'
 
 const keys = {
   matches: (teamId: string) => ['matches', teamId],
@@ -189,7 +189,7 @@ export function useSetAvailability() {
   })
 }
 
-/** Called-up players of a match, with their per-match number and position. */
+/** Called-up players of a match, with their per-match number and positions. */
 export function useCallups(matchId: string) {
   return useQuery({
     queryKey: keys.callups(matchId),
@@ -198,7 +198,7 @@ export function useCallups(matchId: string) {
         check(
           await supabase
             .from('callups')
-            .select('player_id, number, position')
+            .select('player_id, number, positions')
             .eq('match_id', matchId),
         ) as CallupRow[]
       ).map(toCallup),
@@ -239,7 +239,7 @@ export function useSetCalledUp(matchId: string) {
       const others = previous.filter((callup) => callup.playerId !== playerId)
       queryClient.setQueryData(
         callupsKey,
-        calledUp ? [...others, { playerId, number: null, position: null }] : others,
+        calledUp ? [...others, { playerId, number: null, positions: null }] : others,
       )
       return previous
     },
@@ -248,7 +248,8 @@ export function useSetCalledUp(matchId: string) {
   })
 }
 
-export interface NewMatch {
+/** Editable fields of a match, shared by the create and edit forms. */
+export interface MatchInput {
   opponent: string
   date: string
   warmupTime: string
@@ -259,24 +260,27 @@ export interface NewMatch {
   notes: string
 }
 
+function toMatchColumns(match: MatchInput) {
+  return {
+    opponent: match.opponent,
+    date: match.date,
+    warmup_time: match.warmupTime || null,
+    match_time: match.matchTime || null,
+    venue: match.venue,
+    maps_url: match.mapsUrl,
+    home_away: match.homeAway,
+    notes: match.notes,
+  }
+}
+
 export function useCreateMatch(teamId: string) {
   return useMutation({
-    mutationFn: async (match: NewMatch) =>
+    mutationFn: async (match: MatchInput) =>
       (
         check(
           await supabase
             .from('matches')
-            .insert({
-              team_id: teamId,
-              opponent: match.opponent,
-              date: match.date,
-              warmup_time: match.warmupTime || null,
-              match_time: match.matchTime || null,
-              venue: match.venue,
-              maps_url: match.mapsUrl,
-              home_away: match.homeAway,
-              notes: match.notes,
-            })
+            .insert({ team_id: teamId, ...toMatchColumns(match) })
             .select('id')
             .single(),
         ) as { id: string }
@@ -285,24 +289,63 @@ export function useCreateMatch(teamId: string) {
   })
 }
 
-/** Number and position a called-up player uses in this match only (null = the roster value). */
+export function useUpdateMatch(teamId: string, matchId: string) {
+  return useMutation({
+    mutationFn: async (match: MatchInput) =>
+      check(await supabase.from('matches').update(toMatchColumns(match)).eq('id', matchId)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.matches(teamId) }),
+  })
+}
+
+/** Deletes the match with its availability answers, call-ups and set plans. */
+export function useDeleteMatch(teamId: string) {
+  return useMutation({
+    mutationFn: async (matchId: string) =>
+      check(await supabase.from('matches').delete().eq('id', matchId)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.matches(teamId) }),
+  })
+}
+
+/** Saves the points of each set. With sets the match is "played"; without them, back to "scheduled". */
+export function useSetMatchResult(teamId: string, matchId: string) {
+  return useMutation({
+    mutationFn: async (sets: SetScore[]) =>
+      check(
+        await supabase
+          .from('matches')
+          .update({ sets_result: sets, status: sets.length ? 'played' : 'scheduled' })
+          .eq('id', matchId),
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.matches(teamId) }),
+  })
+}
+
+/** Change to one call-up: only the fields being edited, so quick successive edits never undo each other. */
+export interface CallupChange {
+  playerId: string
+  changes: Partial<Pick<Callup, 'number' | 'positions'>>
+}
+
+/** Number and positions a called-up player uses in this match only (null = the roster values). */
 export function useSetCallupDetails(matchId: string) {
   const callupsKey = keys.callups(matchId)
   return useMutation({
-    mutationFn: async ({ playerId, number, position }: Callup) =>
+    mutationFn: async ({ playerId, changes }: CallupChange) =>
       check(
         await supabase
           .from('callups')
-          .update({ number, position })
+          .update(changes)
           .eq('match_id', matchId)
           .eq('player_id', playerId),
       ),
-    onMutate: async (changed: Callup) => {
+    onMutate: async ({ playerId, changes }: CallupChange) => {
       await queryClient.cancelQueries({ queryKey: callupsKey })
       const previous = queryClient.getQueryData<Callup[]>(callupsKey) ?? []
       queryClient.setQueryData(
         callupsKey,
-        previous.map((callup) => (callup.playerId === changed.playerId ? changed : callup)),
+        previous.map((callup) =>
+          callup.playerId === playerId ? { ...callup, ...changes } : callup,
+        ),
       )
       return previous
     },

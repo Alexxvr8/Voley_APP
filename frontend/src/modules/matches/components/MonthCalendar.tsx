@@ -1,4 +1,5 @@
 // Monthly calendar, Monday first. Each day shows a bubble per event: blue for a match, green for a training.
+// The bubbles grow with the calendar's own width: dots, then the time, then time and label.
 import { shiftMonth, monthGrid, type CalendarMonth } from '@/shared/utils/calendar'
 import type { DayEvents } from '../calendarEvents'
 
@@ -15,25 +16,54 @@ interface MonthCalendarProps {
   eventsOn: (isoDate: string) => DayEvents
 }
 
+/** One event inside a day cell. Its size follows the calendar width (container queries), not the screen. */
+function EventBubble({
+  kind,
+  time,
+  label,
+}: {
+  kind: 'match' | 'training'
+  time: string
+  label: string
+}) {
+  const colors =
+    kind === 'match'
+      ? 'bg-blue-700 @lg:text-white'
+      : 'bg-emerald-500 @lg:bg-emerald-100 @lg:text-emerald-900'
+  return (
+    <span
+      title={`${time} ${label}`.trim()}
+      className={`block size-2.5 shrink-0 rounded-full @lg:size-auto @lg:w-full @lg:rounded-md @lg:px-1 @lg:py-0.5 @lg:text-left @lg:text-[11px] @lg:leading-tight @lg:font-semibold ${colors}`}
+    >
+      {/* Narrow calendar: just the dot. Medium: the time. Wide: time and what it is, up to two lines. */}
+      <span className="hidden @lg:block @2xl:hidden">{time || label}</span>
+      <span className="hidden @2xl:line-clamp-2">
+        {time && <span className="opacity-80">{time} </span>}
+        {label}
+      </span>
+    </span>
+  )
+}
+
 function DayBubbles({ events }: { events: DayEvents }) {
   const activeTrainings = events.trainings.filter((training) => !training.cancelled)
   return (
-    <span className="flex flex-wrap justify-center gap-1 lg:flex-col lg:items-stretch">
+    <span className="flex w-full flex-wrap justify-center gap-1 @lg:flex-col @lg:flex-nowrap">
       {events.matches.map((match) => (
-        <span
+        <EventBubble
           key={match.id}
-          className="size-2.5 rounded-full bg-blue-700 lg:size-auto lg:truncate lg:rounded-md lg:px-1.5 lg:py-0.5 lg:text-[11px] lg:font-semibold lg:text-white"
-        >
-          <span className="hidden lg:inline">vs {match.opponent}</span>
-        </span>
+          kind="match"
+          time={match.matchTime}
+          label={`vs ${match.opponent}`}
+        />
       ))}
       {activeTrainings.map((training) => (
-        <span
+        <EventBubble
           key={training.slot.id}
-          className="size-2.5 rounded-full bg-emerald-500 lg:size-auto lg:truncate lg:rounded-md lg:bg-emerald-100 lg:px-1.5 lg:py-0.5 lg:text-[11px] lg:font-semibold lg:text-emerald-900"
-        >
-          <span className="hidden lg:inline">Entreno {training.slot.startTime}</span>
-        </span>
+          kind="training"
+          time={training.slot.startTime}
+          label="Entreno"
+        />
       ))}
     </span>
   )
@@ -50,7 +80,7 @@ export function MonthCalendar({
   const title = monthFormatter.format(new Date(month.year, month.month, 1))
 
   return (
-    <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 lg:p-4">
+    <div className="@container rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 lg:p-4">
       <div className="mb-3 flex items-center justify-between">
         <button
           type="button"
@@ -91,12 +121,12 @@ export function MonthCalendar({
                 onClick={() => onSelectDate(date)}
                 aria-pressed={isSelected}
                 aria-label={date}
-                className={`flex min-h-14 min-w-0 flex-col items-center gap-1 overflow-hidden rounded-xl p-1 lg:min-h-24 lg:items-stretch ${
+                className={`flex min-h-14 min-w-0 flex-col items-center gap-1 overflow-hidden rounded-xl p-1 @lg:min-h-20 @lg:items-stretch @2xl:min-h-24 ${
                   isSelected ? 'bg-blue-50 ring-2 ring-blue-700' : 'hover:bg-slate-50'
                 }`}
               >
                 <span
-                  className={`flex size-7 items-center justify-center self-center rounded-full text-sm lg:self-start ${
+                  className={`flex size-7 shrink-0 items-center justify-center self-center rounded-full text-sm @lg:self-start ${
                     isToday ? 'bg-blue-800 font-bold text-white' : 'text-slate-800'
                   }`}
                 >

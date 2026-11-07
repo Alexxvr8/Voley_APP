@@ -66,7 +66,7 @@ Siete módulos forman el núcleo; el plan de partido por set es el que más trab
 
 - **Calendario mensual** con una burbuja en cada día con evento: azul para partido, verde para entrenamiento. Al tocar un día se ve lo que hay; debajo, los próximos partidos.
 - Los entrenamientos salen del horario semanal del equipo; el staff puede cancelar un día suelto.
-- Detalle: rival, fecha, hora de calentamiento, hora de partido, pabellón (con enlace a Maps), local/visitante, notas.
+- Detalle: rival, fecha, hora de calentamiento, hora de partido, pabellón (con enlace de Google Maps pegado por el entrenador y el mapa visible en la app), local/visitante, notas y, una vez jugado, el resultado por sets.
 - Botón de disponibilidad: Sí / No / Duda, con comentario opcional.
 - Los jugadores ven si están convocados.
 
@@ -79,9 +79,10 @@ Siete módulos forman el núcleo; el plan de partido por set es el que más trab
 
 ### 4. Gestión de partido (entrenador)
 
-- Editar los datos del partido.
+- Crear, editar y borrar partidos (borrar pide confirmación).
+- Marcar el resultado: puntos de cada set (hasta 5); el partido pasa a jugado y se ve "Ganado 3-1" en el calendario y en el detalle.
 - El partido tiene tres pestañas: **Info** (datos y disponibilidad), **Gestión** y **Rotación** (plan por set). Gestión y Rotación son del staff.
-- **Gestión:** ver disponibilidad de los que compiten y convocar a cualquiera, haya respondido o no; para cada convocado, cambiar dorsal y posición solo en ese partido.
+- **Gestión:** ver disponibilidad de los que compiten y convocar a cualquiera, haya respondido o no; para cada convocado, cambiar dorsal y las posiciones (varias a la vez) solo en ese partido. En la rotación, cada set es independiente: un jugador puede ir en una posición distinta en cada set.
 - Botón **Ir al partido** → modo partido (fase 2).
 
 ### 5. Plan de partido por set (entrenador, funciona offline)
@@ -176,8 +177,8 @@ La pieza clave es `team_members`: une usuario, equipo y rol, y todas las reglas 
 | `players` | id, team\_id, first\_name, last\_name, birth\_year, number, main\_position, other\_positions, training\_days, competes | Ficha de plantilla, puede no tener cuenta. `competes = false`: solo entrena |
 | `matches` | id, team\_id, opponent, date, warmup\_time, match\_time, venue, maps\_url, home\_away, status, sets\_result, notes, mvp\_status, mvp\_closes\_at, mvp\_winners | status: scheduled / played / cancelled; mvp\_status: closed / open / tie\_pending / finished |
 | `availability` | match\_id, player\_id, status, comment, updated\_at | status: yes / no / maybe |
-| `callups` | match\_id, player\_id, number, position | Convocados; dorsal y posición del partido (vacío = los de la ficha) |
-| `training_slots` | id, team\_id, weekday, start\_time, end\_time, venue | Horario semanal de entrenamientos |
+| `callups` | match\_id, player\_id, number, positions | Convocados; dorsal y posiciones del partido (vacío = los de la ficha) |
+| `training_slots` | id, team\_id, weekday, start\_time, end\_time, venue, maps\_url | Horario semanal de entrenamientos |
 | `training_cancellations` | slot\_id, date | Entrenamiento que no se hace un día concreto |
 | `account_recovery` | user\_id, code\_hash, failed\_attempts, locked\_until | Código de recuperación (solo el hash). Sin acceso directo: solo vía RPC |
 | `set_plans` | id, match\_id, set\_number, system, start\_rotation, rotation, libero\_id, second\_libero\_id, planned\_subs, updated\_at, updated\_by | rotation = zona 1–6 → player\_id |
@@ -238,6 +239,9 @@ Cada decisión cerrada se añade aquí con su fecha; este documento es la refere
 | 2026-11-07 | Partido con pestañas Info, Gestión (convocatoria + dorsal/posición del partido) y Rotación; "Rotaciones" sale del menú |
 | 2026-11-07 | Calendario mensual con burbujas de partido y entrenamiento; horario semanal de entrenamientos con cancelación de días sueltos |
 | 2026-11-07 | Jugador "solo entrena" (`competes = false`): fuera de disponibilidad y convocatoria; se cambia con doble comprobación |
+| 2026-11-07 | Los jugadores tienen varias posiciones (ficha editable) y en cada partido pueden cubrir varias; en la rotación pueden cambiar de posición entre sets |
+| 2026-11-07 | Pabellones con enlace de Google Maps y mapa incrustado (sin clave de API); también en el horario de entrenamientos |
+| 2026-11-07 | Crear, editar y borrar partidos y marcar el resultado por sets desde el propio partido; la lista de resultados y la tabla siguen en el módulo Resultados |
 | 2026-11-07 | Calidad de código: ESLint (flat config, typescript-eslint, reglas de hooks) y Prettier en `frontend/` |
 
 **Temas abiertos**

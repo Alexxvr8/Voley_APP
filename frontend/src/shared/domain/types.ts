@@ -44,6 +44,14 @@ export interface Player {
   competes: boolean
 }
 
+/** Points of one set, from the team's point of view. */
+export interface SetScore {
+  us: number
+  them: number
+}
+
+export type MatchStatus = 'scheduled' | 'played' | 'cancelled'
+
 export interface Match {
   id: string
   opponent: string
@@ -56,13 +64,17 @@ export interface Match {
   mapsUrl: string
   homeAway: 'home' | 'away'
   notes: string
+  status: MatchStatus
+  /** One entry per set played; empty until the result is recorded. */
+  setsResult: SetScore[]
 }
 
-/** A called-up player and the number/position they use in that match (null = the roster value). */
+/** A called-up player and the number/positions they use in that match (null = the roster values). */
 export interface Callup {
   playerId: string
   number: number | null
-  position: Position | null
+  /** Positions the player can cover in this match; the first one is shown as the main one. */
+  positions: Position[] | null
 }
 
 export interface AvailabilityEntry {
@@ -77,6 +89,7 @@ export interface TrainingSlot {
   startTime: string
   endTime: string
   venue: string
+  mapsUrl: string
 }
 
 /** A training slot that does not happen on one specific date. */

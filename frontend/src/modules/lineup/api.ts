@@ -39,7 +39,7 @@ export function useCallups(matchId: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('callups')
-        .select('player_id, number, position')
+        .select('player_id, number, positions')
         .eq('match_id', matchId)
       if (error) throw error
       return (data as CallupRow[]).map(toCallup)

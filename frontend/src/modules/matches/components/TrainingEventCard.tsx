@@ -1,6 +1,7 @@
 // A weekly training on a specific date. Staff can cancel it for that day or bring it back.
 import type { TrainingOnDate } from '@/shared/utils/calendar'
 import { Card } from '@/shared/ui/Card'
+import { mapsOpenUrl } from '@/shared/utils/maps'
 
 interface TrainingEventCardProps {
   training: TrainingOnDate
@@ -21,7 +22,16 @@ export function TrainingEventCard({ training, onToggleCancelled }: TrainingEvent
         >
           Entrenamiento · {slot.startTime}–{slot.endTime}
         </p>
-        {slot.venue && <p className="text-sm text-slate-500">{slot.venue}</p>}
+        {(slot.venue || slot.mapsUrl) && (
+          <a
+            href={mapsOpenUrl(slot.mapsUrl, slot.venue)}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm text-blue-800 underline"
+          >
+            {slot.venue || 'Ver en Google Maps'}
+          </a>
+        )}
         {cancelled && <p className="text-sm font-semibold text-rose-700">Cancelado este día</p>}
       </div>
       {onToggleCancelled && (

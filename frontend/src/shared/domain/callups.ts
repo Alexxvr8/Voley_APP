@@ -1,30 +1,29 @@
-// Applies a call-up's per-match number and position to a roster entry (no React here).
-import type { Callup, Player } from './types'
+// Applies a call-up's per-match number and positions to a roster entry (no React here).
+import type { Callup, Player, Position } from './types'
 
-/** The player as they play this match: the call-up's number and position replace the roster ones. */
+/** The player as they play this match: the call-up's number and positions replace the roster ones. */
 export function asCalledUp(player: Player, callup: Callup): Player {
-  if (!callup.position) return { ...player, number: callup.number ?? player.number }
-  return {
-    ...player,
-    number: callup.number ?? player.number,
-    mainPosition: callup.position,
-    // The roster position stays available as a secondary one.
-    otherPositions: [player.mainPosition, ...player.otherPositions].filter(
-      (position) => position !== callup.position,
-    ),
-  }
+  const number = callup.number ?? player.number
+  if (!callup.positions?.length) return { ...player, number }
+  const [mainPosition, ...otherPositions] = callup.positions
+  return { ...player, number, mainPosition, otherPositions }
+}
+
+/** All the positions a roster entry can play, main one first. */
+export function rosterPositions(player: Player): Position[] {
+  return [player.mainPosition, ...player.otherPositions]
 }
 
 export interface CallupRow {
   player_id: string
   number: number | null
-  position: string | null
+  positions: string[] | null
 }
 
 export function toCallup(row: CallupRow): Callup {
   return {
     playerId: row.player_id,
     number: row.number,
-    position: row.position as Callup['position'],
+    positions: row.positions as Position[] | null,
   }
 }

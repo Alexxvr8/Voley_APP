@@ -2,6 +2,7 @@
 // and the Gestión tab (call-ups with per-match number and position).
 import type { ModuleDefinition } from '@/core/modules/types'
 import { CalendarPage } from './CalendarPage'
+import { EditMatchPage } from './EditMatchPage'
 import { ManagementPage } from './ManagementPage'
 import { MatchDetailPage } from './MatchDetailPage'
 import { NewMatchPage } from './NewMatchPage'
@@ -14,6 +15,7 @@ export const matchesModule: ModuleDefinition = {
     { path: 'partidos/nuevo', component: NewMatchPage },
     { path: 'partidos/:matchId', component: MatchDetailPage },
     { path: 'partidos/:matchId/gestion', component: ManagementPage },
+    { path: 'partidos/:matchId/editar', component: EditMatchPage },
   ],
   menu: { label: 'Partidos', path: 'partidos' },
   minRole: 'player',

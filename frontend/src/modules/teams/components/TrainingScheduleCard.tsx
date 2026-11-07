@@ -9,6 +9,7 @@ import {
   LABEL_TEXT_CLASS,
   PRIMARY_BUTTON_CLASS,
 } from '@/shared/ui/form'
+import { isMapsLink } from '@/shared/utils/maps'
 import { useAddTrainingSlot, useDeleteTrainingSlot, useTrainingSlots } from '../api'
 
 const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7]
@@ -21,6 +22,8 @@ export function TrainingScheduleCard({ teamId }: { teamId: string }) {
   const [startTime, setStartTime] = useState('18:00')
   const [endTime, setEndTime] = useState('19:30')
   const [venue, setVenue] = useState('')
+  const [mapsUrl, setMapsUrl] = useState('')
+  const badLink = mapsUrl.trim() !== '' && !isMapsLink(mapsUrl)
 
   const sorted = [...(slots.data ?? [])].sort(
     (a, b) => a.weekday - b.weekday || a.startTime.localeCompare(b.startTime),
@@ -28,7 +31,8 @@ export function TrainingScheduleCard({ teamId }: { teamId: string }) {
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    addSlot.mutate({ weekday, startTime, endTime, venue: venue.trim() })
+    if (badLink) return
+    addSlot.mutate({ weekday, startTime, endTime, venue: venue.trim(), mapsUrl: mapsUrl.trim() })
   }
 
   return (
@@ -50,6 +54,7 @@ export function TrainingScheduleCard({ teamId }: { teamId: string }) {
           <span className="flex-1 text-slate-600">
             {slot.startTime}–{slot.endTime}
             {slot.venue && ` · ${slot.venue}`}
+            {slot.mapsUrl && ' · 📍'}
           </span>
           <button
             type="button"
@@ -108,6 +113,22 @@ export function TrainingScheduleCard({ teamId }: { teamId: string }) {
             placeholder="Pabellón"
           />
         </label>
+        <label className={`col-span-2 sm:col-span-4 ${LABEL_CLASS}`}>
+          <span className={LABEL_TEXT_CLASS}>Enlace de Google Maps (opcional)</span>
+          <input
+            className={INPUT_CLASS}
+            type="url"
+            inputMode="url"
+            value={mapsUrl}
+            onChange={(e) => setMapsUrl(e.target.value)}
+            placeholder="https://maps.app.goo.gl/…"
+          />
+        </label>
+        {badLink && (
+          <p className={`col-span-2 sm:col-span-4 ${ERROR_CLASS}`}>
+            Ese enlace no es de Google Maps.
+          </p>
+        )}
         {addSlot.isError && (
           <p className={`col-span-2 sm:col-span-4 ${ERROR_CLASS}`}>
             No se ha podido añadir. La hora de fin tiene que ser después de la de inicio.

@@ -1,18 +1,14 @@
-// Practical match details: times, venue (opens Maps) and home/away.
+// Practical match details: times, venue with its map, home/away, notes and the result once played.
 import type { Match } from '@/shared/domain/types'
 import { Card } from '@/shared/ui/Card'
-
-/** Google Maps link: the one saved with the match, or a search for the venue name. */
-function mapsLink(match: Match): string {
-  return (
-    match.mapsUrl ||
-    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(match.venue)}`
-  )
-}
+import { MapEmbed } from '@/shared/ui/MapEmbed'
+import { ResultSummary } from './ResultSummary'
 
 export function MatchInfoCard({ match }: { match: Match }) {
   return (
-    <Card>
+    <Card className="space-y-4">
+      <ResultSummary sets={match.setsResult} />
+
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
         <dt className="text-slate-500">Calentamiento</dt>
         <dd className="font-medium">{match.warmupTime || '—'}</dd>
@@ -21,20 +17,7 @@ export function MatchInfoCard({ match }: { match: Match }) {
         <dd className="font-medium">{match.matchTime || '—'}</dd>
 
         <dt className="text-slate-500">Pabellón</dt>
-        <dd>
-          {match.venue ? (
-            <a
-              href={mapsLink(match)}
-              target="_blank"
-              rel="noreferrer"
-              className="font-medium text-blue-800 underline"
-            >
-              {match.venue}
-            </a>
-          ) : (
-            '—'
-          )}
-        </dd>
+        <dd className="font-medium">{match.venue || '—'}</dd>
 
         <dt className="text-slate-500">Juega</dt>
         <dd className="font-medium">{match.homeAway === 'home' ? 'Local' : 'Visitante'}</dd>
@@ -46,6 +29,8 @@ export function MatchInfoCard({ match }: { match: Match }) {
           </>
         )}
       </dl>
+
+      <MapEmbed venue={match.venue} mapsUrl={match.mapsUrl} />
     </Card>
   )
 }

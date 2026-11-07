@@ -15,9 +15,9 @@ export function AppShell() {
       <SideNav />
       {menuOpen && <MobileDrawer onClose={() => setMenuOpen(false)} />}
 
-      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col lg:max-w-6xl">
+      <div className="mx-auto flex min-h-dvh w-full max-w-md min-w-0 flex-col lg:mx-0 lg:max-w-none lg:flex-1">
         <MobileHeader onOpenMenu={() => setMenuOpen(true)} />
-        <main className="flex-1 px-4 pt-4 pb-24 lg:px-10 lg:pt-8 lg:pb-10">
+        <main className="w-full flex-1 px-4 pt-4 pb-24 lg:max-w-7xl lg:px-10 lg:pt-8 lg:pb-10">
           <Outlet />
         </main>
       </div>

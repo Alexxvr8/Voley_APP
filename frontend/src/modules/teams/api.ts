@@ -165,6 +165,7 @@ export function useAddTrainingSlot(teamId: string) {
       startTime: string
       endTime: string
       venue: string
+      mapsUrl: string
     }) =>
       check(
         await supabase.from('training_slots').insert({
@@ -173,6 +174,7 @@ export function useAddTrainingSlot(teamId: string) {
           start_time: slot.startTime,
           end_time: slot.endTime,
           venue: slot.venue,
+          maps_url: slot.mapsUrl,
         }),
       ),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.slots(teamId) }),

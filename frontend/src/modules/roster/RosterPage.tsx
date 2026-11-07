@@ -7,14 +7,15 @@ import { Card } from '@/shared/ui/Card'
 import { PRIMARY_BUTTON_CLASS } from '@/shared/ui/form'
 import { PageMessage } from '@/shared/ui/PageMessage'
 import { byShirtNumber } from '@/shared/utils/format'
-import { usePlayers } from './api'
-import { AddPlayerForm } from './components/AddPlayerForm'
+import { useAddPlayer, usePlayers } from './api'
+import { PlayerForm } from './components/PlayerForm'
 import { PlayerRow } from './components/PlayerRow'
 
 export function RosterPage() {
   const { team, role } = useCurrentTeam()
   const isStaff = hasRole(role, 'assistant')
   const players = usePlayers(team.id)
+  const addPlayer = useAddPlayer(team.id)
   const [adding, setAdding] = useState(false)
 
   if (players.isPending) return <PageMessage>Cargando…</PageMessage>
@@ -41,7 +42,16 @@ export function RosterPage() {
         )}
       </div>
 
-      {adding && <AddPlayerForm teamId={team.id} onDone={() => setAdding(false)} />}
+      {adding && (
+        <PlayerForm
+          title="Nuevo jugador"
+          submitLabel="Añadir"
+          busy={addPlayer.isPending}
+          failed={addPlayer.isError}
+          onSubmit={(player) => addPlayer.mutate(player, { onSuccess: () => setAdding(false) })}
+          onCancel={() => setAdding(false)}
+        />
+      )}
 
       {sorted.length === 0 ? (
         <PageMessage>

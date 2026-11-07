@@ -1,4 +1,4 @@
-// Server calls of the roster module: players of the team, add a player and switch "compite".
+// Server calls of the roster module: players of the team, add or edit a player and switch "compite".
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { queryClient } from '@/core/query/queryClient'
 import { supabase } from '@/core/supabase/client'
@@ -18,7 +18,8 @@ export function usePlayers(teamId: string) {
   })
 }
 
-export interface NewPlayer {
+/** Editable fields of a roster entry. */
+export interface PlayerInput {
   firstName: string
   lastName: string
   birthYear: number | null
@@ -29,7 +30,7 @@ export interface NewPlayer {
 
 export function useAddPlayer(teamId: string) {
   return useMutation({
-    mutationFn: async (player: NewPlayer) => {
+    mutationFn: async (player: PlayerInput) => {
       const { error } = await supabase.from('players').insert({
         team_id: teamId,
         first_name: player.firstName,
@@ -39,6 +40,26 @@ export function useAddPlayer(teamId: string) {
         main_position: player.mainPosition,
         other_positions: player.otherPositions,
       })
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: playersKey(teamId) }),
+  })
+}
+
+export function useUpdatePlayer(teamId: string, playerId: string) {
+  return useMutation({
+    mutationFn: async (player: PlayerInput) => {
+      const { error } = await supabase
+        .from('players')
+        .update({
+          first_name: player.firstName,
+          last_name: player.lastName,
+          birth_year: player.birthYear,
+          number: player.number,
+          main_position: player.mainPosition,
+          other_positions: player.otherPositions,
+        })
+        .eq('id', playerId)
       if (error) throw error
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: playersKey(teamId) }),

@@ -36,6 +36,7 @@ Cada cambio en la base de datos es un fichero SQL nuevo en `supabase/migrations/
 | `20261107000000_teams_accounts_trainings.sql` | Jugadores pendientes sin acceso hasta que los acepta el entrenador, `my_teams`, `team_members_overview`, `accept_member`, `players.competes`, horario de entrenamientos y recuperación de contraseña |
 | `20261107000100_remove_4_2_front_system.sql` | Quita el sistema `4-2-front`: quedan 5-1, 6-0, 4-2 y 6-2 |
 | `20261107000200_callup_match_overrides.sql` | Dorsal y posición por partido en `callups` (`number`, `position`) y permiso para cambiarlos |
+| `20261107000300_callup_positions_and_training_maps.sql` | `callups.position` pasa a `positions` (varias posiciones por partido) y `training_slots.maps_url` |
 
 Se aplican al proyecto con el conector de Supabase (`apply_migration`) o con la CLI (`supabase db push`, desde `backend/`).
 
@@ -50,12 +51,12 @@ La pieza central es `team_members`: une usuario, equipo y rol, y todas las regla
 | `team_members` | Quién pertenece a qué equipo y con qué rol (`coach`, `assistant`, `player`) | `player_id` enlaza la cuenta con su ficha. Si está vacío, el jugador está **pendiente** |
 | `join_codes` | Código de acceso por equipo y rol | Uno por rol; se regenera con `regenerate_join_code` |
 | `players` | Fichas de la plantilla | Una ficha puede existir sin cuenta. `competes = false`: solo entrena, no puede tener disponibilidad ni ser convocado |
-| `matches` | Partidos: rival, fecha, horas, pabellón, estado, resultado por sets | `sets_result` = `[{"us": 25, "them": 20}, …]` |
+| `matches` | Partidos: rival, fecha, horas, pabellón y enlace de Maps, estado, resultado por sets | `sets_result` = `[{"us": 25, "them": 20}, …]`; con resultado, `status = played` |
 | `availability` | Respuesta de cada jugador a cada partido (`yes`, `no`, `maybe`) | |
-| `callups` | Convocados de cada partido | `number` y `position`: dorsal y posición solo para ese partido (vacío = los de la ficha) |
+| `callups` | Convocados de cada partido | `number` y `positions`: dorsal y posiciones solo para ese partido (vacío = los de la ficha; la primera posición es la principal) |
 | `set_plans` | Plan de cada set: sistema, rotación inicial, alineación, líberos, cambios previstos | `start_rotation` = 1–6 (R1…R6); `rotation` = `{"1": player_id, …, "6": player_id}`; `libero_id` y `second_libero_id`; `planned_subs` = `[{"out", "in", "note"}]` |
 | `league_table` | Tabla de liga no oficial, rellenada a mano | Filas en JSON |
-| `training_slots` | Horario semanal de entrenamientos: día (1 = lunes … 7 = domingo), hora de inicio y fin, lugar | Se repite cada semana en el calendario |
+| `training_slots` | Horario semanal de entrenamientos: día (1 = lunes … 7 = domingo), hora de inicio y fin, lugar y enlace de Google Maps | Se repite cada semana en el calendario |
 | `training_cancellations` | Fechas en que un entrenamiento del horario no se hace | |
 | `account_recovery` | Hash del código de recuperación de cada cuenta, intentos fallidos y bloqueo | Sin políticas: solo se usa desde las funciones de recuperación |
 

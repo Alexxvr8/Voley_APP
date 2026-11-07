@@ -1,5 +1,5 @@
 // "Gestión" tab of a match (staff): who plays, from the availability answers, and their number and
-// position for this match.
+// positions for this match.
 import { useParams } from 'react-router'
 import { hasRole, useCurrentTeam, useTeamPath } from '@/core/teams/currentTeam'
 import { MatchHeader } from '@/shared/ui/MatchHeader'
@@ -55,7 +55,7 @@ export function ManagementPage() {
               calledUp: !callups.data.some((callup) => callup.playerId === id),
             })
           }
-          onChangeDetails={(callup) => setDetails.mutate(callup)}
+          onChangeDetails={(playerId, changes) => setDetails.mutate({ playerId, changes })}
         />
       </div>
     </section>

@@ -2,9 +2,11 @@
 import type {
   GameSystem,
   Match,
+  MatchStatus,
   MyTeam,
   Player,
   Position,
+  SetScore,
   Team,
   TeamRole,
   TrainingCancellation,
@@ -93,6 +95,8 @@ export interface MatchRow {
   maps_url: string
   home_away: string
   notes: string
+  status: string
+  sets_result: SetScore[]
 }
 
 export function toMatch(row: MatchRow): Match {
@@ -106,6 +110,8 @@ export function toMatch(row: MatchRow): Match {
     mapsUrl: row.maps_url,
     homeAway: row.home_away === 'away' ? 'away' : 'home',
     notes: row.notes,
+    status: row.status as MatchStatus,
+    setsResult: row.sets_result,
   }
 }
 
@@ -115,6 +121,7 @@ export interface TrainingSlotRow {
   start_time: string
   end_time: string
   venue: string
+  maps_url: string
 }
 
 export function toTrainingSlot(row: TrainingSlotRow): TrainingSlot {
@@ -124,6 +131,7 @@ export function toTrainingSlot(row: TrainingSlotRow): TrainingSlot {
     startTime: shortTime(row.start_time),
     endTime: shortTime(row.end_time),
     venue: row.venue,
+    mapsUrl: row.maps_url,
   }
 }
 

@@ -1,7 +1,8 @@
-// Form to add a roster entry. The player can link their account to it later, when the coach accepts them.
+// Roster entry form, used to add a player and to edit one: name, number, year and every position
+// they can play (a main one plus any others).
 import { useState, type FormEvent } from 'react'
 import { POSITION_LABELS, POSITIONS } from '@/shared/domain/labels'
-import type { Position } from '@/shared/domain/types'
+import type { Player, Position } from '@/shared/domain/types'
 import { Card } from '@/shared/ui/Card'
 import {
   ERROR_CLASS,
@@ -11,16 +12,34 @@ import {
   PRIMARY_BUTTON_CLASS,
   SECONDARY_BUTTON_CLASS,
 } from '@/shared/ui/form'
-import { useAddPlayer } from '../api'
+import type { PlayerInput } from '../api'
 
-export function AddPlayerForm({ teamId, onDone }: { teamId: string; onDone: () => void }) {
-  const addPlayer = useAddPlayer(teamId)
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [number, setNumber] = useState('')
-  const [birthYear, setBirthYear] = useState('')
-  const [mainPosition, setMainPosition] = useState<Position>('outside')
-  const [otherPositions, setOtherPositions] = useState<Position[]>([])
+interface PlayerFormProps {
+  title: string
+  /** Player being edited; empty form when adding a new one. */
+  initial?: Player
+  submitLabel: string
+  busy: boolean
+  failed: boolean
+  onSubmit: (player: PlayerInput) => void
+  onCancel: () => void
+}
+
+export function PlayerForm({
+  title,
+  initial,
+  submitLabel,
+  busy,
+  failed,
+  onSubmit,
+  onCancel,
+}: PlayerFormProps) {
+  const [firstName, setFirstName] = useState(initial?.firstName ?? '')
+  const [lastName, setLastName] = useState(initial?.lastName ?? '')
+  const [number, setNumber] = useState(initial?.number?.toString() ?? '')
+  const [birthYear, setBirthYear] = useState(initial?.birthYear?.toString() ?? '')
+  const [mainPosition, setMainPosition] = useState<Position>(initial?.mainPosition ?? 'outside')
+  const [otherPositions, setOtherPositions] = useState<Position[]>(initial?.otherPositions ?? [])
 
   function toggleOther(position: Position) {
     setOtherPositions((current) =>
@@ -30,23 +49,20 @@ export function AddPlayerForm({ teamId, onDone }: { teamId: string; onDone: () =
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    addPlayer.mutate(
-      {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        number: number ? Number(number) : null,
-        birthYear: birthYear ? Number(birthYear) : null,
-        mainPosition,
-        otherPositions: otherPositions.filter((p) => p !== mainPosition),
-      },
-      { onSuccess: onDone },
-    )
+    onSubmit({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      number: number ? Number(number) : null,
+      birthYear: birthYear ? Number(birthYear) : null,
+      mainPosition,
+      otherPositions: otherPositions.filter((p) => p !== mainPosition),
+    })
   }
 
   return (
     <Card>
       <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
-        <p className="col-span-2 font-semibold">Nuevo jugador</p>
+        <p className="col-span-2 font-semibold">{title}</p>
         <label className={LABEL_CLASS}>
           <span className={LABEL_TEXT_CLASS}>Nombre</span>
           <input
@@ -119,14 +135,12 @@ export function AddPlayerForm({ teamId, onDone }: { teamId: string; onDone: () =
             ))}
           </div>
         </fieldset>
-        {addPlayer.isError && (
-          <p className={`col-span-2 ${ERROR_CLASS}`}>No se ha podido guardar.</p>
-        )}
-        <button type="button" onClick={onDone} className={SECONDARY_BUTTON_CLASS}>
+        {failed && <p className={`col-span-2 ${ERROR_CLASS}`}>No se ha podido guardar.</p>}
+        <button type="button" onClick={onCancel} className={SECONDARY_BUTTON_CLASS}>
           Cancelar
         </button>
-        <button type="submit" disabled={addPlayer.isPending} className={PRIMARY_BUTTON_CLASS}>
-          {addPlayer.isPending ? 'Guardando…' : 'Añadir'}
+        <button type="submit" disabled={busy} className={PRIMARY_BUTTON_CLASS}>
+          {busy ? 'Guardando…' : submitLabel}
         </button>
       </form>
     </Card>

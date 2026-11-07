@@ -8,7 +8,7 @@ export function TeamsPage() {
   const myTeams = useMyTeams()
 
   return (
-    <section className="space-y-4">
+    <section className="max-w-3xl space-y-4">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-slate-900">Mis equipos</h1>
         <Link

@@ -1,6 +1,6 @@
 // Staff view: every competing player with their availability answer and a checkbox to call them up.
 // The coach can call up anyone, whether they answered or not (spec module 4), and change the
-// number and position a called-up player uses in this match.
+// number and positions a called-up player uses in this match.
 import { AVAILABILITY_LABELS } from '@/shared/domain/labels'
 import { asCalledUp } from '@/shared/domain/callups'
 import type { AvailabilityEntry, AvailabilityStatus, Callup, Player } from '@/shared/domain/types'
@@ -21,7 +21,10 @@ interface CallupListProps {
   answers: Record<string, AvailabilityEntry>
   callups: Callup[]
   onToggle: (playerId: string) => void
-  onChangeDetails: (callup: Callup) => void
+  onChangeDetails: (
+    playerId: string,
+    changes: Partial<Pick<Callup, 'number' | 'positions'>>,
+  ) => void
 }
 
 export function CallupList({
@@ -43,7 +46,7 @@ export function CallupList({
       {byNumber.map((rosterPlayer) => {
         const answer = answers[rosterPlayer.id]
         const callup = callups.find((entry) => entry.playerId === rosterPlayer.id)
-        // Called-up players show the number and position they use in this match.
+        // Called-up players show the number and main position they use in this match.
         const player = callup ? asCalledUp(rosterPlayer, callup) : rosterPlayer
         return (
           <div key={player.id} className="border-t border-slate-100">
@@ -76,7 +79,7 @@ export function CallupList({
               <CallupDetailsEditor
                 player={rosterPlayer}
                 callup={callup}
-                onChange={onChangeDetails}
+                onChange={(changes) => onChangeDetails(player.id, changes)}
               />
             )}
           </div>
