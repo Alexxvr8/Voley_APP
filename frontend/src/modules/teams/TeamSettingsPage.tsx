@@ -1,12 +1,18 @@
-// "Ajustes" screen for the coach: team name, join codes, pending requests, members and training schedule.
+// "Ajustes" screen for the coach: team details and default system, sections, join codes, pending
+// requests, members (remove, hand over), training schedule and deleting the team.
 import { useCurrentTeam } from '@/core/teams/currentTeam'
 import { PageMessage } from '@/shared/ui/PageMessage'
 import { useMembers, useTeamPlayers } from './api'
+import { DeleteTeamCard } from './components/DeleteTeamCard'
 import { JoinCodesCard } from './components/JoinCodesCard'
 import { MembersCard } from './components/MembersCard'
+import { ModulesCard } from './components/ModulesCard'
+import { OpponentsCard } from './components/OpponentsCard'
 import { PendingRequestsCard } from './components/PendingRequestsCard'
+import { TeamColorCard } from './components/TeamColorCard'
 import { TeamDetailsCard } from './components/TeamDetailsCard'
 import { TrainingScheduleCard } from './components/TrainingScheduleCard'
+import { VenuesCard } from './components/VenuesCard'
 import { activeMembers, linkedPlayerIds, pendingMembers } from './members'
 
 export function TeamSettingsPage() {
@@ -33,11 +39,16 @@ export function TeamSettingsPage() {
             freePlayers={freePlayers}
           />
           <JoinCodesCard teamId={team.id} />
-          <TeamDetailsCard key={team.name + team.category + team.season} team={team} />
+          <TeamDetailsCard team={team} />
+          <TeamColorCard team={team} />
+          <ModulesCard team={team} />
         </div>
         <div className="space-y-4">
           <TrainingScheduleCard teamId={team.id} />
+          <VenuesCard teamId={team.id} />
+          <OpponentsCard teamId={team.id} />
           <MembersCard teamId={team.id} members={activeMembers(members.data)} />
+          <DeleteTeamCard team={team} />
         </div>
       </div>
     </section>

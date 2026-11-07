@@ -11,10 +11,13 @@ Se pueden lanzar desde esta carpeta o desde la raíz del repo.
 | `npm run dev` | Servidor de desarrollo en http://localhost:5173 |
 | `npm run build` | `tsc` (comprobación de tipos) + build de producción en `dist/`. Tiene que pasar antes de cada commit |
 | `npm run preview` | Sirve `dist/` para probar la instalación y el modo sin conexión |
+| `npm test` | Tests unitarios con Vitest (lógica pura: calendario, mapas, horas, resultados, sistemas de rotación) |
 | `npm run lint` | ESLint: TypeScript, reglas de hooks de React y fast refresh. No debe dar errores antes de un commit |
 | `npm run format` | Prettier sobre todo el código (sin punto y coma, comillas simples, 100 columnas). `format:check` solo comprueba. Los `.md` se dejan como están |
 
 TypeScript va fijado en la 6.x: la 7 todavía no es compatible con typescript-eslint.
+
+En cada subida a GitHub, `.github/workflows/ci.yml` pasa lint, formato, tests y build.
 
 ## Variables de entorno
 

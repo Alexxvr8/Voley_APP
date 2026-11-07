@@ -37,3 +37,8 @@ export function isMapsLink(text: string): boolean {
     text.trim(),
   )
 }
+
+/** True when the pasted link is empty (it is optional) or looks like Google Maps. */
+export function isValidMapsUrl(url: string): boolean {
+  return url.trim() === '' || isMapsLink(url)
+}

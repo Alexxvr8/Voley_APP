@@ -1,10 +1,11 @@
 // One roster row: shirt number, name, birth year and all positions. Staff also get the "compite"
-// switch and "Editar", which opens the player form in place.
+// switch and "Editar", which opens the player form in place (with "Borrar ficha").
 import { useState } from 'react'
 import type { Player } from '@/shared/domain/types'
 import { PositionBadge } from '@/shared/ui/PositionBadge'
 import { playerName, shirtNumber } from '@/shared/utils/format'
-import { useUpdatePlayer } from '../api'
+import { ConfirmDialog } from '@/shared/ui/ConfirmDialog'
+import { useDeletePlayer, useUpdatePlayer } from '../api'
 import { CompetesSwitch } from './CompetesSwitch'
 import { PlayerForm } from './PlayerForm'
 
@@ -17,7 +18,9 @@ interface PlayerRowProps {
 
 export function PlayerRow({ teamId, player, editable }: PlayerRowProps) {
   const updatePlayer = useUpdatePlayer(teamId, player.id)
+  const deletePlayer = useDeletePlayer(teamId)
   const [editing, setEditing] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   if (editing) {
     return (
@@ -33,6 +36,25 @@ export function PlayerRow({ teamId, player, editable }: PlayerRowProps) {
           }
           onCancel={() => setEditing(false)}
         />
+        <button
+          type="button"
+          onClick={() => setConfirmingDelete(true)}
+          className="mt-2 w-full text-center text-sm font-medium text-rose-700 underline"
+        >
+          Borrar ficha
+        </button>
+        {confirmingDelete && (
+          <ConfirmDialog
+            title={`¿Borrar la ficha de ${playerName(player)}?`}
+            confirmLabel="Borrar"
+            busy={deletePlayer.isPending}
+            onCancel={() => setConfirmingDelete(false)}
+            onConfirm={() => deletePlayer.mutate(player.id)}
+          >
+            Se borran también sus respuestas y convocatorias. Si tiene cuenta, seguirá en el equipo
+            pero como pendiente, hasta que la vincules a otra ficha.
+          </ConfirmDialog>
+        )}
       </div>
     )
   }

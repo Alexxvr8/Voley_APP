@@ -4,14 +4,20 @@ import { hasRole, useCurrentTeam, useTeamPath } from '@/core/teams/currentTeam'
 import { Card } from '@/shared/ui/Card'
 import { PageMessage } from '@/shared/ui/PageMessage'
 import { todayIso } from '@/shared/utils/format'
-import { useCreateMatch, type MatchInput } from './api'
+import {
+  useCreateMatch,
+  useSaveOpponent,
+  useTeamOpponents,
+  useTeamVenues,
+  type MatchInput,
+} from './api'
 import { MatchForm } from './components/MatchForm'
 
 const EMPTY_MATCH: MatchInput = {
   opponent: '',
   date: todayIso(),
-  warmupTime: '',
   matchTime: '',
+  warmupMinutes: null,
   venue: '',
   mapsUrl: '',
   homeAway: 'home',
@@ -23,9 +29,13 @@ export function NewMatchPage() {
   const teamPath = useTeamPath()
   const navigate = useNavigate()
   const createMatch = useCreateMatch(team.id)
+  const venues = useTeamVenues(team.id)
+  const opponents = useTeamOpponents(team.id)
+  const saveOpponent = useSaveOpponent(team.id)
 
   if (!hasRole(role, 'assistant'))
     return <PageMessage>No tienes acceso a esta sección.</PageMessage>
+  if (venues.isPending || opponents.isPending) return <PageMessage>Cargando…</PageMessage>
 
   return (
     <section className="max-w-xl space-y-4">
@@ -39,9 +49,12 @@ export function NewMatchPage() {
           submitLabel="Crear partido"
           busy={createMatch.isPending}
           failed={createMatch.isError}
-          onSubmit={(match) =>
+          venues={venues.data ?? []}
+          opponents={opponents.data ?? []}
+          onSubmit={(match, addOpponent) => {
+            if (addOpponent) saveOpponent.mutate(match.opponent)
             createMatch.mutate(match, { onSuccess: (id) => navigate(teamPath(`partidos/${id}`)) })
-          }
+          }}
         />
       </Card>
     </section>

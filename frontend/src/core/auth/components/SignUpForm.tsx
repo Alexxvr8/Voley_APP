@@ -1,6 +1,7 @@
-// Account creation: username, visible name, password twice and the data consent checkbox.
+// Account creation: username, visible name, password twice, optional recovery email and the consent checkbox.
 import { useState, type FormEvent } from 'react'
-import { normalizeUsername, useAuth, USERNAME_PATTERN } from '@/core/auth/auth'
+import { normalizeUsername, USERNAME_PATTERN } from '@/core/auth/accounts'
+import { useAuth } from '@/core/auth/auth'
 import { authErrorMessage, newPasswordProblem } from '@/core/auth/errors'
 import {
   ERROR_CLASS,
@@ -18,6 +19,7 @@ export function SignUpForm() {
   const [displayName, setDisplayName] = useState('')
   const [password, setPassword] = useState('')
   const [confirmation, setConfirmation] = useState('')
+  const [email, setEmail] = useState('')
   const [consent, setConsent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -38,7 +40,7 @@ export function SignUpForm() {
     }
     setBusy(true)
     try {
-      await signUp(username, displayName || username, password)
+      await signUp(username, displayName || username, password, email)
     } catch (err) {
       setError(authErrorMessage(err))
       setBusy(false)
@@ -65,6 +67,20 @@ export function SignUpForm() {
         onPasswordChange={setPassword}
         onConfirmationChange={setConfirmation}
       />
+      <label className={LABEL_CLASS}>
+        <span className={LABEL_TEXT_CLASS}>Correo (opcional)</span>
+        <input
+          className={INPUT_CLASS}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
+          placeholder="Para recuperar la contraseña si pierdes el código"
+        />
+        <span className="text-xs text-slate-500">
+          Nadie del equipo lo ve. Solo se usa para recuperar la contraseña.
+        </span>
+      </label>
       <label className="flex items-start gap-3 text-sm text-slate-600">
         <input
           type="checkbox"

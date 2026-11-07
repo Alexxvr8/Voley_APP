@@ -1,9 +1,10 @@
-// "Mi cuenta": new recovery code, change password and sign out.
+// "Mi cuenta": new recovery code, recovery email, change password and sign out.
 import { Link } from 'react-router'
 import { useAuth } from '@/core/auth/auth'
 import { SECONDARY_BUTTON_CLASS } from '@/shared/ui/form'
 import { ChangePasswordCard } from './components/ChangePasswordCard'
 import { RecoveryCodeCard } from './components/RecoveryCodeCard'
+import { RecoveryEmailCard } from './components/RecoveryEmailCard'
 
 export function AccountPage() {
   const { user, signOut } = useAuth()
@@ -21,6 +22,7 @@ export function AccountPage() {
         </p>
       </div>
       <RecoveryCodeCard />
+      <RecoveryEmailCard />
       <ChangePasswordCard />
       <button type="button" onClick={signOut} className={`w-full ${SECONDARY_BUTTON_CLASS}`}>
         Cerrar sesión

@@ -37,6 +37,9 @@ Cada cambio en la base de datos es un fichero SQL nuevo en `supabase/migrations/
 | `20261107000100_remove_4_2_front_system.sql` | Quita el sistema `4-2-front`: quedan 5-1, 6-0, 4-2 y 6-2 |
 | `20261107000200_callup_match_overrides.sql` | Dorsal y posición por partido en `callups` (`number`, `position`) y permiso para cambiarlos |
 | `20261107000300_callup_positions_and_training_maps.sql` | `callups.position` pasa a `positions` (varias posiciones por partido) y `training_slots.maps_url` |
+| `20261107000400_team_ownership_and_email_recovery.sql` | Un equipo nunca se queda sin entrenador (trigger `keep_a_coach`), `transfer_team` y recuperación por correo (`account_recovery_email` y sus funciones) |
+| `20261107000500_warmup_venues_team_color.sql` | Calentamiento como duración (`matches.warmup_minutes` sustituye a `warmup_time`), pabellones del equipo (`team_venues`), color del equipo (`teams.color`) y `my_teams` devuelve el color |
+| `20261107000600_team_opponents.sql` | Lista de rivales del equipo (`team_opponents`) |
 
 Se aplican al proyecto con el conector de Supabase (`apply_migration`) o con la CLI (`supabase db push`, desde `backend/`).
 
@@ -47,11 +50,11 @@ La pieza central es `team_members`: une usuario, equipo y rol, y todas las regla
 | Tabla | Qué guarda | Notas |
 | --- | --- | --- |
 | `profiles` | Nombre de usuario y nombre visible de cada cuenta | Se crea sola al registrarse (trigger `on_auth_user_created`) |
-| `teams` | Equipos: nombre, categoría, temporada, sistema por defecto, módulos activos | Se crean con la RPC `create_team` |
+| `teams` | Equipos: nombre, categoría, temporada, color (`#rrggbb`), sistema por defecto, módulos activos | Se crean con la RPC `create_team` |
 | `team_members` | Quién pertenece a qué equipo y con qué rol (`coach`, `assistant`, `player`) | `player_id` enlaza la cuenta con su ficha. Si está vacío, el jugador está **pendiente** |
 | `join_codes` | Código de acceso por equipo y rol | Uno por rol; se regenera con `regenerate_join_code` |
 | `players` | Fichas de la plantilla | Una ficha puede existir sin cuenta. `competes = false`: solo entrena, no puede tener disponibilidad ni ser convocado |
-| `matches` | Partidos: rival, fecha, horas, pabellón y enlace de Maps, estado, resultado por sets | `sets_result` = `[{"us": 25, "them": 20}, …]`; con resultado, `status = played` |
+| `matches` | Partidos: rival, fecha, hora, calentamiento en minutos (`warmup_minutes`, de 15 en 15), pabellón y enlace de Maps, estado, resultado por sets | `sets_result` = `[{"us": 25, "them": 20}, …]`; con resultado, `status = played` |
 | `availability` | Respuesta de cada jugador a cada partido (`yes`, `no`, `maybe`) | |
 | `callups` | Convocados de cada partido | `number` y `positions`: dorsal y posiciones solo para ese partido (vacío = los de la ficha; la primera posición es la principal) |
 | `set_plans` | Plan de cada set: sistema, rotación inicial, alineación, líberos, cambios previstos | `start_rotation` = 1–6 (R1…R6); `rotation` = `{"1": player_id, …, "6": player_id}`; `libero_id` y `second_libero_id`; `planned_subs` = `[{"out", "in", "note"}]` |
@@ -59,6 +62,9 @@ La pieza central es `team_members`: une usuario, equipo y rol, y todas las regla
 | `training_slots` | Horario semanal de entrenamientos: día (1 = lunes … 7 = domingo), hora de inicio y fin, lugar y enlace de Google Maps | Se repite cada semana en el calendario |
 | `training_cancellations` | Fechas en que un entrenamiento del horario no se hace | |
 | `account_recovery` | Hash del código de recuperación de cada cuenta, intentos fallidos y bloqueo | Sin políticas: solo se usa desde las funciones de recuperación |
+| `account_recovery_email` | Correo de recuperación (opcional) y el hash del enlace de un solo uso, con caducidad | Sin políticas: solo vía funciones. Nadie del equipo lo ve |
+| `team_venues` | Pabellones habituales del equipo con su enlace de Google Maps | Partidos y entrenamientos copian nombre y enlace |
+| `team_opponents` | Rivales habituales del equipo | Nombre único dentro del equipo; los partidos guardan su propia copia del nombre |
 
 Los valores fijos (posiciones, roles, sistemas, estados) se validan con `check` en la propia tabla.
 
@@ -72,7 +78,7 @@ Todas las tablas tienen RLS activado. Resumen de quién puede qué:
 | `teams` | Miembros del equipo | Editar y borrar: entrenador |
 | `team_members` | Miembros del equipo | Cambiar rol o enlazar ficha: entrenador. Salir del equipo: uno mismo |
 | `join_codes` | Entrenador | Entrenador |
-| `players`, `matches`, `callups`, `league_table`, `training_slots`, `training_cancellations` | Miembros del equipo | Entrenador y segundo |
+| `players`, `matches`, `callups`, `league_table`, `training_slots`, `training_cancellations`, `team_venues`, `team_opponents` | Miembros del equipo | Entrenador y segundo |
 | `availability` | Miembros del equipo | El jugador la suya (si su cuenta está enlazada a la ficha); entrenador y segundo, la de cualquiera |
 | `set_plans` | Entrenador y segundo | Entrenador y segundo |
 
@@ -106,6 +112,22 @@ Las acciones que tocan varias tablas o necesitan saltarse RLS de forma controlad
 | `create_recovery_code()` | Cualquier usuario con sesión | Crea o sustituye tu código de recuperación y lo devuelve (solo esa vez) |
 | `reset_password_with_code(username, code, new_password)` | **Sin sesión** | Pone una contraseña nueva si el código es correcto y devuelve `{ok, code}` con el código nuevo. 5 fallos bloquean 15 minutos. Devuelve en vez de lanzar error para que los fallos queden contados |
 | `coach_reset_password(team, member)` | Entrenador | Pone una contraseña temporal a un miembro que no sea entrenador y la devuelve |
+| `transfer_team(team, new_coach)` | Entrenador | Hace entrenador a otro miembro; el actual pasa a segundo entrenador |
+| `set_recovery_email(email)` / `my_recovery_email()` | Cualquier usuario con sesión | Guarda (vacío = quita) o lee tu correo de recuperación |
+| `reset_password_with_email_token(username, token, new_password)` | **Sin sesión** | Contraseña nueva con el enlace del correo: un solo uso y 1 hora. Devuelve `{ok, code}` con un código de recuperación nuevo |
+| `issue_email_reset_token(username)` | Solo `service_role` (la Edge Function) | Crea el enlace de 1 hora y devuelve a qué correo mandarlo; como mucho uno por minuto |
+
+**Trigger `keep_a_coach`:** impide quitar o degradar al último entrenador de un equipo (para irse, antes hay que transferirlo). Borrar el equipo entero sí se permite.
+
+## Edge Functions
+
+El código vive en `supabase/functions/` y se despliega con el conector de Supabase o con `supabase functions deploy <nombre>`.
+
+| Función | Qué hace |
+| --- | --- |
+| `send-reset-email` | "He olvidado la contraseña → Por correo". Recibe `{ username }`, pide un token a `issue_email_reset_token` y manda el enlace `https://voley-app-gold.vercel.app/?recuperar=<token>&usuario=<usuario>` con Brevo. Responde igual exista o no el usuario. Se despliega sin verificar JWT porque la usa quien no puede entrar |
+
+Secretos de la función (*Edge Functions → Secrets*): `BREVO_API_KEY` y `MAIL_SENDER_EMAIL` (remitente verificado en Brevo); opcionales `MAIL_SENDER_NAME` y `APP_URL`. Sin los dos primeros, la función responde `not_configured` y la app avisa de que el correo aún no está activado.
 
 ## Registro de usuarios
 

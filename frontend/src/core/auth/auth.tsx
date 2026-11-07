@@ -4,28 +4,13 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import type { User } from '@supabase/supabase-js'
 import { queryClient } from '@/core/query/queryClient'
 import { supabase } from '@/core/supabase/client'
-
-const INTERNAL_EMAIL_DOMAIN = 'voley.local'
-
-/** Same rule as the `profiles.username` check constraint. */
-export const USERNAME_PATTERN = /^[a-z0-9._-]{3,30}$/
-
-export const MIN_PASSWORD_LENGTH = 6
-
-export function normalizeUsername(username: string): string {
-  return username.trim().toLowerCase()
-}
-
-function usernameToEmail(username: string): string {
-  return `${normalizeUsername(username)}@${INTERNAL_EMAIL_DOMAIN}`
-}
-
-/** Thrown by `resetPassword` when the username, code or lock state does not allow the reset. */
-export class RecoveryRejectedError extends Error {
-  constructor() {
-    super('recovery_rejected')
-  }
-}
+import {
+  createRecoveryCode,
+  normalizeUsername,
+  RecoveryRejectedError,
+  setRecoveryEmail,
+  usernameToEmail,
+} from './accounts'
 
 /**
  * Recovery code to show once, right after signing up or resetting the password.
@@ -40,20 +25,21 @@ interface Auth {
   /** Hides the recovery code screen once the user has saved the code. */
   dismissRecoveryNotice: () => void
   signIn: (username: string, password: string) => Promise<void>
-  signUp: (username: string, displayName: string, password: string) => Promise<void>
+  /** `recoveryEmail` is optional; it lets the user reset the password by email later. */
+  signUp: (
+    username: string,
+    displayName: string,
+    password: string,
+    recoveryEmail: string,
+  ) => Promise<void>
   /** Sets a new password with the recovery code, signs in and shows the replacement code. */
   resetPassword: (username: string, code: string, newPassword: string) => Promise<void>
+  /** Same, with the token of the reset email link instead of the recovery code. */
+  resetPasswordWithEmail: (username: string, token: string, newPassword: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<Auth | null>(null)
-
-/** Creates a new recovery code for the signed-in user, replacing the old one. */
-export async function createRecoveryCode(): Promise<string> {
-  const { data, error } = await supabase.rpc('create_recovery_code')
-  if (error) throw error
-  return data as string
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null | undefined>(undefined)
@@ -75,7 +61,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error
   }
 
-  async function signUp(username: string, displayName: string, password: string) {
+  async function signUp(
+    username: string,
+    displayName: string,
+    password: string,
+    recoveryEmail: string,
+  ) {
     setRecoveryNotice('issuing')
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -88,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error
       // Without a session the project still requires email confirmation, which cannot work here.
       if (!data.session) throw new Error('email_confirmation_enabled')
+      if (recoveryEmail.trim()) await setRecoveryEmail(recoveryEmail)
       setRecoveryNotice({ code: await createRecoveryCode() })
     } catch (error) {
       setRecoveryNotice(null)
@@ -95,12 +87,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function resetPassword(username: string, code: string, newPassword: string) {
-    const { data, error } = await supabase.rpc('reset_password_with_code', {
-      username: normalizeUsername(username),
-      code,
-      new_password: newPassword,
-    })
+  /** Runs a reset RPC; on success signs in with the new password and shows the new recovery code. */
+  async function finishReset(
+    rpc: string,
+    args: Record<string, string>,
+    username: string,
+    newPassword: string,
+  ) {
+    const { data, error } = await supabase.rpc(rpc, args)
     if (error) throw error
     const result = data as { ok: boolean; code?: string }
     if (!result.ok || !result.code) throw new RecoveryRejectedError()
@@ -112,6 +106,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRecoveryNotice(null)
       throw signInError
     }
+  }
+
+  async function resetPassword(username: string, code: string, newPassword: string) {
+    const args = { username: normalizeUsername(username), code, new_password: newPassword }
+    await finishReset('reset_password_with_code', args, username, newPassword)
+  }
+
+  async function resetPasswordWithEmail(username: string, token: string, newPassword: string) {
+    const args = { username: normalizeUsername(username), token, new_password: newPassword }
+    await finishReset('reset_password_with_email_token', args, username, newPassword)
   }
 
   async function signOut() {
@@ -131,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signUp,
         resetPassword,
+        resetPasswordWithEmail,
         signOut,
       }}
     >

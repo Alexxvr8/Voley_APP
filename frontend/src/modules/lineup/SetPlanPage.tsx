@@ -126,7 +126,8 @@ function SetPlanEditor({ team, match, players, calledUp }: SetPlanEditorProps) {
         match={match}
         backHref={teamPath('partidos')}
         matchPath={teamPath(`partidos/${match.id}`)}
-        showStaffTabs
+        showManagement
+        showRotation={team.enabledModules.includes('lineup')}
       />
       <div>
         <p className="text-sm text-slate-500">

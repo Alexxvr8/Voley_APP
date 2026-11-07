@@ -11,7 +11,7 @@ Voley_APP/
 ├── frontend/        La app que se ve en el móvil (React + Vite, PWA)
 ├── backend/         Base de datos, permisos y lógica de servidor (Supabase)
 ├── docs/especificacion.md  Qué hace la app y por qué (fuente de verdad)
-├── .github/workflows/  Tarea programada que evita que Supabase se pause (ver backend/README.md)
+├── .github/workflows/  CI (lint, formato, tests, build) y la tarea que evita que Supabase se pause
 ├── CLAUDE.md        Reglas del proyecto para el asistente de código
 └── package.json     Atajos para lanzar el frontend desde la raíz
 ```
@@ -38,6 +38,7 @@ npm run dev          # http://localhost:5173
 | `npm run dev` | Servidor de desarrollo con recarga automática |
 | `npm run build` | Comprueba los tipos y genera el build de producción en `frontend/dist` |
 | `npm run preview` | Sirve el build para probar la PWA y el modo sin conexión |
+| `npm test` | Tests unitarios (Vitest) |
 | `npm run lint` | Revisa el código con ESLint |
 | `npm run format` | Da formato al código con Prettier (`format:check` solo comprueba) |
 

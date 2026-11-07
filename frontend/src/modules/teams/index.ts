@@ -1,4 +1,4 @@
-// Registration of the team settings module: name, join codes, pending players, members and
+// Registration of the team settings module: details, sections, join codes, pending players, members and
 // training schedule. Coach only.
 import type { ModuleDefinition } from '@/core/modules/types'
 import { TeamSettingsPage } from './TeamSettingsPage'

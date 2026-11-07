@@ -6,7 +6,14 @@ import { Card } from '@/shared/ui/Card'
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog'
 import { SECONDARY_BUTTON_CLASS } from '@/shared/ui/form'
 import { PageMessage } from '@/shared/ui/PageMessage'
-import { useDeleteMatch, useMatches, useUpdateMatch } from './api'
+import {
+  useDeleteMatch,
+  useMatches,
+  useSaveOpponent,
+  useTeamOpponents,
+  useTeamVenues,
+  useUpdateMatch,
+} from './api'
 import { MatchForm } from './components/MatchForm'
 
 export function EditMatchPage() {
@@ -15,13 +22,18 @@ export function EditMatchPage() {
   const teamPath = useTeamPath()
   const navigate = useNavigate()
   const matches = useMatches(team.id)
+  const venues = useTeamVenues(team.id)
+  const opponents = useTeamOpponents(team.id)
   const updateMatch = useUpdateMatch(team.id, matchId)
   const deleteMatch = useDeleteMatch(team.id)
+  const saveOpponent = useSaveOpponent(team.id)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   if (!hasRole(role, 'assistant'))
     return <PageMessage>No tienes acceso a esta sección.</PageMessage>
-  if (matches.isPending) return <PageMessage>Cargando…</PageMessage>
+  if (matches.isPending || venues.isPending || opponents.isPending) {
+    return <PageMessage>Cargando…</PageMessage>
+  }
   if (matches.isError)
     return <PageMessage>No se ha podido cargar el partido. ¿Hay conexión?</PageMessage>
   const match = matches.data.find((m) => m.id === matchId)
@@ -41,9 +53,12 @@ export function EditMatchPage() {
           submitLabel="Guardar cambios"
           busy={updateMatch.isPending}
           failed={updateMatch.isError}
-          onSubmit={(changes) =>
+          venues={venues.data ?? []}
+          opponents={opponents.data ?? []}
+          onSubmit={(changes, addOpponent) => {
+            if (addOpponent) saveOpponent.mutate(changes.opponent)
             updateMatch.mutate(changes, { onSuccess: () => navigate(matchPath) })
-          }
+          }}
         />
       </Card>
       <button

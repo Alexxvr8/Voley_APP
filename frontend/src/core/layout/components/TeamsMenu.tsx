@@ -1,4 +1,5 @@
-// The app menu: the user's teams with a "+" to add one. The open team unfolds its sections below its name.
+// The app menu: the user's teams (with their colour) and a "+" to add one. The open team unfolds its
+// sections below its name.
 import { Link, NavLink } from 'react-router'
 import { useMyTeams } from '@/core/teams/api'
 import { ROLE_LABELS } from '@/shared/domain/labels'
@@ -45,10 +46,18 @@ export function TeamsMenu({ onNavigate }: { onNavigate?: () => void }) {
                 <Link
                   to={`/equipos/${team.id}`}
                   onClick={onNavigate}
-                  className={`block rounded-lg px-3 py-2 ${isOpen ? 'bg-blue-800' : 'hover:bg-blue-800/60'}`}
+                  style={{ borderLeftColor: team.color }}
+                  className={`block rounded-lg border-l-4 px-3 py-2 ${isOpen ? 'bg-blue-800' : 'hover:bg-blue-800/60'}`}
                 >
-                  <span className="block truncate font-semibold">{team.name}</span>
-                  <span className="block text-xs text-blue-200">
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="size-3 shrink-0 rounded-full ring-2 ring-white/70"
+                      style={{ backgroundColor: team.color }}
+                      aria-hidden
+                    />
+                    <span className="truncate font-semibold">{team.name}</span>
+                  </span>
+                  <span className="block pl-5 text-xs text-blue-200">
                     {team.pending ? 'Pendiente de aceptar' : ROLE_LABELS[team.role]}
                   </span>
                 </Link>

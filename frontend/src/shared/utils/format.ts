@@ -54,3 +54,25 @@ export function shirtNumber(player: Player): string {
 export function byShirtNumber(a: Player, b: Player): number {
   return (a.number ?? 1000) - (b.number ?? 1000)
 }
+
+/** 45 → `45 min`, 60 → `1 h`, 75 → `1 h 15 min`. */
+export function formatDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  if (hours === 0) return `${rest} min`
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`
+}
+
+/** `18:00` minus 45 minutes → `17:15`. */
+export function timeMinus(time: string, minutes: number): string {
+  const [hours, mins] = time.split(':').map(Number)
+  const total = (((hours * 60 + mins - minutes) % 1440) + 1440) % 1440
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
+}
+
+/** Warm-up as shown to the team: `45 min (desde 17:15)`, or just `45 min` without a match time. */
+export function formatWarmup(minutes: number | null, matchTime: string): string {
+  if (!minutes) return ''
+  const duration = formatDuration(minutes)
+  return matchTime ? `${duration} (desde ${timeMinus(matchTime, minutes)})` : duration
+}

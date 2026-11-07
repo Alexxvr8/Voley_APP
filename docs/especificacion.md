@@ -27,7 +27,7 @@ Cada usuario se registra por su cuenta y entra en un equipo con un código; el r
 - Registro con usuario y contraseña. Por debajo se guarda como `usuario@<dominio-interno>` para usar Supabase Auth sin pedir email real.
 - La sesión se renueva automáticamente: el usuario solo vuelve a loguearse si cierra sesión o pasa mucho tiempo sin abrir la app.
 - Casilla de consentimiento al registrarse (menores de 14 años necesitan autorización de sus padres en España). No se guardan DNI ni teléfonos de jugadores.
-- Recuperar contraseña: con el **código de recuperación** que se muestra al crear la cuenta (usuario + código + contraseña nueva), sin ayuda de nadie. Respaldo: el entrenador pone una contraseña temporal. Recuperación por email opcional: pendiente de un servicio de envío gratuito.
+- Recuperar contraseña: con el **código de recuperación** que se muestra al crear la cuenta (usuario + código + contraseña nueva), sin ayuda de nadie. Si no tienes el código, **por correo**: con un correo opcional guardado al registrarte o en "Mi cuenta" (nadie del equipo lo ve), llega un enlace de un solo uso que caduca en 1 hora, sin molestar al entrenador. Último respaldo: el entrenador pone una contraseña temporal.
 - Al crear la cuenta se pide la contraseña dos veces.
 
 **Unirse a un equipo**
@@ -66,7 +66,7 @@ Siete módulos forman el núcleo; el plan de partido por set es el que más trab
 
 - **Calendario mensual** con una burbuja en cada día con evento: azul para partido, verde para entrenamiento. Al tocar un día se ve lo que hay; debajo, los próximos partidos.
 - Los entrenamientos salen del horario semanal del equipo; el staff puede cancelar un día suelto.
-- Detalle: rival, fecha, hora de calentamiento, hora de partido, pabellón (con enlace de Google Maps pegado por el entrenador y el mapa visible en la app), local/visitante, notas y, una vez jugado, el resultado por sets.
+- Detalle: rival, fecha, hora de partido (24 h), calentamiento como duración antes del partido (de 15 en 15 minutos, p. ej. "45 min (desde 17:15)"), pabellón (con enlace de Google Maps pegado por el entrenador y el mapa visible en la app), local/visitante, notas y, una vez jugado, el resultado por sets.
 - Botón de disponibilidad: Sí / No / Duda, con comentario opcional.
 - Los jugadores ven si están convocados.
 
@@ -171,16 +171,19 @@ La pieza clave es `team_members`: une usuario, equipo y rol, y todas las reglas 
 | Tabla | Campos principales | Notas |
 | --- | --- | --- |
 | `profiles` | id (= auth user), username, display\_name | Uno por cuenta |
-| `teams` | id, name, category, season, default\_system, enabled\_modules, settings, created\_by | `enabled_modules` = lista de módulos activos; `settings` incluye `mvp_ranking_visible` |
+| `teams` | id, name, category, season, color, default\_system, enabled\_modules, settings, created\_by | `enabled_modules` = lista de módulos activos; `settings` incluye `mvp_ranking_visible` |
 | `team_members` | team\_id, user\_id, role, player\_id | role: coach / assistant / player; player\_id enlaza con la ficha |
 | `join_codes` | team\_id, code, role, active, expires\_at | Un código por rol, regenerable |
 | `players` | id, team\_id, first\_name, last\_name, birth\_year, number, main\_position, other\_positions, training\_days, competes | Ficha de plantilla, puede no tener cuenta. `competes = false`: solo entrena |
-| `matches` | id, team\_id, opponent, date, warmup\_time, match\_time, venue, maps\_url, home\_away, status, sets\_result, notes, mvp\_status, mvp\_closes\_at, mvp\_winners | status: scheduled / played / cancelled; mvp\_status: closed / open / tie\_pending / finished |
+| `matches` | id, team\_id, opponent, date, match\_time, warmup\_minutes, venue, maps\_url, home\_away, status, sets\_result, notes, mvp\_status, mvp\_closes\_at, mvp\_winners | status: scheduled / played / cancelled; mvp\_status: closed / open / tie\_pending / finished |
 | `availability` | match\_id, player\_id, status, comment, updated\_at | status: yes / no / maybe |
 | `callups` | match\_id, player\_id, number, positions | Convocados; dorsal y posiciones del partido (vacío = los de la ficha) |
 | `training_slots` | id, team\_id, weekday, start\_time, end\_time, venue, maps\_url | Horario semanal de entrenamientos |
 | `training_cancellations` | slot\_id, date | Entrenamiento que no se hace un día concreto |
 | `account_recovery` | user\_id, code\_hash, failed\_attempts, locked\_until | Código de recuperación (solo el hash). Sin acceso directo: solo vía RPC |
+| `account_recovery_email` | user\_id, email, token\_hash, token\_expires\_at | Correo de recuperación opcional y enlace de un solo uso. Sin acceso directo |
+| `team_venues` | id, team\_id, name, maps\_url | Pabellones habituales |
+| `team_opponents` | id, team\_id, name | Rivales habituales |
 | `set_plans` | id, match\_id, set\_number, system, start\_rotation, rotation, libero\_id, second\_libero\_id, planned\_subs, updated\_at, updated\_by | rotation = zona 1–6 → player\_id |
 | `mvp_votes` | match\_id, voter\_user\_id, voted\_player\_id, created\_at | Única por votante y votada; máx. 2 por votante. Sin acceso directo: solo vía RPC |
 | `league_table` | team\_id, rows, updated\_at | Tabla no oficial, filas en JSON |
@@ -242,6 +245,13 @@ Cada decisión cerrada se añade aquí con su fecha; este documento es la refere
 | 2026-11-07 | Los jugadores tienen varias posiciones (ficha editable) y en cada partido pueden cubrir varias; en la rotación pueden cambiar de posición entre sets |
 | 2026-11-07 | Pabellones con enlace de Google Maps y mapa incrustado (sin clave de API); también en el horario de entrenamientos |
 | 2026-11-07 | Crear, editar y borrar partidos y marcar el resultado por sets desde el propio partido; la lista de resultados y la tabla siguen en el módulo Resultados |
+| 2026-11-07 | Recuperación por correo (Brevo, Edge Function `send-reset-email`) para quien pierda el código, sin pasar por el entrenador |
+| 2026-11-07 | Un equipo nunca se queda sin entrenador; el entrenador puede transferirlo, borrarlo (escribiendo su nombre) y activar o desactivar secciones. Los demás pueden salir del equipo |
+| 2026-11-07 | Ajustes: sistema predeterminado, color del equipo (20 colores, visible en el menú), pabellones con enlace de Maps y rivales habituales; en el partido se eligen de la lista o se escriben a mano |
+| 2026-11-07 | Horas siempre en 24 h (selectores propios); calentamiento como duración en pasos de 15 min |
+| 2026-11-07 | Comentario opcional en la disponibilidad; borrar fichas de la plantilla |
+| 2026-11-07 | Puede haber varios partidos contra el mismo rival |
+| 2026-11-07 | Tests unitarios (Vitest) y CI en GitHub Actions: lint, formato, tests y build en cada subida |
 | 2026-11-07 | Calidad de código: ESLint (flat config, typescript-eslint, reglas de hooks) y Prettier en `frontend/` |
 
 **Temas abiertos**

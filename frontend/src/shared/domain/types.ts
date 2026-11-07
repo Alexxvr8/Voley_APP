@@ -14,6 +14,8 @@ export interface Team {
   name: string
   category: string
   season: string
+  /** Base colour shown next to the team name in the menu, `#rrggbb`. */
+  color: string
   defaultSystem: GameSystem
   /** Ids of the active modules, matching `ModuleDefinition.id`. */
   enabledModules: string[]
@@ -25,6 +27,7 @@ export interface MyTeam {
   name: string
   category: string
   season: string
+  color: string
   role: TeamRole
   /** Roster entry linked to the user's account in this team, if any. */
   playerId: string | null
@@ -58,8 +61,9 @@ export interface Match {
   /** Local date, `YYYY-MM-DD`. */
   date: string
   /** `HH:MM`, empty if not set. */
-  warmupTime: string
   matchTime: string
+  /** Warm-up before the match, in minutes (multiples of 15); null if not set. */
+  warmupMinutes: number | null
   venue: string
   mapsUrl: string
   homeAway: 'home' | 'away'
@@ -80,6 +84,13 @@ export interface Callup {
 export interface AvailabilityEntry {
   status: AvailabilityStatus
   comment?: string
+}
+
+/** One of the team's usual venues, picked when creating matches and trainings. */
+export interface TeamVenue {
+  id: string
+  name: string
+  mapsUrl: string
 }
 
 /** A weekly training: every `weekday` (1 = Monday … 7 = Sunday) from `startTime` to `endTime`. */

@@ -9,19 +9,23 @@ interface MatchHeaderProps {
   backHref: string
   /** Base path of the match, e.g. `/equipos/<team>/partidos/<match>`. */
   matchPath: string
-  /** Staff also get the Gestión and Rotación tabs. */
-  showStaffTabs: boolean
+  /** Staff get the Gestión tab. */
+  showManagement: boolean
+  /** Staff get the Rotación tab when the team has the lineup section on. */
+  showRotation: boolean
 }
 
-export function MatchHeader({ match, backHref, matchPath, showStaffTabs }: MatchHeaderProps) {
+export function MatchHeader({
+  match,
+  backHref,
+  matchPath,
+  showManagement,
+  showRotation,
+}: MatchHeaderProps) {
   const tabs = [
     { label: 'Info', to: matchPath },
-    ...(showStaffTabs
-      ? [
-          { label: 'Gestión', to: `${matchPath}/gestion` },
-          { label: 'Rotación', to: `${matchPath}/rotacion` },
-        ]
-      : []),
+    ...(showManagement ? [{ label: 'Gestión', to: `${matchPath}/gestion` }] : []),
+    ...(showRotation ? [{ label: 'Rotación', to: `${matchPath}/rotacion` }] : []),
   ]
 
   return (

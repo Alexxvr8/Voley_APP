@@ -9,6 +9,7 @@ import type {
   SetScore,
   Team,
   TeamRole,
+  TeamVenue,
   TrainingCancellation,
   TrainingSlot,
 } from './types'
@@ -23,6 +24,7 @@ export interface TeamRow {
   name: string
   category: string
   season: string
+  color: string
   default_system: string
   enabled_modules: string[]
 }
@@ -33,6 +35,7 @@ export function toTeam(row: TeamRow): Team {
     name: row.name,
     category: row.category,
     season: row.season,
+    color: row.color,
     defaultSystem: row.default_system as GameSystem,
     enabledModules: row.enabled_modules,
   }
@@ -44,6 +47,7 @@ export interface MyTeamRow {
   name: string
   category: string
   season: string
+  color: string
   role: string
   player_id: string | null
   pending: boolean
@@ -55,6 +59,7 @@ export function toMyTeam(row: MyTeamRow): MyTeam {
     name: row.name,
     category: row.category,
     season: row.season,
+    color: row.color,
     role: row.role as TeamRole,
     playerId: row.player_id,
     pending: row.pending,
@@ -89,8 +94,8 @@ export interface MatchRow {
   id: string
   opponent: string
   date: string
-  warmup_time: string | null
   match_time: string | null
+  warmup_minutes: number | null
   venue: string
   maps_url: string
   home_away: string
@@ -104,8 +109,8 @@ export function toMatch(row: MatchRow): Match {
     id: row.id,
     opponent: row.opponent,
     date: row.date,
-    warmupTime: shortTime(row.warmup_time),
     matchTime: shortTime(row.match_time),
+    warmupMinutes: row.warmup_minutes,
     venue: row.venue,
     mapsUrl: row.maps_url,
     homeAway: row.home_away === 'away' ? 'away' : 'home',
@@ -133,6 +138,10 @@ export function toTrainingSlot(row: TrainingSlotRow): TrainingSlot {
     venue: row.venue,
     mapsUrl: row.maps_url,
   }
+}
+
+export function toTeamVenue(row: { id: string; name: string; maps_url: string }): TeamVenue {
+  return { id: row.id, name: row.name, mapsUrl: row.maps_url }
 }
 
 export function toTrainingCancellation(row: {

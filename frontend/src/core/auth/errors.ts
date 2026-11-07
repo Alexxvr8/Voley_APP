@@ -1,6 +1,6 @@
 // Maps auth and recovery errors to messages a young player can understand.
 import { isAuthError } from '@supabase/supabase-js'
-import { MIN_PASSWORD_LENGTH, RecoveryRejectedError } from './auth'
+import { MIN_PASSWORD_LENGTH, RecoveryRejectedError } from './accounts'
 
 export function authErrorMessage(error: unknown): string {
   if (error instanceof RecoveryRejectedError) {

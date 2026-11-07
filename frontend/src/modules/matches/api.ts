@@ -5,6 +5,7 @@ import { supabase } from '@/core/supabase/client'
 import {
   toMatch,
   toPlayer,
+  toTeamVenue,
   toTrainingCancellation,
   toTrainingSlot,
   type MatchRow,
@@ -152,20 +153,24 @@ export function useSetAvailability() {
       matchId,
       playerId,
       status,
+      comment,
     }: {
       matchId: string
       playerId: string
       status: AvailabilityStatus
+      /** Optional note ("depende de un examen"); left as it was when not given. */
+      comment?: string
     }) =>
       check(
         await supabase.from('availability').upsert({
           match_id: matchId,
           player_id: playerId,
           status,
+          ...(comment === undefined ? {} : { comment }),
           updated_at: new Date().toISOString(),
         }),
       ),
-    onMutate: async ({ matchId, playerId, status }) => {
+    onMutate: async ({ matchId, playerId, status, comment }) => {
       const matchKey = keys.availability(matchId)
       const playerKey = keys.myAvailability(playerId)
       await queryClient.cancelQueries({ queryKey: matchKey })
@@ -174,7 +179,11 @@ export function useSetAvailability() {
         match: queryClient.getQueryData<Record<string, AvailabilityEntry>>(matchKey),
         player: queryClient.getQueryData<Record<string, AvailabilityStatus>>(playerKey),
       }
-      queryClient.setQueryData(matchKey, { ...previous.match, [playerId]: { status } })
+      const before = previous.match?.[playerId]
+      queryClient.setQueryData(matchKey, {
+        ...previous.match,
+        [playerId]: { status, comment: comment ?? before?.comment },
+      })
       queryClient.setQueryData(playerKey, { ...previous.player, [matchId]: status })
       return previous
     },
@@ -252,7 +261,8 @@ export function useSetCalledUp(matchId: string) {
 export interface MatchInput {
   opponent: string
   date: string
-  warmupTime: string
+  /** Minutes of warm-up before the match (multiples of 15), null if not set. */
+  warmupMinutes: number | null
   matchTime: string
   venue: string
   mapsUrl: string
@@ -264,7 +274,7 @@ function toMatchColumns(match: MatchInput) {
   return {
     opponent: match.opponent,
     date: match.date,
-    warmup_time: match.warmupTime || null,
+    warmup_minutes: match.warmupMinutes,
     match_time: match.matchTime || null,
     venue: match.venue,
     maps_url: match.mapsUrl,
@@ -351,5 +361,46 @@ export function useSetCallupDetails(matchId: string) {
     },
     onError: (_error, _input, previous) => queryClient.setQueryData(callupsKey, previous),
     onSettled: () => queryClient.invalidateQueries({ queryKey: callupsKey }),
+  })
+}
+
+/** The team's usual venues, offered in the match form. */
+export function useTeamVenues(teamId: string) {
+  return useQuery({
+    queryKey: ['venues', teamId],
+    queryFn: async () =>
+      (
+        check(
+          await supabase
+            .from('team_venues')
+            .select('id, name, maps_url')
+            .eq('team_id', teamId)
+            .order('name'),
+        ) as { id: string; name: string; maps_url: string }[]
+      ).map(toTeamVenue),
+  })
+}
+
+/** Names of the team's usual opponents, suggested in the match form. */
+export function useTeamOpponents(teamId: string) {
+  return useQuery({
+    queryKey: ['opponents', teamId],
+    queryFn: async () =>
+      (
+        check(
+          await supabase.from('team_opponents').select('name').eq('team_id', teamId).order('name'),
+        ) as {
+          name: string
+        }[]
+      ).map((row) => row.name),
+  })
+}
+
+/** Adds a name typed in the match form to the team's opponents list. */
+export function useSaveOpponent(teamId: string) {
+  return useMutation({
+    mutationFn: async (name: string) =>
+      check(await supabase.from('team_opponents').insert({ team_id: teamId, name })),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['opponents', teamId] }),
   })
 }

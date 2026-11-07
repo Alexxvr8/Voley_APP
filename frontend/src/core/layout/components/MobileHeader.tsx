@@ -16,7 +16,16 @@ export function MobileHeader({ onOpenMenu }: { onOpenMenu: () => void }) {
         ☰
       </button>
       <div className="min-w-0">
-        <p className="truncate text-lg leading-tight font-bold">{openTeam?.name ?? 'Voley APP'}</p>
+        <p className="flex items-center gap-2 truncate text-lg leading-tight font-bold">
+          {openTeam && (
+            <span
+              className="size-3 shrink-0 rounded-full ring-2 ring-white/70"
+              style={{ backgroundColor: openTeam.color }}
+              aria-hidden
+            />
+          )}
+          {openTeam?.name ?? 'Voley APP'}
+        </p>
         {openTeam && <p className="text-xs text-blue-200">{ROLE_LABELS[openTeam.role]}</p>}
       </div>
     </header>

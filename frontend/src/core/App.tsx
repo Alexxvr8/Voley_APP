@@ -1,24 +1,21 @@
 // App root: auth gate, then the router. Every screen shares the shell with the teams menu.
 // Inside `/equipos/:teamId`: the screens of the team's enabled modules allowed for the user's role.
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import {
-  createBrowserRouter,
-  Navigate,
-  Outlet,
-  RouterProvider,
-  type RouteObject,
-} from 'react-router'
+import { createBrowserRouter, Outlet, RouterProvider, type RouteObject } from 'react-router'
 import { AccountPage } from '@/core/account/AccountPage'
 import { AuthProvider, useAuth } from '@/core/auth/auth'
+import { EmailResetScreen } from '@/core/auth/EmailResetScreen'
 import { LoginPage } from '@/core/auth/LoginPage'
 import { RecoveryCodeScreen } from '@/core/auth/RecoveryCodeScreen'
 import { AppShell } from '@/core/layout/AppShell'
+import { ModuleCatalogContext } from '@/core/modules/catalog'
 import { modules } from '@/core/modules/registry'
 import type { ModuleDefinition } from '@/core/modules/types'
 import { queryClient } from '@/core/query/queryClient'
 import { AddTeamPage } from '@/core/teams/AddTeamPage'
 import { CurrentTeamProvider, hasRole, useCurrentTeam } from '@/core/teams/currentTeam'
+import { TeamHome } from '@/core/teams/TeamHome'
 import { TeamsPage } from '@/core/teams/TeamsPage'
 import { PageMessage } from '@/shared/ui/PageMessage'
 
@@ -58,20 +55,34 @@ const router = createBrowserRouter([
             <Outlet />
           </CurrentTeamProvider>
         ),
-        children: [
-          { index: true, element: <Navigate to="partidos" replace /> },
-          ...moduleRoutes,
-          notFound,
-        ],
+        children: [{ index: true, element: <TeamHome /> }, ...moduleRoutes, notFound],
       },
       notFound,
     ],
   },
 ])
 
+/** Token and username of a reset email link opened in the browser, if any. */
+function readEmailResetLink(): { token: string; username: string } | null {
+  const params = new URLSearchParams(window.location.search)
+  const token = params.get('recuperar')
+  const username = params.get('usuario')
+  return token && username ? { token, username } : null
+}
+
 /** Shows the login screen until there is a session; the stored session is restored offline too. */
 function AuthGate() {
   const { user, recoveryNotice } = useAuth()
+  const [emailReset, setEmailReset] = useState(readEmailResetLink)
+
+  function leaveEmailReset() {
+    window.history.replaceState(null, '', '/')
+    setEmailReset(null)
+  }
+
+  if (emailReset) {
+    return <EmailResetScreen {...emailReset} onDone={leaveEmailReset} />
+  }
   if (user === undefined || recoveryNotice === 'issuing') return null
   if (recoveryNotice) return <RecoveryCodeScreen code={recoveryNotice.code} />
   if (!user) return <LoginPage />
@@ -81,9 +92,11 @@ function AuthGate() {
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AuthGate />
-      </AuthProvider>
+      <ModuleCatalogContext.Provider value={modules}>
+        <AuthProvider>
+          <AuthGate />
+        </AuthProvider>
+      </ModuleCatalogContext.Provider>
     </QueryClientProvider>
   )
 }

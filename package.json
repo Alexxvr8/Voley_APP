@@ -9,6 +9,7 @@
     "preview": "npm --prefix frontend run preview",
     "lint": "npm --prefix frontend run lint",
     "format": "npm --prefix frontend run format",
-    "format:check": "npm --prefix frontend run format:check"
+    "format:check": "npm --prefix frontend run format:check",
+    "test": "npm --prefix frontend test"
   }
 }

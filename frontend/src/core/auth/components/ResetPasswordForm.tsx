@@ -41,8 +41,8 @@ export function ResetPasswordForm({ onBack }: { onBack: () => void }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <p className="text-sm text-slate-600">
-        Usa el código de recuperación que guardaste al crear la cuenta. Si no lo tienes, pide al
-        entrenador que te ponga una contraseña temporal.
+        Usa el código de recuperación que guardaste al crear la cuenta. Si no lo tienes, elige "Por
+        correo".
       </p>
       <UsernameField value={username} onChange={setUsername} />
       <label className={LABEL_CLASS}>

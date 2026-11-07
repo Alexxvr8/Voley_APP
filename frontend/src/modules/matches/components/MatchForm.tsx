@@ -1,5 +1,7 @@
-// Match fields form, shared by "Nuevo partido" and "Editar partido". Includes the Google Maps link.
+// Match fields form, shared by "Nuevo partido" and "Editar partido": opponent (suggested from the
+// team's list or typed), date, 24 h match time, warm-up duration, venue (team list or another) and notes.
 import { useState, type FormEvent } from 'react'
+import type { TeamVenue } from '@/shared/domain/types'
 import {
   ERROR_CLASS,
   INPUT_CLASS,
@@ -7,46 +9,89 @@ import {
   LABEL_TEXT_CLASS,
   PRIMARY_BUTTON_CLASS,
 } from '@/shared/ui/form'
-import { isMapsLink } from '@/shared/utils/maps'
+import { TimeSelect } from '@/shared/ui/TimeSelect'
+import { VenuePicker } from '@/shared/ui/VenuePicker'
+import { isValidMapsUrl } from '@/shared/utils/maps'
+import { formatDuration } from '@/shared/utils/format'
 import type { MatchInput } from '../api'
+
+/** Warm-up choices: none, then every 15 minutes up to 2 hours. */
+const WARMUP_OPTIONS = Array.from({ length: 8 }, (_, i) => (i + 1) * 15)
 
 interface MatchFormProps {
   initial: MatchInput
   submitLabel: string
   busy: boolean
   failed: boolean
-  onSubmit: (match: MatchInput) => void
+  venues: TeamVenue[]
+  /** Names in the team's opponents list. */
+  opponents: string[]
+  /** `saveOpponent`: also add the typed opponent to the team's list. */
+  onSubmit: (match: MatchInput, saveOpponent: boolean) => void
 }
 
-export function MatchForm({ initial, submitLabel, busy, failed, onSubmit }: MatchFormProps) {
+export function MatchForm({
+  initial,
+  submitLabel,
+  busy,
+  failed,
+  venues,
+  opponents,
+  onSubmit,
+}: MatchFormProps) {
   const [match, setMatch] = useState<MatchInput>(initial)
+  const [saveOpponent, setSaveOpponent] = useState(false)
   const update = (changes: Partial<MatchInput>) => setMatch({ ...match, ...changes })
-  const badLink = match.mapsUrl.trim() !== '' && !isMapsLink(match.mapsUrl)
+  const badLink = !isValidMapsUrl(match.mapsUrl)
+  const newOpponent = match.opponent.trim() !== '' && !opponents.includes(match.opponent.trim())
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
     if (badLink) return
-    onSubmit({
-      ...match,
-      opponent: match.opponent.trim(),
-      venue: match.venue.trim(),
-      mapsUrl: match.mapsUrl.trim(),
-      notes: match.notes.trim(),
-    })
+    onSubmit(
+      {
+        ...match,
+        opponent: match.opponent.trim(),
+        venue: match.venue.trim(),
+        mapsUrl: match.mapsUrl.trim(),
+        notes: match.notes.trim(),
+      },
+      newOpponent && saveOpponent,
+    )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
-      <label className={`col-span-2 ${LABEL_CLASS}`}>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <label className={LABEL_CLASS}>
         <span className={LABEL_TEXT_CLASS}>Rival</span>
         <input
           className={INPUT_CLASS}
+          list="team-opponents"
           value={match.opponent}
           onChange={(e) => update({ opponent: e.target.value })}
+          placeholder={opponents.length ? 'Elige de tu lista o escribe otro' : 'Nombre del rival'}
+          autoComplete="off"
           required
         />
+        <datalist id="team-opponents">
+          {opponents.map((name) => (
+            <option key={name} value={name} />
+          ))}
+        </datalist>
       </label>
-      <label className={`col-span-2 ${LABEL_CLASS}`}>
+      {newOpponent && (
+        <label className="flex items-center gap-2 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            checked={saveOpponent}
+            onChange={(e) => setSaveOpponent(e.target.checked)}
+            className="size-4 accent-blue-800"
+          />
+          Guardar "{match.opponent.trim()}" en la lista de rivales
+        </label>
+      )}
+
+      <label className={LABEL_CLASS}>
         <span className={LABEL_TEXT_CLASS}>Fecha</span>
         <input
           className={INPUT_CLASS}
@@ -56,49 +101,45 @@ export function MatchForm({ initial, submitLabel, busy, failed, onSubmit }: Matc
           required
         />
       </label>
-      <label className={LABEL_CLASS}>
-        <span className={LABEL_TEXT_CLASS}>Calentamiento</span>
-        <input
-          className={INPUT_CLASS}
-          type="time"
-          value={match.warmupTime}
-          onChange={(e) => update({ warmupTime: e.target.value })}
-        />
-      </label>
-      <label className={LABEL_CLASS}>
-        <span className={LABEL_TEXT_CLASS}>Partido</span>
-        <input
-          className={INPUT_CLASS}
-          type="time"
-          value={match.matchTime}
-          onChange={(e) => update({ matchTime: e.target.value })}
-        />
-      </label>
-      <label className={`col-span-2 ${LABEL_CLASS}`}>
-        <span className={LABEL_TEXT_CLASS}>Pabellón</span>
-        <input
-          className={INPUT_CLASS}
-          value={match.venue}
-          onChange={(e) => update({ venue: e.target.value })}
-        />
-      </label>
-      <label className={`col-span-2 ${LABEL_CLASS}`}>
-        <span className={LABEL_TEXT_CLASS}>Enlace de Google Maps (opcional)</span>
-        <input
-          className={INPUT_CLASS}
-          type="url"
-          inputMode="url"
-          value={match.mapsUrl}
-          onChange={(e) => update({ mapsUrl: e.target.value })}
-          placeholder="https://maps.app.goo.gl/…"
-        />
-        <span className="text-xs text-slate-500">
-          En Google Maps: Compartir → Copiar enlace. Si no pones enlace, el mapa busca el nombre del
-          pabellón.
-        </span>
-      </label>
-      {badLink && <p className={`col-span-2 ${ERROR_CLASS}`}>Ese enlace no es de Google Maps.</p>}
-      <fieldset className="col-span-2">
+
+      <div className="flex flex-wrap gap-4">
+        <div className={LABEL_CLASS}>
+          <span className={LABEL_TEXT_CLASS}>Hora del partido</span>
+          <TimeSelect
+            value={match.matchTime}
+            onChange={(matchTime) => update({ matchTime })}
+            step={5}
+            label="Hora del partido"
+            optional
+          />
+        </div>
+        <label className={LABEL_CLASS}>
+          <span className={LABEL_TEXT_CLASS}>Calentamiento</span>
+          <select
+            className={INPUT_CLASS}
+            value={match.warmupMinutes ?? ''}
+            onChange={(e) =>
+              update({ warmupMinutes: e.target.value ? Number(e.target.value) : null })
+            }
+          >
+            <option value="">Sin indicar</option>
+            {WARMUP_OPTIONS.map((minutes) => (
+              <option key={minutes} value={minutes}>
+                {formatDuration(minutes)} antes
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <VenuePicker
+        venues={venues}
+        value={{ venue: match.venue, mapsUrl: match.mapsUrl }}
+        onChange={(place) => update({ venue: place.venue, mapsUrl: place.mapsUrl })}
+        label="Pabellón"
+      />
+
+      <fieldset>
         <legend className={LABEL_TEXT_CLASS}>Juega</legend>
         <div className="mt-2 grid grid-cols-2 gap-2">
           {(['home', 'away'] as const).map((value) => (
@@ -117,7 +158,7 @@ export function MatchForm({ initial, submitLabel, busy, failed, onSubmit }: Matc
           ))}
         </div>
       </fieldset>
-      <label className={`col-span-2 ${LABEL_CLASS}`}>
+      <label className={LABEL_CLASS}>
         <span className={LABEL_TEXT_CLASS}>Notas (opcional)</span>
         <textarea
           className={INPUT_CLASS}
@@ -126,12 +167,8 @@ export function MatchForm({ initial, submitLabel, busy, failed, onSubmit }: Matc
           onChange={(e) => update({ notes: e.target.value })}
         />
       </label>
-      {failed && <p className={`col-span-2 ${ERROR_CLASS}`}>No se ha podido guardar el partido.</p>}
-      <button
-        type="submit"
-        disabled={busy || badLink}
-        className={`col-span-2 ${PRIMARY_BUTTON_CLASS}`}
-      >
+      {failed && <p className={ERROR_CLASS}>No se ha podido guardar el partido.</p>}
+      <button type="submit" disabled={busy || badLink} className={PRIMARY_BUTTON_CLASS}>
         {busy ? 'Guardando…' : submitLabel}
       </button>
     </form>

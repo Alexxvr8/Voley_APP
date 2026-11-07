@@ -1,23 +1,64 @@
-// Accepted members with their role. The coach can give a temporary password to someone who lost theirs.
+// Accepted members with their role. For each one the coach can give a temporary password, remove
+// them from the team or hand the team over (make them coach). Every action asks for confirmation.
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
+import { useAuth } from '@/core/auth/auth'
 import { ROLE_LABELS } from '@/shared/domain/labels'
 import { Card } from '@/shared/ui/Card'
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog'
-import { useCoachResetPassword } from '../api'
+import { useCoachResetPassword, useRemoveMember, useTransferTeam } from '../api'
 import type { Member } from '../members'
 
-export function MembersCard({ teamId, members }: { teamId: string; members: Member[] }) {
-  const resetPassword = useCoachResetPassword(teamId)
-  const [resetting, setResetting] = useState<Member | null>(null)
-  const [temporary, setTemporary] = useState<{ member: Member; password: string } | null>(null)
+type Action = 'password' | 'remove' | 'transfer'
 
-  function confirmReset(member: Member) {
-    resetPassword.mutate(member.userId, {
-      onSuccess: (password) => {
-        setResetting(null)
-        setTemporary({ member, password })
-      },
-    })
+const ACTION_LABELS: Record<Action, string> = {
+  password: 'Contraseña temporal',
+  remove: 'Quitar',
+  transfer: 'Hacer entrenador',
+}
+
+export function MembersCard({ teamId, members }: { teamId: string; members: Member[] }) {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const resetPassword = useCoachResetPassword(teamId)
+  const removeMember = useRemoveMember(teamId)
+  const transferTeam = useTransferTeam(teamId)
+  const [pending, setPending] = useState<{ member: Member; action: Action } | null>(null)
+  const [temporary, setTemporary] = useState<{ member: Member; password: string } | null>(null)
+  const busy = resetPassword.isPending || removeMember.isPending || transferTeam.isPending
+
+  function confirm() {
+    if (!pending) return
+    const { member, action } = pending
+    const done = () => setPending(null)
+    if (action === 'password') {
+      resetPassword.mutate(member.userId, {
+        onSuccess: (password) => {
+          done()
+          setTemporary({ member, password })
+        },
+      })
+    } else if (action === 'remove') {
+      removeMember.mutate(member.userId, { onSuccess: done })
+    } else {
+      // The coach becomes segundo entrenador and loses this screen.
+      transferTeam.mutate(member.userId, { onSuccess: () => navigate(`/equipos/${teamId}`) })
+    }
+  }
+
+  const texts: Record<Action, (name: string) => { title: string; body: string }> = {
+    password: (name) => ({
+      title: `¿Contraseña temporal para ${name}?`,
+      body: 'Su contraseña actual dejará de funcionar. Úsalo solo si no puede recuperarla con su código o su correo.',
+    }),
+    remove: (name) => ({
+      title: `¿Quitar a ${name} del equipo?`,
+      body: 'Dejará de ver el equipo. Su ficha de la plantilla se queda. Podrá volver a entrar con un código.',
+    }),
+    transfer: (name) => ({
+      title: `¿Hacer entrenador a ${name}?`,
+      body: 'Pasará a ser el entrenador del equipo y tú quedarás como segundo entrenador: ya no verás Ajustes.',
+    }),
   }
 
   return (
@@ -28,21 +69,29 @@ export function MembersCard({ teamId, members }: { teamId: string; members: Memb
       </div>
 
       {members.map((member) => (
-        <div key={member.userId} className="flex items-center gap-3 border-t border-slate-100 pt-3">
+        <div
+          key={member.userId}
+          className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-slate-100 pt-3"
+        >
           <div className="min-w-0 flex-1">
             <p className="truncate font-medium text-slate-900">{member.displayName}</p>
             <p className="text-xs text-slate-500">
               @{member.username} · {ROLE_LABELS[member.role]}
             </p>
           </div>
-          {member.role !== 'coach' && (
-            <button
-              type="button"
-              onClick={() => setResetting(member)}
-              className="text-xs font-medium text-blue-800 underline"
-            >
-              Contraseña temporal
-            </button>
+          {member.userId !== user?.id && member.role !== 'coach' && (
+            <div className="flex flex-wrap gap-3">
+              {(Object.keys(ACTION_LABELS) as Action[]).map((action) => (
+                <button
+                  key={action}
+                  type="button"
+                  onClick={() => setPending({ member, action })}
+                  className={`text-xs font-medium underline ${action === 'remove' ? 'text-rose-700' : 'text-blue-800'}`}
+                >
+                  {ACTION_LABELS[action]}
+                </button>
+              ))}
+            </div>
           )}
         </div>
       ))}
@@ -54,16 +103,15 @@ export function MembersCard({ teamId, members }: { teamId: string; members: Memb
           Díselo y que la cambie en "Mi cuenta".
         </div>
       )}
-      {resetting && (
+      {pending && (
         <ConfirmDialog
-          title={`¿Contraseña temporal para ${resetting.displayName}?`}
-          confirmLabel="Crear contraseña"
-          busy={resetPassword.isPending}
-          onCancel={() => setResetting(null)}
-          onConfirm={() => confirmReset(resetting)}
+          title={texts[pending.action](pending.member.displayName).title}
+          confirmLabel={ACTION_LABELS[pending.action]}
+          busy={busy}
+          onCancel={() => setPending(null)}
+          onConfirm={confirm}
         >
-          Su contraseña actual dejará de funcionar. Úsalo solo si la ha olvidado y no tiene su
-          código de recuperación.
+          {texts[pending.action](pending.member.displayName).body}
         </ConfirmDialog>
       )}
     </Card>

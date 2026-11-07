@@ -42,7 +42,8 @@ export function ManagementPage() {
         match={match}
         backHref={teamPath('partidos')}
         matchPath={teamPath(`partidos/${match.id}`)}
-        showStaffTabs
+        showManagement
+        showRotation={team.enabledModules.includes('lineup')}
       />
       <div className="lg:max-w-3xl">
         <CallupList

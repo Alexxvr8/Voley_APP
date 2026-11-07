@@ -42,6 +42,21 @@ export function useCreateTeam() {
   })
 }
 
+/** Leaves a team. The database refuses it for the last coach (they must hand the team over first). */
+export function useLeaveTeam() {
+  return useMutation({
+    mutationFn: async ({ teamId, userId }: { teamId: string; userId: string }) => {
+      const { error } = await supabase
+        .from('team_members')
+        .delete()
+        .eq('team_id', teamId)
+        .eq('user_id', userId)
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: MY_TEAMS_KEY }),
+  })
+}
+
 /** Joins with a code. Fails with code `P0002` when the code does not exist or is inactive. */
 export function useJoinTeam() {
   return useMutation({

@@ -4,11 +4,12 @@ import { queryClient } from '@/core/query/queryClient'
 import { supabase } from '@/core/supabase/client'
 import {
   toPlayer,
+  toTeamVenue,
   toTrainingSlot,
   type PlayerRow,
   type TrainingSlotRow,
 } from '@/shared/domain/rows'
-import type { Position } from '@/shared/domain/types'
+import type { GameSystem, Position, Team } from '@/shared/domain/types'
 import { toMember, type MemberRow } from './members'
 
 /** Role a join code lets in. */
@@ -193,16 +194,165 @@ export interface TeamDetails {
   name: string
   category: string
   season: string
+  /** System every new set starts with. */
+  defaultSystem: GameSystem
 }
 
-/** Renames the team or changes its category and season. Refreshes the menu and the team list. */
+/** Invalidates everything that shows the team's settings (menu, team list, team screens). */
+function refreshTeam(teamId: string) {
+  queryClient.invalidateQueries({ queryKey: ['my-teams'] })
+  queryClient.invalidateQueries({ queryKey: ['team', teamId] })
+}
+
+/** Renames the team or changes its category, season or default system. */
 export function useUpdateTeamDetails(teamId: string) {
   return useMutation({
     mutationFn: async (details: TeamDetails) =>
-      check(await supabase.from('teams').update(details).eq('id', teamId)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-teams'] })
-      queryClient.invalidateQueries({ queryKey: ['team', teamId] })
+      check(
+        await supabase
+          .from('teams')
+          .update({
+            name: details.name,
+            category: details.category,
+            season: details.season,
+            default_system: details.defaultSystem,
+          })
+          .eq('id', teamId),
+      ),
+    onSuccess: () => refreshTeam(teamId),
+  })
+}
+
+/**
+ * Changes one field of the cached team at once (switches and colour react immediately) and goes back
+ * if the server rejects it.
+ */
+function optimisticTeamUpdate<T>(teamId: string, apply: (team: Team, value: T) => Team) {
+  const teamKey = ['team', teamId]
+  return {
+    onMutate: async (value: T) => {
+      await queryClient.cancelQueries({ queryKey: teamKey })
+      const previous = queryClient.getQueryData<Team>(teamKey)
+      if (previous) queryClient.setQueryData(teamKey, apply(previous, value))
+      return { previous }
     },
+    onError: (_error: unknown, _value: T, context: { previous?: Team } | undefined) =>
+      queryClient.setQueryData(teamKey, context?.previous),
+    onSettled: () => refreshTeam(teamId),
+  }
+}
+
+/** Which sections (modules) the team uses. */
+export function useSetEnabledModules(teamId: string) {
+  return useMutation({
+    mutationFn: async (enabledModules: string[]) =>
+      check(
+        await supabase.from('teams').update({ enabled_modules: enabledModules }).eq('id', teamId),
+      ),
+    ...optimisticTeamUpdate<string[]>(teamId, (team, enabledModules) => ({
+      ...team,
+      enabledModules,
+    })),
+  })
+}
+
+/** Makes another member the coach; the current coach becomes segundo entrenador. */
+export function useTransferTeam(teamId: string) {
+  return useMutation({
+    mutationFn: async (newCoach: string) =>
+      check(await supabase.rpc('transfer_team', { team: teamId, new_coach: newCoach })),
+    onSuccess: () => {
+      refreshTeam(teamId)
+      queryClient.invalidateQueries({ queryKey: keys.members(teamId) })
+    },
+  })
+}
+
+/** Deletes the team and everything in it. */
+export function useDeleteTeam(teamId: string) {
+  return useMutation({
+    mutationFn: async () => check(await supabase.from('teams').delete().eq('id', teamId)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-teams'] }),
+  })
+}
+
+export function useTeamVenues(teamId: string) {
+  return useQuery({
+    queryKey: ['venues', teamId],
+    queryFn: async () =>
+      (
+        check(
+          await supabase
+            .from('team_venues')
+            .select('id, name, maps_url')
+            .eq('team_id', teamId)
+            .order('name'),
+        ) as {
+          id: string
+          name: string
+          maps_url: string
+        }[]
+      ).map(toTeamVenue),
+  })
+}
+
+export function useAddVenue(teamId: string) {
+  return useMutation({
+    mutationFn: async (venue: { name: string; mapsUrl: string }) =>
+      check(
+        await supabase
+          .from('team_venues')
+          .insert({ team_id: teamId, name: venue.name, maps_url: venue.mapsUrl }),
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['venues', teamId] }),
+  })
+}
+
+export function useDeleteVenue(teamId: string) {
+  return useMutation({
+    mutationFn: async (venueId: string) =>
+      check(await supabase.from('team_venues').delete().eq('id', venueId)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['venues', teamId] }),
+  })
+}
+
+export function useTeamOpponents(teamId: string) {
+  return useQuery({
+    queryKey: ['opponents', teamId],
+    queryFn: async () =>
+      check(
+        await supabase
+          .from('team_opponents')
+          .select('id, name')
+          .eq('team_id', teamId)
+          .order('name'),
+      ) as {
+        id: string
+        name: string
+      }[],
+  })
+}
+
+export function useAddOpponent(teamId: string) {
+  return useMutation({
+    mutationFn: async (name: string) =>
+      check(await supabase.from('team_opponents').insert({ team_id: teamId, name })),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['opponents', teamId] }),
+  })
+}
+
+export function useDeleteOpponent(teamId: string) {
+  return useMutation({
+    mutationFn: async (opponentId: string) =>
+      check(await supabase.from('team_opponents').delete().eq('id', opponentId)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['opponents', teamId] }),
+  })
+}
+
+export function useSetTeamColor(teamId: string) {
+  return useMutation({
+    mutationFn: async (color: string) =>
+      check(await supabase.from('teams').update({ color }).eq('id', teamId)),
+    ...optimisticTeamUpdate<string>(teamId, (team, color) => ({ ...team, color })),
   })
 }

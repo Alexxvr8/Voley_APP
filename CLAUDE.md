@@ -29,6 +29,7 @@ frontend/              # PWA (React + Vite). Its own package.json
     shared/            # reusable UI components, domain types/labels and utilities
 backend/
   supabase/migrations/ # SQL schema, RLS policies and RPC functions
+  supabase/functions/  # Edge Functions (send-reset-email)
 docs/especificacion.md
 ```
 
@@ -51,6 +52,8 @@ docs/especificacion.md
 - **Idioma del código:** comentarios, docstrings, nombres de identificadores y mensajes de commit en inglés.
 - **Idioma de la interfaz:** todo texto visible para el usuario en español.
 - Valores de dominio fijos en inglés en código y base de datos (posiciones `setter`, `outside`, `middle`, `opposite`, `libero`; roles `coach`, `assistant`, `player`), con su etiqueta en español solo en la interfaz.
+- Horas siempre en 24 h con `shared/ui/TimeSelect` (nunca `<input type="time">`, que depende del idioma del móvil).
+- Lógica pura nueva (cálculos, conversiones) con su test en `*.test.ts`.
 - Diseño móvil primero: los usuarios son jugadores jóvenes con poca soltura tecnológica; las acciones de jugador deben requerir dos toques como máximo.
 - También cómodo en PC (sobre todo para el entrenador): desde `lg` (1024 px) el marco usa barra lateral y las pantallas reparten el contenido en columnas con clases `lg:`. El móvil no cambia.
 - Offline: solo la plantilla (lectura) y las rotaciones (plan por set y modo partido) funcionan sin red; todo lo demás requiere conexión (ver "Funciones online y offline" en la especificación). Ten en cuenta esto al diseñar datos y estado desde el principio.
@@ -61,6 +64,7 @@ Desde la raíz o desde `frontend/`:
 
 - `npm run dev`: servidor de desarrollo
 - `npm run build`: comprobación de tipos y build de producción (debe pasar antes de cada commit)
+- `npm test`: tests unitarios con Vitest (`*.test.ts` junto al código; deben pasar antes de cada commit)
 - `npm run lint`: ESLint (sin errores antes de cada commit)
 - `npm run format`: aplica Prettier; `npm run format:check` solo comprueba
 - `npm run preview`: sirve el build, útil para probar la PWA y el service worker

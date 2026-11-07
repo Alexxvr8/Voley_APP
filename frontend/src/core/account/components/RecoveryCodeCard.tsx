@@ -1,6 +1,6 @@
 // Lets the user replace a lost recovery code; the new one is shown once.
 import { useState } from 'react'
-import { createRecoveryCode } from '@/core/auth/auth'
+import { createRecoveryCode } from '@/core/auth/accounts'
 import { RecoveryCodeBox } from '@/core/auth/components/RecoveryCodeBox'
 import { Card } from '@/shared/ui/Card'
 import { ERROR_CLASS, SECONDARY_BUTTON_CLASS } from '@/shared/ui/form'

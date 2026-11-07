@@ -7,19 +7,23 @@ Infraestructura que comparten todas las pantallas: login, equipos del usuario, n
 | `App.tsx` | Raíz de la app. Sin sesión muestra el login; con sesión, el router. Fuera de un equipo: "Mis equipos" (`/`), añadir equipo (`/equipos/nuevo`) y "Mi cuenta" (`/cuenta`). Dentro de `/equipos/:teamId/…`, las pantallas de los módulos activos que permite el rol |
 | `supabase/client.ts` | Crea el cliente único de Supabase con las variables de entorno. La sesión se guarda en el móvil y se renueva sola |
 | `query/queryClient.ts` | Cliente de TanStack Query: caché de los datos del servidor. Se vacía al cerrar sesión |
-| `auth/auth.tsx` | `AuthProvider` y `useAuth()`: usuario, `signIn`, `signUp`, `resetPassword` (con código de recuperación), `signOut` y el aviso con el código que se muestra una vez |
-| `auth/LoginPage.tsx` + `auth/components/` | Entrar, crear cuenta (contraseña dos veces y consentimiento) y "He olvidado la contraseña" |
+| `auth/auth.tsx` | `AuthProvider` y `useAuth()`: usuario, `signIn`, `signUp` (con correo opcional), `resetPassword` (código), `resetPasswordWithEmail` (enlace del correo), `signOut` y el aviso con el código que se muestra una vez |
+| `auth/accounts.ts` | Sin React: reglas del nombre de usuario, email interno y llamadas de recuperación (crear código, guardar/leer correo, pedir el enlace por correo) |
+| `auth/EmailResetScreen.tsx` | Pantalla que abre el enlace del correo (`/?recuperar=…&usuario=…`): contraseña nueva |
+| `auth/LoginPage.tsx` + `auth/components/` | Entrar, crear cuenta (contraseña dos veces, correo opcional y consentimiento) y "He olvidado la contraseña" (con mi código / por correo) |
 | `auth/RecoveryCodeScreen.tsx` | Pantalla "Guarda tu código de recuperación", tras registrarse o tras recuperar la contraseña |
 | `auth/errors.ts` | Mensajes de error comprensibles y validación de contraseña nueva |
 | `teams/api.ts` | `useMyTeams()` (RPC `my_teams`: equipos, rol y si estás pendiente), `useTeam()`, crear equipo y unirse con código |
 | `teams/currentTeam.tsx` | `CurrentTeamProvider`: el equipo de la URL y tu rol en él. Si estás pendiente, muestra la espera. `useCurrentTeam()`, `useTeamPath()` (enlaces dentro del equipo) y `hasRole()` |
-| `teams/TeamsPage.tsx`, `teams/AddTeamPage.tsx` | "Mis equipos" y el "+" (tengo un código / crear equipo) |
-| `account/AccountPage.tsx` | "Mi cuenta": código de recuperación nuevo, cambiar contraseña, cerrar sesión |
+| `teams/TeamsPage.tsx`, `teams/AddTeamPage.tsx` | "Mis equipos" (con el color de cada equipo y "Salir del equipo" para quien no es entrenador) y el "+" (tengo un código / crear equipo) |
+| `teams/TeamHome.tsx` | `/equipos/:id` abre la primera sección que puedes ver |
+| `account/AccountPage.tsx` | "Mi cuenta": código de recuperación nuevo, correo de recuperación, cambiar contraseña, cerrar sesión |
 | `layout/AppShell.tsx` | Marco de todas las pantallas. PC (`lg`, desde 1024 px): barra lateral siempre visible. Móvil: cabecera con botón ☰ que abre el mismo menú, y pestañas abajo mientras hay un equipo abierto |
 | `layout/components/TeamsMenu.tsx` | El menú: "Mis equipos" con el "+", la lista de tus equipos y, bajo el equipo abierto, sus secciones (Partidos, Plantilla y, para el entrenador, Ajustes) |
 | `layout/teamMenu.ts` | `useOpenTeam()` (equipo de la URL) y `useTeamMenu()` (secciones según módulos activos y rol) |
 | `modules/types.ts` | `ModuleDefinition`: el contrato que cumple cada módulo. Las rutas y el menú van **relativos al equipo** (`partidos`, `partidos/:matchId`…) |
 | `modules/registry.ts` | Lista de módulos de la app. Añadir un módulo = añadirlo aquí |
+| `modules/catalog.tsx` | `useModuleCatalog()`: la lista de módulos para pantallas que la necesitan (activar secciones) sin importar el registro, que crearía una importación circular |
 
 ## Roles en cada equipo
 
@@ -30,8 +34,8 @@ El rol sale de `team_members` (no se puede cambiar desde la app). Cada pantalla 
 1. Al crear la cuenta se genera un código (`XXXX-XXXX-XXXX`) que se enseña una sola vez. En la base de datos solo se guarda su hash.
 2. "He olvidado la contraseña": usuario + código + contraseña nueva (RPC `reset_password_with_code`). Si es correcto, se entra y se muestra un código nuevo; el usado deja de servir.
 3. Tras 5 intentos fallidos, el código se bloquea 15 minutos.
-4. Respaldo: el entrenador puede poner una contraseña temporal desde Ajustes → Miembros.
-5. Recuperación por email: pendiente (necesita un servicio de envío gratuito).
+4. Sin código: "Por correo". Si la cuenta tiene correo de recuperación, la Edge Function `send-reset-email` manda un enlace de un solo uso válido 1 hora. La respuesta es la misma tenga o no correo, para que no se pueda averiguar quién lo tiene.
+5. Último respaldo: el entrenador pone una contraseña temporal desde Ajustes → Miembros.
 
 ## Login sin email
 

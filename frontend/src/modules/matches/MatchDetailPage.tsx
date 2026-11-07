@@ -49,7 +49,8 @@ export function MatchDetailPage() {
         match={match}
         backHref={teamPath('partidos')}
         matchPath={teamPath(`partidos/${match.id}`)}
-        showStaffTabs={isStaff}
+        showManagement={isStaff}
+        showRotation={isStaff && team.enabledModules.includes('lineup')}
       />
 
       <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
@@ -93,10 +94,10 @@ export function MatchDetailPage() {
           match.status !== 'played' &&
           (me?.competes ? (
             <MyAvailabilityCard
-              status={availability.data[me.id]?.status}
+              answer={availability.data[me.id]}
               isCalledUp={callups.data.some((callup) => callup.playerId === me.id)}
-              onChange={(status) =>
-                setAvailability.mutate({ matchId: match.id, playerId: me.id, status })
+              onChange={(status, comment) =>
+                setAvailability.mutate({ matchId: match.id, playerId: me.id, status, comment })
               }
             />
           ) : (

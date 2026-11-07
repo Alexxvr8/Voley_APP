@@ -66,6 +66,17 @@ export function useUpdatePlayer(teamId: string, playerId: string) {
   })
 }
 
+/** Deletes a roster entry with its answers and call-ups. A linked account goes back to pending. */
+export function useDeletePlayer(teamId: string) {
+  return useMutation({
+    mutationFn: async (playerId: string) => {
+      const { error } = await supabase.from('players').delete().eq('id', playerId)
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: playersKey(teamId) }),
+  })
+}
+
 /** Marks a player as competing or as "only trains" (left out of availability and call-ups). */
 export function useSetCompetes(teamId: string) {
   return useMutation({

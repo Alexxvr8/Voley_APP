@@ -2,6 +2,7 @@
 import type { Match } from '@/shared/domain/types'
 import { Card } from '@/shared/ui/Card'
 import { MapEmbed } from '@/shared/ui/MapEmbed'
+import { formatWarmup } from '@/shared/utils/format'
 import { ResultSummary } from './ResultSummary'
 
 export function MatchInfoCard({ match }: { match: Match }) {
@@ -10,11 +11,11 @@ export function MatchInfoCard({ match }: { match: Match }) {
       <ResultSummary sets={match.setsResult} />
 
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-        <dt className="text-slate-500">Calentamiento</dt>
-        <dd className="font-medium">{match.warmupTime || '—'}</dd>
-
         <dt className="text-slate-500">Partido</dt>
         <dd className="font-medium">{match.matchTime || '—'}</dd>
+
+        <dt className="text-slate-500">Calentamiento</dt>
+        <dd className="font-medium">{formatWarmup(match.warmupMinutes, match.matchTime) || '—'}</dd>
 
         <dt className="text-slate-500">Pabellón</dt>
         <dd className="font-medium">{match.venue || '—'}</dd>
