@@ -20,7 +20,13 @@ interface PlannedSubsCardProps {
 
 const EMPTY_DRAFT: PlannedSub = { outId: '', inId: '', note: '' }
 
-export function PlannedSubsCard({ subs, onCourt, substitutesFor, allPlayers, onChange }: PlannedSubsCardProps) {
+export function PlannedSubsCard({
+  subs,
+  onCourt,
+  substitutesFor,
+  allPlayers,
+  onChange,
+}: PlannedSubsCardProps) {
   // The substitution being typed in the form; only added to the plan when confirmed.
   const [draft, setDraft] = useState<PlannedSub>(EMPTY_DRAFT)
 
@@ -58,14 +64,24 @@ export function PlannedSubsCard({ subs, onCourt, substitutesFor, allPlayers, onC
             </p>
             {sub.note && <p className="text-xs text-slate-500">{sub.note}</p>}
           </div>
-          <button type="button" onClick={() => removeSub(index)} className="px-1 text-slate-400" aria-label="Quitar cambio">
+          <button
+            type="button"
+            onClick={() => removeSub(index)}
+            className="px-1 text-slate-400"
+            aria-label="Quitar cambio"
+          >
             ✕
           </button>
         </div>
       ))}
 
       <div className="grid grid-cols-2 gap-2 border-t border-slate-100 pt-3 text-sm">
-        <PlayerSelect players={onCourt} value={draft.outId || undefined} onChange={chooseOutgoing} placeholder="Sale…" />
+        <PlayerSelect
+          players={onCourt}
+          value={draft.outId || undefined}
+          onChange={chooseOutgoing}
+          placeholder="Sale…"
+        />
         <PlayerSelect
           players={draft.outId ? substitutesFor(draft.outId) : []}
           value={draft.inId || undefined}

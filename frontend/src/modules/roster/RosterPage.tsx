@@ -15,7 +15,8 @@ export function RosterPage() {
         <span className="text-sm text-slate-500">{players.length} jugadoras/es</span>
       </div>
       <p className="text-sm text-slate-600">
-        Sistema por defecto: <span className="font-semibold">{SYSTEM_LABELS[team.defaultSystem]}</span>
+        Sistema por defecto:{' '}
+        <span className="font-semibold">{SYSTEM_LABELS[team.defaultSystem]}</span>
       </p>
 
       <Card className="divide-y divide-slate-100 p-0">

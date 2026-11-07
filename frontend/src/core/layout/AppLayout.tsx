@@ -15,7 +15,8 @@ export function AppLayout() {
   const { role, setRole } = useSession()
   const { user, signOut } = useAuth()
   const menu = modules.filter(
-    (module) => module.menu && team.enabledModules.includes(module.id) && hasRole(role, module.minRole),
+    (module) =>
+      module.menu && team.enabledModules.includes(module.id) && hasRole(role, module.minRole),
   )
 
   return (
@@ -31,7 +32,11 @@ export function AppLayout() {
               {user?.user_metadata.display_name ?? 'Cuenta'} · Salir
             </button>
           </div>
-          <div className="flex rounded-full bg-blue-950/60 p-0.5 text-xs" role="group" aria-label="Ver como">
+          <div
+            className="flex rounded-full bg-blue-950/60 p-0.5 text-xs"
+            role="group"
+            aria-label="Ver como"
+          >
             {ROLE_OPTIONS.map((option) => (
               <button
                 key={option.role}

@@ -63,7 +63,7 @@ Todas las tablas tienen RLS activado. Resumen de quién puede qué:
 | `availability` | Miembros del equipo | El jugador la suya (si su cuenta está enlazada a la ficha); entrenador y segundo, la de cualquiera |
 | `set_plans` | Entrenador y segundo | Entrenador y segundo |
 
-Que los jugadores vean los planes por set sigue siendo un tema abierto del SPEC. Por ahora no los ven.
+Que los jugadores vean los planes por set sigue siendo un tema abierto de la especificación. Por ahora no los ven.
 
 ### Funciones auxiliares de las políticas
 

@@ -14,7 +14,12 @@ export function MatchInfoCard({ match }: { match: Match }) {
 
         <dt className="text-slate-500">Pabellón</dt>
         <dd>
-          <a href={match.mapsUrl} target="_blank" rel="noreferrer" className="font-medium text-blue-800 underline">
+          <a
+            href={match.mapsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium text-blue-800 underline"
+          >
             {match.venue}
           </a>
         </dd>

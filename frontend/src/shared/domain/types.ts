@@ -1,5 +1,5 @@
 // Domain types shared by every module. Field values match the database (see backend/README.md).
-/** Fixed position values (see SPEC "Modelo de datos inicial"). */
+/** Fixed position values (see spec "Modelo de datos inicial"). */
 export type Position = 'setter' | 'outside' | 'middle' | 'opposite' | 'libero'
 
 export type AvailabilityStatus = 'yes' | 'no' | 'maybe'

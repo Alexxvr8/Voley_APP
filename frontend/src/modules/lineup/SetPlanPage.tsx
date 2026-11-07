@@ -44,8 +44,10 @@ export function SetPlanPage() {
   if (!match) return <p className="py-12 text-center text-slate-500">Partido no encontrado.</p>
 
   const plan = plans[currentSet] ?? newSetPlan(plans[currentSet - 1], team.defaultSystem)
-  const updatePlan = (changes: Partial<SetPlan>) => setPlans({ ...plans, [currentSet]: { ...plan, ...changes } })
-  const copyPlanFrom = (setNumber: number) => setPlans({ ...plans, [currentSet]: structuredClone(plans[setNumber]) })
+  const updatePlan = (changes: Partial<SetPlan>) =>
+    setPlans({ ...plans, [currentSet]: { ...plan, ...changes } })
+  const copyPlanFrom = (setNumber: number) =>
+    setPlans({ ...plans, [currentSet]: structuredClone(plans[setNumber]) })
 
   function changeSystem(system: GameSystem) {
     updatePlan({ system, startRotation: validStartRotation(system, plan.startRotation) })
@@ -68,8 +70,12 @@ export function SetPlanPage() {
   const onCourtIds = playersOnCourt(plan)
   const liberoIds = chosenLiberos(plan)
   const onCourt = calledUp.filter((player) => onCourtIds.includes(player.id))
-  const bench = calledUp.filter((player) => !onCourtIds.includes(player.id) && !liberoIds.includes(player.id))
-  const copyableSets = SET_NUMBERS.filter((setNumber) => setNumber !== currentSet && plans[setNumber])
+  const bench = calledUp.filter(
+    (player) => !onCourtIds.includes(player.id) && !liberoIds.includes(player.id),
+  )
+  const copyableSets = SET_NUMBERS.filter(
+    (setNumber) => setNumber !== currentSet && plans[setNumber],
+  )
 
   /** Bench players who can cover the position the outgoing player has in the lineup. */
   function substitutesFor(outId: string) {
@@ -109,7 +115,9 @@ export function SetPlanPage() {
           liberos={plan.liberos}
           candidates={calledUp}
           showAll={showAll}
-          onAssign={(zone, playerId) => updatePlan({ rotation: { ...plan.rotation, [zone]: playerId } })}
+          onAssign={(zone, playerId) =>
+            updatePlan({ rotation: { ...plan.rotation, [zone]: playerId } })
+          }
           onAssignLibero={assignLibero}
         />
         <label className="flex items-center gap-2 text-sm text-slate-600">

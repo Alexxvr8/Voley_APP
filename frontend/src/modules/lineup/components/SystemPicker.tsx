@@ -65,7 +65,11 @@ export function SystemPicker({
         <label className="text-sm">
           <span className="mb-1 block text-slate-500">Copiar de</span>
           {/* Always shows "—": choosing a set copies it right away instead of keeping a selection. */}
-          <select value="" onChange={(e) => onCopyFrom(Number(e.target.value))} className={SELECT_CLASS}>
+          <select
+            value=""
+            onChange={(e) => onCopyFrom(Number(e.target.value))}
+            className={SELECT_CLASS}
+          >
             <option value="">—</option>
             {copyableSets.map((setNumber) => (
               <option key={setNumber} value={setNumber}>

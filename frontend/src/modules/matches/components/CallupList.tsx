@@ -1,5 +1,5 @@
 // Staff view: every player with their availability answer and a checkbox to call them up.
-// The coach can call up anyone, whether they answered or not (SPEC module 4).
+// The coach can call up anyone, whether they answered or not (spec module 4).
 import { AVAILABILITY_LABELS } from '@/shared/domain/labels'
 import type { AvailabilityEntry, AvailabilityStatus, Player } from '@/shared/domain/types'
 import { Card } from '@/shared/ui/Card'
@@ -43,7 +43,9 @@ export function CallupList({ players, answers, calledUpIds, onToggle }: CallupLi
             <span className="w-6 text-right text-sm font-bold text-slate-400">{player.number}</span>
             <span className="flex-1">
               <span className="block text-sm font-medium">{playerName(player)}</span>
-              {answer?.comment && <span className="block text-xs text-slate-500">{answer.comment}</span>}
+              {answer?.comment && (
+                <span className="block text-xs text-slate-500">{answer.comment}</span>
+              )}
             </span>
             <PositionBadge position={player.mainPosition} short />
             <span

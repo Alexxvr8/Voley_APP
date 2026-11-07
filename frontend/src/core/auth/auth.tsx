@@ -1,5 +1,5 @@
 // Username/password auth on top of Supabase Auth. Usernames are mapped to an internal
-// email address so players never need a real email (see SPEC "Registro y sesión").
+// email address so players never need a real email (see spec "Registro y sesión").
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/core/supabase/client'
@@ -32,12 +32,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null))
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null))
+    const { data } = supabase.auth.onAuthStateChange((_event, session) =>
+      setUser(session?.user ?? null),
+    )
     return () => data.subscription.unsubscribe()
   }, [])
 
   async function signIn(username: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email: usernameToEmail(username), password })
+    const { error } = await supabase.auth.signInWithPassword({
+      email: usernameToEmail(username),
+      password,
+    })
     if (error) throw error
   }
 
@@ -45,7 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.auth.signUp({
       email: usernameToEmail(username),
       password,
-      options: { data: { username: normalizeUsername(username), display_name: displayName.trim() } },
+      options: {
+        data: { username: normalizeUsername(username), display_name: displayName.trim() },
+      },
     })
     if (error) throw error
     // Without a session the project still requires email confirmation, which cannot work here.
@@ -58,7 +65,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) await supabase.auth.signOut({ scope: 'local' })
   }
 
-  return <AuthContext.Provider value={{ user, signIn, signUp, signOut }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, signIn, signUp, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth(): Auth {

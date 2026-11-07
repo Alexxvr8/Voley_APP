@@ -8,7 +8,7 @@ if (!url || !key) {
 }
 
 // The session is persisted in localStorage and refreshed automatically, so users stay
-// signed in across app restarts and while offline (see SPEC "Registro y sesión").
+// signed in across app restarts and while offline (see spec "Registro y sesión").
 export const supabase = createClient(url, key, {
   auth: { persistSession: true, autoRefreshToken: true },
 })

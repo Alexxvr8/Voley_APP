@@ -50,7 +50,11 @@ export function MatchDetailPage() {
               Preparar partido
             </Link>
             {/* Match mode arrives in phase 2. */}
-            <button type="button" disabled className="rounded-xl bg-slate-200 py-3 text-sm font-semibold text-slate-500">
+            <button
+              type="button"
+              disabled
+              className="rounded-xl bg-slate-200 py-3 text-sm font-semibold text-slate-500"
+            >
               Ir al partido
             </button>
           </div>

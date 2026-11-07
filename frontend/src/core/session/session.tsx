@@ -19,7 +19,11 @@ const SessionContext = createContext<Session | null>(null)
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<TeamRole>('coach')
   const playerId = role === 'player' ? MOCK_PLAYER_ID : null
-  return <SessionContext.Provider value={{ role, playerId, setRole }}>{children}</SessionContext.Provider>
+  return (
+    <SessionContext.Provider value={{ role, playerId, setRole }}>
+      {children}
+    </SessionContext.Provider>
+  )
 }
 
 export function useSession(): Session {

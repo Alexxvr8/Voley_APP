@@ -17,7 +17,7 @@ export interface PlannedSub {
 /** Up to two liberos per set; either slot can be empty. */
 export type LiberoSlots = [string | undefined, string | undefined]
 
-/** Everything the coach decides for one set (SPEC module 5). */
+/** Everything the coach decides for one set (spec module 5). */
 export interface SetPlan {
   system: GameSystem
   /** Rotation the set starts in, named by the setter's zone (4 = R4). One of `availableRotations(system)`. */
@@ -33,7 +33,7 @@ export type SetPlans = Partial<Record<number, SetPlan>>
 
 /**
  * Plan shown for a set that has not been edited yet: it inherits the previous set's system,
- * or the team default for the first set (SPEC module 5).
+ * or the team default for the first set (spec module 5).
  */
 export function newSetPlan(previous: SetPlan | undefined, defaultSystem: GameSystem): SetPlan {
   const system = previous?.system ?? defaultSystem

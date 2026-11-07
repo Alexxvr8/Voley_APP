@@ -66,8 +66,7 @@ function settingSetterZone(system: GameSystem, steps: number): Zone | undefined 
   const roles = rolesAfterSteps(system, steps)
   return ROTATION_ORDER.find(
     (zone) =>
-      roles[zone] === 'setter' &&
-      (row === 'any' || (row === 'front') === FRONT_ROW.includes(zone)),
+      roles[zone] === 'setter' && (row === 'any' || (row === 'front') === FRONT_ROW.includes(zone)),
   )
 }
 

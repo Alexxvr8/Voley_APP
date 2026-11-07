@@ -37,6 +37,8 @@ export function setAvailability(matchId: string, playerId: string, status: Avail
 
 export function toggleCallup(matchId: string, playerId: string) {
   const current = state.callups[matchId] ?? []
-  const next = current.includes(playerId) ? current.filter((id) => id !== playerId) : [...current, playerId]
+  const next = current.includes(playerId)
+    ? current.filter((id) => id !== playerId)
+    : [...current, playerId]
   setState({ ...state, callups: { ...state.callups, [matchId]: next } })
 }

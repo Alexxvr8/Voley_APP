@@ -36,7 +36,10 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/partidos" replace /> },
       ...moduleRoutes,
-      { path: '*', element: <p className="py-12 text-center text-slate-500">Página no encontrada.</p> },
+      {
+        path: '*',
+        element: <p className="py-12 text-center text-slate-500">Página no encontrada.</p>,
+      },
     ],
   },
 ])

@@ -1,8 +1,16 @@
 // Text formatting helpers for dates and names, in Spanish.
 import type { Player } from '@/shared/domain/types'
 
-const dateFormatter = new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })
-const longDateFormatter = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
+const dateFormatter = new Intl.DateTimeFormat('es-ES', {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+})
+const longDateFormatter = new Intl.DateTimeFormat('es-ES', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+})
 
 /** Parses a `YYYY-MM-DD` string as a local date (avoids the UTC shift of `new Date(iso)`). */
 function parseLocalDate(isoDate: string): Date {

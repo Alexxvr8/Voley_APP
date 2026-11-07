@@ -50,7 +50,9 @@ export function LoginPage() {
     setError(null)
     if (mode === 'signUp') {
       if (!USERNAME_PATTERN.test(normalizeUsername(username))) {
-        setError('El usuario debe tener entre 3 y 30 letras, números, puntos o guiones, sin espacios ni tildes.')
+        setError(
+          'El usuario debe tener entre 3 y 30 letras, números, puntos o guiones, sin espacios ni tildes.',
+        )
         return
       }
       if (password.length < MIN_PASSWORD_LENGTH) {
@@ -73,7 +75,9 @@ export function LoginPage() {
     <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center bg-slate-50 px-6 py-10">
       <div className="mb-8 text-center">
         <p className="text-3xl font-bold text-blue-900">Voley APP</p>
-        <p className="mt-1 text-sm text-slate-500">Partidos, convocatorias y rotaciones de tu equipo</p>
+        <p className="mt-1 text-sm text-slate-500">
+          Partidos, convocatorias y rotaciones de tu equipo
+        </p>
       </div>
 
       <div className="mb-6 flex rounded-full bg-slate-200 p-1 text-sm font-semibold" role="tablist">
@@ -147,8 +151,8 @@ export function LoginPage() {
               required
             />
             <span>
-              Acepto que la app guarde mi nombre y mis datos de juego. Si tengo menos de 14 años, mis padres o tutores
-              lo han autorizado.
+              Acepto que la app guarde mi nombre y mis datos de juego. Si tengo menos de 14 años,
+              mis padres o tutores lo han autorizado.
             </span>
           </label>
         )}

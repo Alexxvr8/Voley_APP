@@ -29,7 +29,9 @@ export function MatchesPage() {
                 <p className="text-sm font-medium capitalize text-blue-800">
                   {formatShortDate(match.date)} · {match.matchTime}
                 </p>
-                <span className="text-xs text-slate-500">{match.homeAway === 'home' ? 'Local' : 'Visitante'}</span>
+                <span className="text-xs text-slate-500">
+                  {match.homeAway === 'home' ? 'Local' : 'Visitante'}
+                </span>
               </div>
               <p className="mt-1 text-lg font-bold text-slate-900">vs {match.opponent}</p>
               <p className="text-sm text-slate-500">{match.venue}</p>
@@ -51,7 +53,9 @@ export function MatchesPage() {
                 <span className="text-rose-700">No {counts.no}</span>
                 <span className="text-amber-700">Duda {counts.maybe}</span>
                 <span>Sin responder {pending}</span>
-                <span className="ml-auto font-semibold text-slate-800">Convocados {matchCallups.length}</span>
+                <span className="ml-auto font-semibold text-slate-800">
+                  Convocados {matchCallups.length}
+                </span>
               </div>
             )}
           </Card>

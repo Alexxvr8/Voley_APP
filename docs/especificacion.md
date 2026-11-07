@@ -82,8 +82,9 @@ Para cada set se guarda un plan independiente:
 
 - **Sistema:** 5-1, 6-0, 4-2, 6-2 o 4-2 con posiciones delanteras. Por defecto el sistema predeterminado del equipo o el del set anterior.
 - **Rotación inicial:** campo con zonas 1–6 coloreadas por rol (colocador, receptor, central, opuesto, líbero). Cada zona solo ofrece convocados con esa posición, con opción de "mostrar todos".
-- **Líbero:** quién entra y por quién.
-- **Cambios previstos:** pares sale → entra, con nota opcional ("si falla recepción", "en rotación 3").
+- **R inicial:** junto al sistema se elige en qué R empieza el set. La R es la zona donde está el colocador que coloca: R1–R6 en 5-1, R2–R4 en 4-2 (coloca el delantero), R1/R5/R6 en 6-2 (coloca el zaguero). En 6-0 todos son receptores y no hay R.
+- **Líberos:** hasta dos casillas grises bajo la pista, solo si hay jugadores que puedan jugar de líbero. No se indica por quién entran.
+- **Cambios previstos:** pares sale → entra, solo entre jugadores de la misma posición (colocador y opuesto se pueden cruzar para pasar de una R a otra), con nota opcional ("si falla recepción", "en rotación 3").
 - **Copiar plan de otro set** para no empezar de cero.
 
 ### 6. Modo partido (entrenador, funciona offline)
@@ -140,7 +141,7 @@ React + Vite como PWA, Supabase como backend y Vercel como hosting, todo en plan
 **Estructura modular del código**
 
 ```
-src/
+frontend/src/
   core/          # auth, sesión, supabase client, sync offline, layout
   modules/
     teams/       # equipos, roles, códigos de acceso
@@ -168,7 +169,7 @@ La pieza clave es `team_members`: une usuario, equipo y rol, y todas las reglas 
 | `matches` | id, team\_id, opponent, date, warmup\_time, match\_time, venue, maps\_url, home\_away, status, sets\_result, notes, mvp\_status, mvp\_closes\_at, mvp\_winners | status: scheduled / played / cancelled; mvp\_status: closed / open / tie\_pending / finished |
 | `availability` | match\_id, player\_id, status, comment, updated\_at | status: yes / no / maybe |
 | `callups` | match\_id, player\_id | Convocados |
-| `set_plans` | id, match\_id, set\_number, system, rotation, libero\_id, libero\_replaces, planned\_subs, updated\_at, updated\_by | rotation = zona 1–6 → player\_id |
+| `set_plans` | id, match\_id, set\_number, system, start\_rotation, rotation, libero\_id, second\_libero\_id, planned\_subs, updated\_at, updated\_by | rotation = zona 1–6 → player\_id |
 | `mvp_votes` | match\_id, voter\_user\_id, voted\_player\_id, created\_at | Única por votante y votada; máx. 2 por votante. Sin acceso directo: solo vía RPC |
 | `league_table` | team\_id, rows, updated\_at | Tabla no oficial, filas en JSON |
 
@@ -180,7 +181,12 @@ Posiciones como valores fijos: `setter` (colocador), `outside` (receptor), `midd
 
 Cuatro fases sin fechas fijas; no se pasa a la siguiente hasta superar la prueba con uso real.
 
-[Hoja de ruta: ver el documento original del proyecto]
+| Fase | Contenido | Prueba para pasar |
+| --- | --- | --- |
+| 0 · Base | Repo en GitHub, Supabase + Vercel, PWA instalable, login y sesión larga, estructura modular | Login funciona en el móvil |
+| 1 · MVP | Equipos y roles, códigos de acceso, plantilla, partidos y calendario, disponibilidad, convocatoria | Tu equipo lo usa dos semanas |
+| 2 · Partido | Plan por set, sistemas y rotaciones, cambios previstos, modo partido, offline y sincronización, resultados y tabla | Partido real en modo avión |
+| 3 · Extras | Entrenamientos, notificaciones, estadísticas, importar Sheets, APK (opcional) | — |
 
 La fase 2 es la crítica: el offline se diseña desde la fase 0 (estructura de datos local), pero se completa y prueba aquí. El módulo MVP entra después de la fase 1, porque depende de la convocatoria.
 
@@ -196,12 +202,21 @@ Cada decisión cerrada se añade aquí con su fecha; este documento es la refere
 | 2026-10-24 | Stack: React + Vite (PWA), Supabase, Vercel |
 | 2026-10-24 | Plan por set con sistema, rotación, líbero y cambios previstos, editable entre sets |
 | 2026-10-24 | Modo partido y plan por set funcionan sin conexión |
+| 2026-10-26 | Proyecto Supabase propio `voley-app` (eu-central-1) en la organización Alexxvr8 |
+| 2026-10-26 | Repositorio separado en `frontend/` (PWA) y `backend/` (Supabase: migraciones, RLS, RPC), cada uno con su README |
+| 2026-10-26 | Email interno de Auth: `usuario@voley.local`; confirmación de email desactivada |
+| 2026-10-26 | Crear equipo, unirse con código y regenerar códigos van por funciones RPC (`create_team`, `join_team`, `regenerate_join_code`), no por inserts directos |
+| 2026-10-26 | Hasta resolver el tema abierto, los planes por set solo los ven entrenador y segundo (RLS) |
+| 2026-10-27 | Plan por set: R inicial junto al sistema, hasta dos líberos sin "entra por", cambios previstos limitados a la misma posición (colocador ↔ opuesto permitido). En 6-0 todas las zonas son receptores |
+| 2026-10-27 | La pestaña del plan se llama "Rotaciones" en el menú |
 | 2026-11-07 | Nuevo módulo opcional MVP del partido: 1 o 2 votos por votante, voto secreto |
 | 2026-11-07 | Votan MVP las convocadas y el entrenador (mismo peso); el segundo entrenador no vota |
 | 2026-11-07 | Empate en el MVP: lo resuelve el entrenador eligiendo una o manteniendo co-MVP |
 | 2026-11-07 | Ranking de MVP de temporada: sin ceros para las jugadoras, el entrenador puede ocultarlo |
 | 2026-11-07 | Offline solo plantilla (lectura) y rotaciones; resultados y lo demás requieren conexión |
 | 2026-11-07 | Cada equipo tiene un sistema de juego predeterminado con el que arranca cada set |
+| 2026-11-07 | `docs/especificacion.md` sustituye a `docs/SPEC.md` como única referencia (fusionadas) |
+| 2026-11-07 | Calidad de código: ESLint (flat config, typescript-eslint, reglas de hooks) y Prettier en `frontend/` |
 
 **Temas abiertos**
 

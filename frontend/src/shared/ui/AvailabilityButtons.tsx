@@ -10,7 +10,7 @@ const ACTIVE_STYLES: Record<AvailabilityStatus, string> = {
 
 const STATUSES: AvailabilityStatus[] = ['yes', 'no', 'maybe']
 
-/** One-tap availability selector (SPEC principle 3: two taps max for players). */
+/** One-tap availability selector (spec principle 3: two taps max for players). */
 export function AvailabilityButtons({
   value,
   onChange,
@@ -26,7 +26,9 @@ export function AvailabilityButtons({
           type="button"
           onClick={() => onChange(status)}
           className={`rounded-xl py-2.5 text-sm font-semibold ring-1 transition ${
-            value === status ? ACTIVE_STYLES[status] : 'bg-white text-slate-700 ring-slate-300 active:bg-slate-100'
+            value === status
+              ? ACTIVE_STYLES[status]
+              : 'bg-white text-slate-700 ring-slate-300 active:bg-slate-100'
           }`}
         >
           {AVAILABILITY_LABELS[status]}

@@ -54,7 +54,10 @@ export function Court({
         {COURT_ROWS.flat().map((zone) => {
           const role = roles[zone]
           return (
-            <label key={zone} className={`flex flex-col gap-1 rounded-xl p-2 ${POSITION_COLORS[role]}`}>
+            <label
+              key={zone}
+              className={`flex flex-col gap-1 rounded-xl p-2 ${POSITION_COLORS[role]}`}
+            >
               <span className="text-[11px] font-semibold uppercase opacity-90">
                 Z{zone} · {POSITION_LABELS[role]}
               </span>
@@ -72,8 +75,13 @@ export function Court({
       {hasLiberos && (
         <div className="mt-2 grid grid-cols-2 gap-2 border-t border-orange-300 pt-2">
           {LIBERO_SLOTS.map((slot) => (
-            <label key={slot} className="flex flex-col gap-1 rounded-xl bg-slate-400 p-2 text-white">
-              <span className="text-[11px] font-semibold uppercase opacity-90">Líbero {slot + 1}</span>
+            <label
+              key={slot}
+              className="flex flex-col gap-1 rounded-xl bg-slate-400 p-2 text-white"
+            >
+              <span className="text-[11px] font-semibold uppercase opacity-90">
+                Líbero {slot + 1}
+              </span>
               <PlayerSelect
                 players={optionsFor(liberos[slot], (player) => canPlay(player, 'libero'))}
                 value={liberos[slot]}

@@ -16,9 +16,19 @@ interface PlayerSelectProps {
 const DEFAULT_CLASS = 'w-full rounded-lg border border-slate-300 bg-white px-2 py-2'
 
 /** Shows each player as "number. first name", which is how coaches call them on court. */
-export function PlayerSelect({ players, value, onChange, placeholder = '—', className = DEFAULT_CLASS }: PlayerSelectProps) {
+export function PlayerSelect({
+  players,
+  value,
+  onChange,
+  placeholder = '—',
+  className = DEFAULT_CLASS,
+}: PlayerSelectProps) {
   return (
-    <select value={value ?? ''} onChange={(e) => onChange(e.target.value || undefined)} className={className}>
+    <select
+      value={value ?? ''}
+      onChange={(e) => onChange(e.target.value || undefined)}
+      className={className}
+    >
       <option value="">{placeholder}</option>
       {players.map((player) => (
         <option key={player.id} value={player.id}>

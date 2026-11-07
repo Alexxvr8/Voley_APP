@@ -1,6 +1,6 @@
 # Frontend
 
-La app que usan jugadores y entrenadores: React + TypeScript + Vite, estilos con Tailwind y PWA instalable con service worker (vite-plugin-pwa).
+La app que usan jugadores y entrenadores: React + TypeScript + Vite, estilos con Tailwind y PWA instalable con service worker (vite-plugin-pwa). ESLint y Prettier mantienen el código revisado y con un formato único.
 
 ## Comandos
 
@@ -11,6 +11,10 @@ Se pueden lanzar desde esta carpeta o desde la raíz del repo.
 | `npm run dev` | Servidor de desarrollo en http://localhost:5173 |
 | `npm run build` | `tsc` (comprobación de tipos) + build de producción en `dist/`. Tiene que pasar antes de cada commit |
 | `npm run preview` | Sirve `dist/` para probar la instalación y el modo sin conexión |
+| `npm run lint` | ESLint: TypeScript, reglas de hooks de React y fast refresh. No debe dar errores antes de un commit |
+| `npm run format` | Prettier sobre todo el código (sin punto y coma, comillas simples, 100 columnas). `format:check` solo comprueba. Los `.md` se dejan como están |
+
+TypeScript va fijado en la 6.x: la 7 todavía no es compatible con typescript-eslint.
 
 ## Variables de entorno
 
@@ -27,6 +31,8 @@ Se leen de `.env.local`, que no se sube a git. La plantilla está en `.env.examp
 frontend/
 ├── index.html            Página base; React se monta en <div id="root">
 ├── vite.config.ts        Vite, Tailwind, alias @/ y configuración de la PWA
+├── eslint.config.js      Reglas de ESLint
+├── .prettierrc.json      Formato de Prettier (.prettierignore: qué no se formatea)
 ├── public/               Iconos y ficheros que se sirven tal cual
 └── src/
     ├── main.tsx          Punto de entrada: monta <App />

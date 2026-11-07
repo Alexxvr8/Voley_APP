@@ -1,7 +1,7 @@
 // Contract between the core and the feature modules.
 import type { ComponentType } from 'react'
 
-/** Team role, ordered from least to most privileged (see SPEC "Permisos por rol"). */
+/** Team role, ordered from least to most privileged (see spec "Permisos por rol"). */
 export type TeamRole = 'player' | 'assistant' | 'coach'
 
 /** A screen contributed by a module. */
@@ -31,6 +31,6 @@ export interface ModuleDefinition {
   menu?: ModuleMenuEntry
   /** Lowest role allowed to access the module. */
   minRole: TeamRole
-  /** Whether the module must work without network (see SPEC "Requisito offline"). */
+  /** Whether the module must work without network (see spec "Funciones online y offline"). */
   offline: boolean
 }
