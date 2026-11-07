@@ -1,12 +1,15 @@
-// "Preparar partido" screen: the coach plans each set (system, starting rotation, lineup,
+// "Rotación" tab of a match: the coach plans each set (system, starting rotation, lineup,
 // liberos, planned substitutions). This component only holds the state; each block is its own component.
+// The plan is not saved yet: persistence and offline sync arrive in phase 2.
 import { useState } from 'react'
-import { Link, useParams } from 'react-router'
-import type { GameSystem } from '@/shared/domain/types'
-import { matches, players, team } from '@/shared/mock/data'
-import { useMockStore } from '@/shared/mock/store'
+import { useParams } from 'react-router'
+import { hasRole, useCurrentTeam, useTeamPath } from '@/core/teams/currentTeam'
+import { asCalledUp } from '@/shared/domain/callups'
+import type { GameSystem, Match, Player, Team } from '@/shared/domain/types'
 import { Card } from '@/shared/ui/Card'
-import { formatShortDate } from '@/shared/utils/format'
+import { PageMessage } from '@/shared/ui/PageMessage'
+import { MatchHeader } from '@/shared/ui/MatchHeader'
+import { useCallups, useMatches, usePlayers } from './api'
 import { Court } from './components/Court'
 import { PlannedSubsCard } from './components/PlannedSubsCard'
 import { SetTabs } from './components/SetTabs'
@@ -26,22 +29,55 @@ import {
 } from './setPlan'
 import { rotatePlayers } from './systems'
 
-/** The match from the URL, or the next upcoming one when opened from the menu. */
-function useSelectedMatch() {
-  const { matchId } = useParams()
-  if (matchId) return matches.find((match) => match.id === matchId)
-  return [...matches].sort((a, b) => a.date.localeCompare(b.date))[0]
+/** "Rotación" tab of a match: loads the match and its call-ups, then hands them to the editor. */
+export function SetPlanPage() {
+  const { matchId = '' } = useParams()
+  const { team, role } = useCurrentTeam()
+  const matches = useMatches(team.id)
+  const players = usePlayers(team.id)
+  const callups = useCallups(matchId)
+
+  if (!hasRole(role, 'assistant'))
+    return <PageMessage>No tienes acceso a esta sección.</PageMessage>
+  if (matches.isPending || players.isPending || callups.isPending) {
+    return <PageMessage>Cargando…</PageMessage>
+  }
+  if (matches.isError || players.isError || callups.isError) {
+    return <PageMessage>No se ha podido cargar. ¿Hay conexión?</PageMessage>
+  }
+  const match = matches.data.find((m) => m.id === matchId)
+  if (!match) return <PageMessage>Partido no encontrado.</PageMessage>
+
+  // Called-up players as they play this match (per-match number and position applied).
+  const calledUp = callups.data.flatMap((callup) => {
+    const player = players.data.find((p) => p.id === callup.playerId)
+    return player ? [asCalledUp(player, callup)] : []
+  })
+  // Remounting per match resets the local plan when switching matches.
+  return (
+    <SetPlanEditor
+      key={match.id}
+      team={team}
+      match={match}
+      players={players.data}
+      calledUp={calledUp}
+    />
+  )
 }
 
-export function SetPlanPage() {
-  const match = useSelectedMatch()
-  const { callups } = useMockStore()
+interface SetPlanEditorProps {
+  team: Team
+  match: Match
+  players: Player[]
+  /** Called-up players: the only ones who can take part. */
+  calledUp: Player[]
+}
 
+function SetPlanEditor({ team, match, players, calledUp }: SetPlanEditorProps) {
+  const teamPath = useTeamPath()
   const [currentSet, setCurrentSet] = useState(1)
   const [plans, setPlans] = useState<SetPlans>({})
   const [showAll, setShowAll] = useState(false)
-
-  if (!match) return <p className="py-12 text-center text-slate-500">Partido no encontrado.</p>
 
   const plan = plans[currentSet] ?? newSetPlan(plans[currentSet - 1], team.defaultSystem)
   const updatePlan = (changes: Partial<SetPlan>) =>
@@ -65,8 +101,7 @@ export function SetPlanPage() {
     updatePlan({ liberos })
   }
 
-  // Who is where, derived from the plan. Only called-up players can take part.
-  const calledUp = players.filter((player) => (callups[match.id] ?? []).includes(player.id))
+  // Who is where, derived from the plan.
   const onCourtIds = playersOnCourt(plan)
   const liberoIds = chosenLiberos(plan)
   const onCourt = calledUp.filter((player) => onCourtIds.includes(player.id))
@@ -87,16 +122,21 @@ export function SetPlanPage() {
 
   return (
     <section className="space-y-4">
+      <MatchHeader
+        match={match}
+        backHref={teamPath('partidos')}
+        matchPath={teamPath(`partidos/${match.id}`)}
+        showStaffTabs
+      />
       <div>
-        <Link to={`/partidos/${match.id}`} className="text-sm font-medium text-blue-800">
-          ← Partido
-        </Link>
-        <h1 className="mt-1 text-xl font-bold text-slate-900 lg:text-2xl">
-          Plan vs {match.opponent}
-        </h1>
-        <p className="text-sm capitalize text-slate-500">
-          {formatShortDate(match.date)} · {calledUp.length} convocados
+        <p className="text-sm text-slate-500">
+          {calledUp.length} convocados · el plan aún no se guarda (llegará en la fase 2)
         </p>
+        {calledUp.length === 0 && (
+          <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            Aún no hay convocados. Convócalos en la pestaña Gestión para colocarlos en la pista.
+          </p>
+        )}
       </div>
 
       <SetTabs currentSet={currentSet} plans={plans} onSelect={setCurrentSet} />

@@ -33,6 +33,9 @@ Cada cambio en la base de datos es un fichero SQL nuevo en `supabase/migrations/
 | `20261026000000_initial_schema.sql` | Todas las tablas, funciones auxiliares, RPC y políticas RLS |
 | `20261026000100_restrict_function_grants.sql` | Impide que usuarios sin sesión llamen a funciones internas |
 | `20261027000000_set_plan_rotation_and_liberos.sql` | Añade la R inicial y un segundo líbero a `set_plans`; quita "líbero entra por" |
+| `20261107000000_teams_accounts_trainings.sql` | Jugadores pendientes sin acceso hasta que los acepta el entrenador, `my_teams`, `team_members_overview`, `accept_member`, `players.competes`, horario de entrenamientos y recuperación de contraseña |
+| `20261107000100_remove_4_2_front_system.sql` | Quita el sistema `4-2-front`: quedan 5-1, 6-0, 4-2 y 6-2 |
+| `20261107000200_callup_match_overrides.sql` | Dorsal y posición por partido en `callups` (`number`, `position`) y permiso para cambiarlos |
 
 Se aplican al proyecto con el conector de Supabase (`apply_migration`) o con la CLI (`supabase db push`, desde `backend/`).
 
@@ -46,12 +49,15 @@ La pieza central es `team_members`: une usuario, equipo y rol, y todas las regla
 | `teams` | Equipos: nombre, categoría, temporada, sistema por defecto, módulos activos | Se crean con la RPC `create_team` |
 | `team_members` | Quién pertenece a qué equipo y con qué rol (`coach`, `assistant`, `player`) | `player_id` enlaza la cuenta con su ficha. Si está vacío, el jugador está **pendiente** |
 | `join_codes` | Código de acceso por equipo y rol | Uno por rol; se regenera con `regenerate_join_code` |
-| `players` | Fichas de la plantilla | Una ficha puede existir sin cuenta |
+| `players` | Fichas de la plantilla | Una ficha puede existir sin cuenta. `competes = false`: solo entrena, no puede tener disponibilidad ni ser convocado |
 | `matches` | Partidos: rival, fecha, horas, pabellón, estado, resultado por sets | `sets_result` = `[{"us": 25, "them": 20}, …]` |
 | `availability` | Respuesta de cada jugador a cada partido (`yes`, `no`, `maybe`) | |
-| `callups` | Convocados de cada partido | |
+| `callups` | Convocados de cada partido | `number` y `position`: dorsal y posición solo para ese partido (vacío = los de la ficha) |
 | `set_plans` | Plan de cada set: sistema, rotación inicial, alineación, líberos, cambios previstos | `start_rotation` = 1–6 (R1…R6); `rotation` = `{"1": player_id, …, "6": player_id}`; `libero_id` y `second_libero_id`; `planned_subs` = `[{"out", "in", "note"}]` |
 | `league_table` | Tabla de liga no oficial, rellenada a mano | Filas en JSON |
+| `training_slots` | Horario semanal de entrenamientos: día (1 = lunes … 7 = domingo), hora de inicio y fin, lugar | Se repite cada semana en el calendario |
+| `training_cancellations` | Fechas en que un entrenamiento del horario no se hace | |
+| `account_recovery` | Hash del código de recuperación de cada cuenta, intentos fallidos y bloqueo | Sin políticas: solo se usa desde las funciones de recuperación |
 
 Los valores fijos (posiciones, roles, sistemas, estados) se validan con `check` en la propia tabla.
 
@@ -65,7 +71,7 @@ Todas las tablas tienen RLS activado. Resumen de quién puede qué:
 | `teams` | Miembros del equipo | Editar y borrar: entrenador |
 | `team_members` | Miembros del equipo | Cambiar rol o enlazar ficha: entrenador. Salir del equipo: uno mismo |
 | `join_codes` | Entrenador | Entrenador |
-| `players`, `matches`, `callups`, `league_table` | Miembros del equipo | Entrenador y segundo |
+| `players`, `matches`, `callups`, `league_table`, `training_slots`, `training_cancellations` | Miembros del equipo | Entrenador y segundo |
 | `availability` | Miembros del equipo | El jugador la suya (si su cuenta está enlazada a la ficha); entrenador y segundo, la de cualquiera |
 | `set_plans` | Entrenador y segundo | Entrenador y segundo |
 
@@ -78,10 +84,11 @@ Son `security definer`: se ejecutan con permisos del propietario para poder cons
 | Función | Devuelve |
 | --- | --- |
 | `role_rank(role)` | 0 jugador, 1 segundo, 2 entrenador. Permite comparar roles ("al menos segundo") |
-| `has_team_role(team, min_role)` | ¿El usuario actual está en el equipo con al menos ese rol? |
+| `has_team_role(team, min_role)` | ¿El usuario actual está en el equipo con al menos ese rol? Un jugador pendiente (sin ficha enlazada) no cuenta |
 | `match_team(match)` | Equipo al que pertenece un partido |
 | `is_own_player(match, player)` | ¿Esa ficha es la del usuario actual en el equipo del partido? |
-| `player_in_match_team(match, player)` | ¿La ficha es del mismo equipo que el partido? Evita mezclar equipos |
+| `player_in_match_team(match, player)` | ¿La ficha es del mismo equipo que el partido y compite? Evita mezclar equipos y deja fuera a quien solo entrena |
+| `slot_team(slot)` | Equipo al que pertenece un entrenamiento del horario |
 
 ## Funciones RPC (llamables desde el frontend)
 
@@ -92,6 +99,12 @@ Las acciones que tocan varias tablas o necesitan saltarse RLS de forma controlad
 | `create_team(name, category, season)` | Cualquier usuario con sesión | Crea el equipo y te añade como entrenador. Devuelve el id |
 | `join_team(join_code)` | Cualquier usuario con sesión | Te une al equipo del código con su rol. Si es de jugador, quedas pendiente de enlace. Error `P0002` si el código no vale |
 | `regenerate_join_code(team, code_role)` | Entrenador | Crea o renueva el código del rol: 8 caracteres sin letras ni números que se confundan (0/O, 1/I) |
+| `my_teams()` | Cualquier usuario con sesión | Tus equipos con tu rol, tu ficha y si estás pendiente |
+| `team_members_overview(team)` | Entrenador y segundo | Miembros con usuario y nombre visible |
+| `accept_member(team, member, player)` | Entrenador | Acepta a un jugador pendiente vinculándolo a una ficha del equipo que no tenga cuenta |
+| `create_recovery_code()` | Cualquier usuario con sesión | Crea o sustituye tu código de recuperación y lo devuelve (solo esa vez) |
+| `reset_password_with_code(username, code, new_password)` | **Sin sesión** | Pone una contraseña nueva si el código es correcto y devuelve `{ok, code}` con el código nuevo. 5 fallos bloquean 15 minutos. Devuelve en vez de lanzar error para que los fallos queden contados |
+| `coach_reset_password(team, member)` | Entrenador | Pone una contraseña temporal a un miembro que no sea entrenador y la devuelve |
 
 ## Registro de usuarios
 
@@ -103,10 +116,12 @@ Las acciones que tocan varias tablas o necesitan saltarse RLS de forma controlad
 
 ## Avisos conocidos del linter de Supabase
 
-El linter avisa de que usuarios con sesión pueden ejecutar funciones `security definer`. Es intencionado:
+El linter avisa de que usuarios con sesión (y, en `reset_password_with_code`, también sin sesión) pueden ejecutar funciones `security definer`, y de que `account_recovery` no tiene políticas. Es intencionado:
 
 - Las RPC están pensadas para eso y comprueban permisos por dentro.
 - Las funciones auxiliares tienen que poder ejecutarse para que funcionen las políticas, y solo responden sobre el propio usuario.
+- `reset_password_with_code` es para quien no puede entrar; se protege con el código (60 bits aleatorios, guardado con bcrypt) y el bloqueo por intentos.
+- `account_recovery` no debe leerse nunca desde la API.
 
 ## Cómo probar los permisos
 

@@ -11,7 +11,9 @@ PWA para gestionar equipos de voleibol (plantilla, partidos, disponibilidad, con
 - ESLint (flat config en `frontend/eslint.config.js`) y Prettier (`frontend/.prettierrc.json`: sin punto y coma, comillas simples, 100 columnas). Los Markdown no pasan por Prettier
 - vite-plugin-pwa (Workbox) para instalación y service worker
 - Supabase (Auth + Postgres + RLS), proyecto `voley-app` en la organización Alexxvr8 (ref `djjeodajgsfvcisrrkzk`). Migraciones en `backend/supabase/migrations/`; cada cambio de esquema va en un archivo nuevo (nunca se edita uno aplicado) y se aplica al proyecto. Variables en `frontend/.env.local` (plantilla en `frontend/.env.example`).
-- Previsto en fases siguientes (ver especificación): TanStack Query, Dexie (IndexedDB), hosting en Vercel
+- TanStack Query para leer y cambiar datos de Supabase (un `api.ts` por módulo)
+- Hosting en Vercel (`voley-app-gold.vercel.app`), despliegue automático al subir a `main`
+- Previsto en fases siguientes (ver especificación): Dexie (IndexedDB) para el modo sin conexión
 
 Todo debe funcionar en planes gratuitos.
 
@@ -22,20 +24,21 @@ Frontend y backend van separados:
 ```
 frontend/              # PWA (React + Vite). Its own package.json
   src/
-    core/              # app shell, module registry, auth/session, supabase client, offline sync, layout
-    modules/<module>/  # one folder per feature module (teams, roster, matches, results, lineup, mvp)
+    core/              # app shell and menu, module registry, auth, teams/current team, supabase and query clients
+    modules/<module>/  # one folder per feature module (matches, roster, lineup, teams; later results, mvp)
     shared/            # reusable UI components, domain types/labels and utilities
 backend/
   supabase/migrations/ # SQL schema, RLS policies and RPC functions
 docs/especificacion.md
 ```
 
-- Cada módulo vive en `frontend/src/modules/<module>/` y exporta su registro (`index.ts`) con el tipo `ModuleDefinition` de `frontend/src/core/modules/types.ts`: id, nombre visible, rutas, entrada de menú, rol mínimo y si funciona offline.
+- Cada módulo vive en `frontend/src/modules/<module>/` y exporta su registro (`index.ts`) con el tipo `ModuleDefinition` de `frontend/src/core/modules/types.ts`: id, nombre visible, rutas, entrada de menú, rol mínimo y si funciona offline. Rutas y menú son relativos al equipo (`partidos` → `/equipos/<id>/partidos`); para enlazar dentro del equipo usa `useTeamPath()`.
 - Para añadir un módulo: crear su carpeta y añadirlo al array de `frontend/src/core/modules/registry.ts`. El núcleo solo lee ese registro y los ajustes del equipo (`enabled_modules`) para decidir qué mostrar.
 - Un módulo no importa nada de otro módulo. Lo compartido va en `shared/` (UI/utilidades) o en `core/` (infraestructura).
 - Dentro de un módulo, la página orquesta el estado y delega cada bloque visual en `components/`; tipos y lógica pura van en ficheros sin React.
 - Alias de importación: `@/` apunta a `frontend/src/`.
-- Login real con Supabase en `core/auth/`. Provisional hasta la fase 1: los datos de equipo siguen siendo de ejemplo (`shared/mock/`) y el rol se simula con el selector de `core/session/session.tsx`.
+- Cada usuario es independiente: se registra solo, ve la lista de sus equipos y en cada uno tiene el rol de `team_members` (sin selector). El equipo abierto y el rol salen de `useCurrentTeam()`. Las páginas de staff comprueban el rol con `hasRole()` y la base de datos lo vuelve a comprobar con RLS.
+- Datos del servidor siempre con TanStack Query en el `api.ts` del módulo; las filas se convierten con `shared/domain/rows.ts`. Los cambios que el usuario espera ver al instante (disponibilidad, convocatoria) usan actualización optimista con vuelta atrás si falla.
 
 ## Documentación
 

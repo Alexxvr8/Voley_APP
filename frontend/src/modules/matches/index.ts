@@ -1,16 +1,21 @@
-// Registration of the matches module: upcoming matches, detail, availability and call-ups.
+// Registration of the matches module: calendar (matches and trainings), match info, availability,
+// and the Gestión tab (call-ups with per-match number and position).
 import type { ModuleDefinition } from '@/core/modules/types'
+import { CalendarPage } from './CalendarPage'
+import { ManagementPage } from './ManagementPage'
 import { MatchDetailPage } from './MatchDetailPage'
-import { MatchesPage } from './MatchesPage'
+import { NewMatchPage } from './NewMatchPage'
 
 export const matchesModule: ModuleDefinition = {
   id: 'matches',
-  name: 'Próximos partidos',
+  name: 'Partidos',
   routes: [
-    { path: '/partidos', component: MatchesPage },
-    { path: '/partidos/:matchId', component: MatchDetailPage },
+    { path: 'partidos', component: CalendarPage },
+    { path: 'partidos/nuevo', component: NewMatchPage },
+    { path: 'partidos/:matchId', component: MatchDetailPage },
+    { path: 'partidos/:matchId/gestion', component: ManagementPage },
   ],
-  menu: { label: 'Partidos', path: '/partidos' },
+  menu: { label: 'Partidos', path: 'partidos' },
   minRole: 'player',
   offline: false,
 }

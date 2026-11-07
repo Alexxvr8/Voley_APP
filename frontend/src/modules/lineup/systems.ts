@@ -10,7 +10,7 @@ export const COURT_ROWS: Zone[][] = [
   [5, 6, 1],
 ]
 
-export const SYSTEMS: GameSystem[] = ['5-1', '6-0', '4-2', '6-2', '4-2-front']
+export const SYSTEMS: GameSystem[] = ['5-1', '6-0', '4-2', '6-2']
 
 /**
  * Starting template of each system: expected role per zone before any rotation.
@@ -21,7 +21,6 @@ const TEMPLATE_ZONE_ROLES: Record<GameSystem, Record<Zone, Position>> = {
   '6-0': { 1: 'outside', 2: 'outside', 3: 'outside', 4: 'outside', 5: 'outside', 6: 'outside' },
   '4-2': { 1: 'setter', 2: 'outside', 3: 'middle', 4: 'setter', 5: 'outside', 6: 'middle' },
   '6-2': { 1: 'setter', 2: 'outside', 3: 'middle', 4: 'setter', 5: 'outside', 6: 'middle' },
-  '4-2-front': { 1: 'outside', 2: 'middle', 3: 'setter', 4: 'outside', 5: 'middle', 6: 'setter' },
 }
 
 /**
@@ -57,7 +56,6 @@ const SETTING_ROW: Record<GameSystem, 'front' | 'back' | 'any' | null> = {
   '6-0': null,
   '4-2': 'front',
   '6-2': 'back',
-  '4-2-front': 'front',
 }
 
 /** Zone of the setting setter after `steps` rotations: that zone is the R number. */

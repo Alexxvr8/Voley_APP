@@ -32,7 +32,7 @@ export function PlayerSelect({
       <option value="">{placeholder}</option>
       {players.map((player) => (
         <option key={player.id} value={player.id}>
-          {player.number}. {player.firstName}
+          {player.number ?? '–'}. {player.firstName}
         </option>
       ))}
     </select>

@@ -1,77 +1,82 @@
-// Match detail. Players see the info and answer their availability; staff also see
-// everyone's answers, call players up and open the set plan.
-import { Link, useParams } from 'react-router'
-import { useSession } from '@/core/session/session'
-import { matches, players } from '@/shared/mock/data'
-import { setAvailability, toggleCallup, useMockStore } from '@/shared/mock/store'
-import { formatLongDate } from '@/shared/utils/format'
-import { CallupList } from './components/CallupList'
+// "Info" tab of a match: practical details. Competing players answer their availability here;
+// staff see a summary of the answers and reach Gestión and Rotación from the tabs.
+import { useParams } from 'react-router'
+import { hasRole, useCurrentTeam, useTeamPath } from '@/core/teams/currentTeam'
+import { Card } from '@/shared/ui/Card'
+import { MatchHeader } from '@/shared/ui/MatchHeader'
+import { PageMessage } from '@/shared/ui/PageMessage'
+import { useAvailability, useCallups, useMatches, usePlayers, useSetAvailability } from './api'
 import { MatchInfoCard } from './components/MatchInfoCard'
 import { MyAvailabilityCard } from './components/MyAvailabilityCard'
 
 export function MatchDetailPage() {
-  const { matchId } = useParams()
-  const { playerId } = useSession()
-  const { availability, callups } = useMockStore()
-  const match = matches.find((m) => m.id === matchId)
+  const { matchId = '' } = useParams()
+  const { team, role, playerId } = useCurrentTeam()
+  const teamPath = useTeamPath()
+  const matches = useMatches(team.id)
+  const players = usePlayers(team.id)
+  const availability = useAvailability(matchId)
+  const callups = useCallups(matchId)
+  const setAvailability = useSetAvailability()
 
-  if (!match) return <p className="py-12 text-center text-slate-500">Partido no encontrado.</p>
+  if (matches.isPending || players.isPending || availability.isPending || callups.isPending) {
+    return <PageMessage>Cargando…</PageMessage>
+  }
+  if (matches.isError || players.isError || availability.isError || callups.isError) {
+    return <PageMessage>No se ha podido cargar el partido. ¿Hay conexión?</PageMessage>
+  }
+  const match = matches.data.find((m) => m.id === matchId)
+  if (!match) return <PageMessage>Partido no encontrado.</PageMessage>
 
-  const answers = availability[match.id] ?? {}
-  const calledUpIds = callups[match.id] ?? []
+  const isStaff = hasRole(role, 'assistant')
+  const me = players.data.find((player) => player.id === playerId)
+  const competing = players.data.filter((player) => player.competes)
+  const answers = competing.map((player) => availability.data[player.id]?.status)
 
   return (
     <section className="space-y-4">
-      <Link to="/partidos" className="text-sm font-medium text-blue-800">
-        ← Partidos
-      </Link>
+      <MatchHeader
+        match={match}
+        backHref={teamPath('partidos')}
+        matchPath={teamPath(`partidos/${match.id}`)}
+        showStaffTabs={isStaff}
+      />
 
-      <div>
-        <p className="text-sm font-medium capitalize text-blue-800">{formatLongDate(match.date)}</p>
-        <h1 className="text-2xl font-bold text-slate-900 lg:text-3xl">vs {match.opponent}</h1>
-      </div>
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+        <MatchInfoCard match={match} />
 
-      {/* A linked player id means the user is viewing as a player; otherwise as staff. */}
-      {playerId ? (
-        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-          <MatchInfoCard match={match} />
-          <MyAvailabilityCard
-            status={answers[playerId]?.status}
-            isCalledUp={calledUpIds.includes(playerId)}
-            onChange={(status) => setAvailability(match.id, playerId, status)}
-          />
-        </div>
-      ) : (
-        // Wide screens: match info and actions on the left, call-up list on the right.
-        <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-          <div className="space-y-4">
-            <MatchInfoCard match={match} />
-            <div className="grid grid-cols-2 gap-2">
-              <Link
-                to={`/partidos/${match.id}/plan`}
-                className="rounded-xl bg-blue-800 py-3 text-center text-sm font-semibold text-white hover:bg-blue-900"
-              >
-                Preparar partido
-              </Link>
-              {/* Match mode arrives in phase 2. */}
-              <button
-                type="button"
-                disabled
-                className="rounded-xl bg-slate-200 py-3 text-sm font-semibold text-slate-500"
-              >
-                Ir al partido
-              </button>
+        {isStaff && (
+          <Card className="space-y-2">
+            <p className="font-semibold">Respuestas</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+              <span className="text-emerald-700">
+                Sí {answers.filter((a) => a === 'yes').length}
+              </span>
+              <span className="text-rose-700">No {answers.filter((a) => a === 'no').length}</span>
+              <span className="text-amber-700">
+                Duda {answers.filter((a) => a === 'maybe').length}
+              </span>
+              <span>Sin responder {answers.filter((a) => a === undefined).length}</span>
             </div>
-          </div>
+            <p className="text-sm font-semibold text-slate-800">{callups.data.length} convocados</p>
+          </Card>
+        )}
 
-          <CallupList
-            players={players}
-            answers={answers}
-            calledUpIds={calledUpIds}
-            onToggle={(id) => toggleCallup(match.id, id)}
-          />
-        </div>
-      )}
+        {!isStaff &&
+          (me?.competes ? (
+            <MyAvailabilityCard
+              status={availability.data[me.id]?.status}
+              isCalledUp={callups.data.some((callup) => callup.playerId === me.id)}
+              onChange={(status) =>
+                setAvailability.mutate({ matchId: match.id, playerId: me.id, status })
+              }
+            />
+          ) : (
+            <PageMessage>
+              Estás en la plantilla como "solo entrena", así que no juegas partidos.
+            </PageMessage>
+          ))}
+      </div>
     </section>
   )
 }

@@ -43,4 +43,10 @@ npm run dev          # http://localhost:5173
 
 ## Estado
 
-Fase 0 (base): backend creado y login funcionando. Las pantallas aún usan datos de ejemplo; en la fase 1 pasarán a leer de Supabase.
+Fase 1 en curso. Ya funciona con datos reales:
+- Registro con código de recuperación, recuperar la contraseña uno mismo y la lista de tus equipos.
+- Crear equipo o unirse con código; los jugadores quedan pendientes hasta que el entrenador los acepta.
+- Calendario mensual con partidos y entrenamientos, disponibilidad y convocatoria con dorsal y posición por partido.
+- Plantilla con "compite / solo entrena".
+
+El plan de rotación aún no se guarda en el servidor (fase 2).

@@ -2,12 +2,15 @@
 // email address so players never need a real email (see spec "Registro y sesión").
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
+import { queryClient } from '@/core/query/queryClient'
 import { supabase } from '@/core/supabase/client'
 
 const INTERNAL_EMAIL_DOMAIN = 'voley.local'
 
 /** Same rule as the `profiles.username` check constraint. */
 export const USERNAME_PATTERN = /^[a-z0-9._-]{3,30}$/
+
+export const MIN_PASSWORD_LENGTH = 6
 
 export function normalizeUsername(username: string): string {
   return username.trim().toLowerCase()
@@ -17,18 +20,44 @@ function usernameToEmail(username: string): string {
   return `${normalizeUsername(username)}@${INTERNAL_EMAIL_DOMAIN}`
 }
 
+/** Thrown by `resetPassword` when the username, code or lock state does not allow the reset. */
+export class RecoveryRejectedError extends Error {
+  constructor() {
+    super('recovery_rejected')
+  }
+}
+
+/**
+ * Recovery code to show once, right after signing up or resetting the password.
+ * `issuing` while it is being created, so the app does not flash in between.
+ */
+export type RecoveryNotice = { code: string } | 'issuing' | null
+
 interface Auth {
   /** Undefined while the stored session is being restored. */
   user: User | null | undefined
+  recoveryNotice: RecoveryNotice
+  /** Hides the recovery code screen once the user has saved the code. */
+  dismissRecoveryNotice: () => void
   signIn: (username: string, password: string) => Promise<void>
   signUp: (username: string, displayName: string, password: string) => Promise<void>
+  /** Sets a new password with the recovery code, signs in and shows the replacement code. */
+  resetPassword: (username: string, code: string, newPassword: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<Auth | null>(null)
 
+/** Creates a new recovery code for the signed-in user, replacing the old one. */
+export async function createRecoveryCode(): Promise<string> {
+  const { data, error } = await supabase.rpc('create_recovery_code')
+  if (error) throw error
+  return data as string
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null | undefined>(undefined)
+  const [recoveryNotice, setRecoveryNotice] = useState<RecoveryNotice>(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null))
@@ -47,26 +76,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signUp(username: string, displayName: string, password: string) {
-    const { data, error } = await supabase.auth.signUp({
-      email: usernameToEmail(username),
-      password,
-      options: {
-        data: { username: normalizeUsername(username), display_name: displayName.trim() },
-      },
+    setRecoveryNotice('issuing')
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: usernameToEmail(username),
+        password,
+        options: {
+          data: { username: normalizeUsername(username), display_name: displayName.trim() },
+        },
+      })
+      if (error) throw error
+      // Without a session the project still requires email confirmation, which cannot work here.
+      if (!data.session) throw new Error('email_confirmation_enabled')
+      setRecoveryNotice({ code: await createRecoveryCode() })
+    } catch (error) {
+      setRecoveryNotice(null)
+      throw error
+    }
+  }
+
+  async function resetPassword(username: string, code: string, newPassword: string) {
+    const { data, error } = await supabase.rpc('reset_password_with_code', {
+      username: normalizeUsername(username),
+      code,
+      new_password: newPassword,
     })
     if (error) throw error
-    // Without a session the project still requires email confirmation, which cannot work here.
-    if (!data.session) throw new Error('email_confirmation_enabled')
+    const result = data as { ok: boolean; code?: string }
+    if (!result.ok || !result.code) throw new RecoveryRejectedError()
+    setRecoveryNotice('issuing')
+    try {
+      await signIn(username, newPassword)
+      setRecoveryNotice({ code: result.code })
+    } catch (signInError) {
+      setRecoveryNotice(null)
+      throw signInError
+    }
   }
 
   async function signOut() {
     const { error } = await supabase.auth.signOut()
     // Offline, revoking the session server-side fails; still sign out on this device.
     if (error) await supabase.auth.signOut({ scope: 'local' })
+    // The next account must not see this account's cached teams.
+    queryClient.clear()
   }
 
   return (
-    <AuthContext.Provider value={{ user, signIn, signUp, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        recoveryNotice,
+        dismissRecoveryNotice: () => setRecoveryNotice(null),
+        signIn,
+        signUp,
+        resetPassword,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

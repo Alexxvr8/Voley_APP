@@ -1,5 +1,5 @@
 // Spanish labels and colors for domain values. Code and database keep the English values.
-import type { AvailabilityStatus, GameSystem, Position } from './types'
+import type { AvailabilityStatus, GameSystem, Position, TeamRole } from './types'
 
 export const POSITION_LABELS: Record<Position, string> = {
   setter: 'Colocador',
@@ -37,5 +37,23 @@ export const SYSTEM_LABELS: Record<GameSystem, string> = {
   '6-0': '6-0',
   '4-2': '4-2',
   '6-2': '6-2',
-  '4-2-front': '4-2 con posiciones delanteras',
 }
+
+export const ROLE_LABELS: Record<TeamRole, string> = {
+  coach: 'Entrenador',
+  assistant: 'Segundo entrenador',
+  player: 'Jugador',
+}
+
+/** ISO weekday (1 = Monday … 7 = Sunday) → Spanish name. */
+export const WEEKDAY_LABELS: Record<number, string> = {
+  1: 'Lunes',
+  2: 'Martes',
+  3: 'Miércoles',
+  4: 'Jueves',
+  5: 'Viernes',
+  6: 'Sábado',
+  7: 'Domingo',
+}
+
+export const POSITIONS: Position[] = ['setter', 'outside', 'middle', 'opposite', 'libero']

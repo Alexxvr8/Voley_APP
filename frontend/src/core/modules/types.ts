@@ -1,12 +1,12 @@
 // Contract between the core and the feature modules.
 import type { ComponentType } from 'react'
+import type { TeamRole } from '@/shared/domain/types'
 
-/** Team role, ordered from least to most privileged (see spec "Permisos por rol"). */
-export type TeamRole = 'player' | 'assistant' | 'coach'
+export type { TeamRole }
 
 /** A screen contributed by a module. */
 export interface ModuleRoute {
-  /** Path relative to the app root, e.g. `/matches/:id`. */
+  /** Path relative to the team, e.g. `partidos/:matchId` → `/equipos/<team>/partidos/<id>`. */
   path: string
   component: ComponentType
 }
@@ -15,6 +15,7 @@ export interface ModuleRoute {
 export interface ModuleMenuEntry {
   /** User-facing label, in Spanish. */
   label: string
+  /** Path relative to the team, like `ModuleRoute.path`. */
   path: string
 }
 

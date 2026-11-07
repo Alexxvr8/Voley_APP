@@ -6,7 +6,7 @@ Actualizada: 2026-11-07 · @Brian
 
 App web instalable (PWA) para gestionar equipos de voleibol: plantilla, calendario, disponibilidad, convocatorias y planificación de rotaciones por set, usable en pabellones sin cobertura.
 
-- **Para quién:** pensada para los equipos de Brian, pero abierta a que cualquier entrenador cree los suyos.
+- **Para quién:** cualquier entrenador crea sus equipos; cada usuario es independiente y ve la lista de los equipos a los que pertenece.
 - **Usuarios:** jugadores menores o con poca soltura con la tecnología. Login con usuario y contraseña, sin email obligatorio, y sesión que no caduca mientras se use.
 - **Coste:** cero. Servidor y hosting en planes gratuitos; acceso por enlace, sin dominio propio.
 
@@ -27,12 +27,15 @@ Cada usuario se registra por su cuenta y entra en un equipo con un código; el r
 - Registro con usuario y contraseña. Por debajo se guarda como `usuario@<dominio-interno>` para usar Supabase Auth sin pedir email real.
 - La sesión se renueva automáticamente: el usuario solo vuelve a loguearse si cierra sesión o pasa mucho tiempo sin abrir la app.
 - Casilla de consentimiento al registrarse (menores de 14 años necesitan autorización de sus padres en España). No se guardan DNI ni teléfonos de jugadores.
-- Recuperar contraseña: sin email, la resetea el entrenador desde la gestión del equipo.
+- Recuperar contraseña: con el **código de recuperación** que se muestra al crear la cuenta (usuario + código + contraseña nueva), sin ayuda de nadie. Respaldo: el entrenador pone una contraseña temporal. Recuperación por email opcional: pendiente de un servicio de envío gratuito.
+- Al crear la cuenta se pide la contraseña dos veces.
 
 **Unirse a un equipo**
 
 - El entrenador genera un código por rol (jugador / segundo entrenador). Se puede regenerar o desactivar.
-- Quien entra con código de jugador queda pendiente hasta que el entrenador lo vincula a una ficha de la plantilla (o crea una nueva).
+- Quien entra con código de jugador queda pendiente (no ve nada del equipo) hasta que el entrenador lo acepta vinculándolo a una ficha de la plantilla (o creando una nueva).
+- Al entrar se ve la lista de tus equipos y un botón **+** para crear uno o unirse con código. Siempre hay un menú (barra lateral en PC, botón ☰ en móvil) con tus equipos y el **+**; bajo el equipo abierto aparecen sus secciones: Partidos, Plantilla y, para el entrenador, Ajustes.
+- En cada equipo solo se ve la vista del rol que tienes; no se puede cambiar de rol desde la app.
 
 **Permisos por rol**
 
@@ -40,13 +43,14 @@ Cada usuario se registra por su cuenta y entra en un equipo con un código; el r
 | --- | --- | --- | --- |
 | Ver partidos, resultados y tabla | Sí | Sí | Sí |
 | Marcar su disponibilidad | Sí | Sí | Sí |
-| Editar plantilla | Sí | Sí | No |
+| Ver plantilla | Sí | Sí | Sí (solo lectura) |
+| Editar plantilla y marcar quién compite | Sí | Sí | No |
 | Crear y editar partidos | Sí | Sí | No |
 | Convocar | Sí | Sí | No |
 | Planificar rotaciones y modo partido | Sí | Sí | Ver (si el entrenador lo publica) |
 | Votar MVP del partido | Sí | No | Sí (si está convocada) |
 | Resolver empate de MVP y ver recuento | Sí | No | No |
-| Ajustes del equipo, códigos, módulos | Sí | No | No |
+| Ajustes del equipo (nombre, códigos, horario), aceptar jugadores, módulos | Sí | No | No |
 | Borrar equipo o transferirlo | Sí | No | No |
 
 ## Módulos
@@ -60,7 +64,8 @@ Siete módulos forman el núcleo; el plan de partido por set es el que más trab
 
 ### 2. Próximos partidos
 
-- Lista por proximidad y vista de calendario.
+- **Calendario mensual** con una burbuja en cada día con evento: azul para partido, verde para entrenamiento. Al tocar un día se ve lo que hay; debajo, los próximos partidos.
+- Los entrenamientos salen del horario semanal del equipo; el staff puede cancelar un día suelto.
 - Detalle: rival, fecha, hora de calentamiento, hora de partido, pabellón (con enlace a Maps), local/visitante, notas.
 - Botón de disponibilidad: Sí / No / Duda, con comentario opcional.
 - Los jugadores ven si están convocados.
@@ -69,19 +74,21 @@ Siete módulos forman el núcleo; el plan de partido por set es el que más trab
 
 - Ficha: nombre, apellidos, año de nacimiento, dorsal, posición principal y secundarias, días de entrenamiento.
 - Vinculación ficha ↔ cuenta de usuario (una ficha puede existir sin cuenta).
+- **Compite / solo entrena:** el entrenador lo marca o desmarca con doble comprobación. Quien solo entrena no aparece en la disponibilidad ni en la convocatoria de los partidos, pero ve el calendario.
 - **Sistema de juego predeterminado** del equipo: cada set nuevo arranca con él.
 
 ### 4. Gestión de partido (entrenador)
 
 - Editar los datos del partido.
-- Ver disponibilidad de todos y convocar a cualquiera, haya respondido o no.
-- Botón **Preparar partido** → plan por set. Botón **Ir al partido** → modo partido.
+- El partido tiene tres pestañas: **Info** (datos y disponibilidad), **Gestión** y **Rotación** (plan por set). Gestión y Rotación son del staff.
+- **Gestión:** ver disponibilidad de los que compiten y convocar a cualquiera, haya respondido o no; para cada convocado, cambiar dorsal y posición solo en ese partido.
+- Botón **Ir al partido** → modo partido (fase 2).
 
 ### 5. Plan de partido por set (entrenador, funciona offline)
 
 Para cada set se guarda un plan independiente:
 
-- **Sistema:** 5-1, 6-0, 4-2, 6-2 o 4-2 con posiciones delanteras. Por defecto el sistema predeterminado del equipo o el del set anterior.
+- **Sistema:** 5-1, 6-0, 4-2 o 6-2. Por defecto el sistema predeterminado del equipo o el del set anterior.
 - **Rotación inicial:** campo con zonas 1–6 coloreadas por rol (colocador, receptor, central, opuesto, líbero). Cada zona solo ofrece convocados con esa posición, con opción de "mostrar todos".
 - **R inicial:** junto al sistema se elige en qué R empieza el set. La R es la zona donde está el colocador que coloca: R1–R6 en 5-1, R2–R4 en 4-2 (coloca el delantero), R1/R5/R6 en 6-2 (coloca el zaguero). En 6-0 todos son receptores y no hay R.
 - **Líberos:** hasta dos casillas grises bajo la pista, solo si hay jugadores que puedan jugar de líbero. No se indica por quién entran.
@@ -166,10 +173,13 @@ La pieza clave es `team_members`: une usuario, equipo y rol, y todas las reglas 
 | `teams` | id, name, category, season, default\_system, enabled\_modules, settings, created\_by | `enabled_modules` = lista de módulos activos; `settings` incluye `mvp_ranking_visible` |
 | `team_members` | team\_id, user\_id, role, player\_id | role: coach / assistant / player; player\_id enlaza con la ficha |
 | `join_codes` | team\_id, code, role, active, expires\_at | Un código por rol, regenerable |
-| `players` | id, team\_id, first\_name, last\_name, birth\_year, number, main\_position, other\_positions, training\_days | Ficha de plantilla, puede no tener cuenta |
+| `players` | id, team\_id, first\_name, last\_name, birth\_year, number, main\_position, other\_positions, training\_days, competes | Ficha de plantilla, puede no tener cuenta. `competes = false`: solo entrena |
 | `matches` | id, team\_id, opponent, date, warmup\_time, match\_time, venue, maps\_url, home\_away, status, sets\_result, notes, mvp\_status, mvp\_closes\_at, mvp\_winners | status: scheduled / played / cancelled; mvp\_status: closed / open / tie\_pending / finished |
 | `availability` | match\_id, player\_id, status, comment, updated\_at | status: yes / no / maybe |
-| `callups` | match\_id, player\_id | Convocados |
+| `callups` | match\_id, player\_id, number, position | Convocados; dorsal y posición del partido (vacío = los de la ficha) |
+| `training_slots` | id, team\_id, weekday, start\_time, end\_time, venue | Horario semanal de entrenamientos |
+| `training_cancellations` | slot\_id, date | Entrenamiento que no se hace un día concreto |
+| `account_recovery` | user\_id, code\_hash, failed\_attempts, locked\_until | Código de recuperación (solo el hash). Sin acceso directo: solo vía RPC |
 | `set_plans` | id, match\_id, set\_number, system, start\_rotation, rotation, libero\_id, second\_libero\_id, planned\_subs, updated\_at, updated\_by | rotation = zona 1–6 → player\_id |
 | `mvp_votes` | match\_id, voter\_user\_id, voted\_player\_id, created\_at | Única por votante y votada; máx. 2 por votante. Sin acceso directo: solo vía RPC |
 | `league_table` | team\_id, rows, updated\_at | Tabla no oficial, filas en JSON |
@@ -219,6 +229,15 @@ Cada decisión cerrada se añade aquí con su fecha; este documento es la refere
 | 2026-11-07 | `docs/especificacion.md` sustituye a `docs/SPEC.md` como única referencia (fusionadas) |
 | 2026-11-07 | Anti-pausa: GitHub Action `keep-supabase-awake.yml` consulta la base de datos cada 3 días; URL y clave publicable como variables del repositorio |
 | 2026-11-07 | Uso en PC: desde 1024 px barra lateral y pantallas a dos columnas; la app instalada no se bloquea en vertical |
+| 2026-11-07 | Se elimina el sistema "4-2 con posiciones delanteras" (`4-2-front`): quedan 5-1, 6-0, 4-2 y 6-2 |
+| 2026-11-07 | Cada usuario es independiente: se registra solo, ve sus equipos y recupera la contraseña con su código. App abierta a cualquier entrenador |
+| 2026-11-07 | Recuperar contraseña: código de recuperación (hash bcrypt, 5 intentos y 15 min de bloqueo) + contraseña temporal del entrenador; email opcional pendiente de servicio de envío |
+| 2026-11-07 | Jugadores que entran con código quedan pendientes, sin acceso, hasta que el entrenador los acepta |
+| 2026-11-07 | Rol fijo por equipo, sin selector; los jugadores ven la plantilla en solo lectura |
+| 2026-11-07 | Menú con tus equipos y "+"; secciones del equipo: Partidos, Plantilla y Ajustes (solo entrenador) |
+| 2026-11-07 | Partido con pestañas Info, Gestión (convocatoria + dorsal/posición del partido) y Rotación; "Rotaciones" sale del menú |
+| 2026-11-07 | Calendario mensual con burbujas de partido y entrenamiento; horario semanal de entrenamientos con cancelación de días sueltos |
+| 2026-11-07 | Jugador "solo entrena" (`competes = false`): fuera de disponibilidad y convocatoria; se cambia con doble comprobación |
 | 2026-11-07 | Calidad de código: ESLint (flat config, typescript-eslint, reglas de hooks) y Prettier en `frontend/` |
 
 **Temas abiertos**
