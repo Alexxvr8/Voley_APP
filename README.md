@@ -11,6 +11,7 @@ Voley_APP/
 ├── frontend/        La app que se ve en el móvil (React + Vite, PWA)
 ├── backend/         Base de datos, permisos y lógica de servidor (Supabase)
 ├── docs/especificacion.md  Qué hace la app y por qué (fuente de verdad)
+├── .github/workflows/  Tarea programada que evita que Supabase se pause (ver backend/README.md)
 ├── CLAUDE.md        Reglas del proyecto para el asistente de código
 └── package.json     Atajos para lanzar el frontend desde la raíz
 ```

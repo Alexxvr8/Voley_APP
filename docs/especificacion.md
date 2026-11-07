@@ -216,6 +216,7 @@ Cada decisión cerrada se añade aquí con su fecha; este documento es la refere
 | 2026-11-07 | Offline solo plantilla (lectura) y rotaciones; resultados y lo demás requieren conexión |
 | 2026-11-07 | Cada equipo tiene un sistema de juego predeterminado con el que arranca cada set |
 | 2026-11-07 | `docs/especificacion.md` sustituye a `docs/SPEC.md` como única referencia (fusionadas) |
+| 2026-11-07 | Anti-pausa: GitHub Action `keep-supabase-awake.yml` consulta la base de datos cada 3 días; URL y clave publicable como variables del repositorio |
 | 2026-11-07 | Calidad de código: ESLint (flat config, typescript-eslint, reglas de hooks) y Prettier en `frontend/` |
 
 **Temas abiertos**

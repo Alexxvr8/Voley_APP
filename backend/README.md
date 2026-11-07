@@ -8,7 +8,13 @@ El backend es un proyecto de **Supabase**: Postgres para los datos, Supabase Aut
 | Ref | `djjeodajgsfvcisrrkzk` |
 | Región | eu-central-1 (Frankfurt) |
 | Dashboard | https://supabase.com/dashboard/project/djjeodajgsfvcisrrkzk |
-| Plan | Gratuito. Se pausa tras 7 días sin actividad; en una fase posterior lo evitará una GitHub Action |
+| Plan | Gratuito. Se pausa tras 7 días sin actividad; lo evita la GitHub Action `.github/workflows/keep-supabase-awake.yml` (ver abajo) |
+
+## Que no se pause
+
+El plan gratuito pausa el proyecto tras 7 días sin actividad y entonces el login deja de funcionar. La GitHub Action `keep-supabase-awake.yml` hace una consulta a la base de datos cada 3 días. Lee la URL y la clave publicable de las variables del repositorio (`SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, en GitHub → Settings → Secrets and variables → Actions → Variables). Se puede lanzar a mano desde la pestaña Actions.
+
+GitHub desactiva las tareas programadas de un repositorio público tras 60 días sin commits; si pasa, se reactiva desde la pestaña Actions. Si el proyecto ya está pausado, se restaura desde el dashboard de Supabase.
 
 ## Estructura
 
