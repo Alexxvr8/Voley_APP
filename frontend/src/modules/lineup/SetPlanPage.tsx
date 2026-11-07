@@ -1,15 +1,17 @@
 // "Rotación" tab of a match: the coach plans each set (system, starting rotation, lineup,
 // liberos, planned substitutions). This component only holds the state; each block is its own component.
-// The plan is not saved yet: persistence and offline sync arrive in phase 2.
+// Each change is shown at once and saved through the offline queue (see api.ts), so it also works
+// without network.
 import { useState } from 'react'
-import { useParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
+import { OfflineStatus } from '@/core/offline/components/OfflineStatus'
 import { hasRole, useCurrentTeam, useTeamPath } from '@/core/teams/currentTeam'
 import { asCalledUp } from '@/shared/domain/callups'
 import type { GameSystem, Match, Player, Team } from '@/shared/domain/types'
 import { Card } from '@/shared/ui/Card'
 import { PageMessage } from '@/shared/ui/PageMessage'
 import { MatchHeader } from '@/shared/ui/MatchHeader'
-import { useCallups, useMatches, usePlayers } from './api'
+import { savePlan, useCallups, useMatches, usePlayers, useSetPlans } from './api'
 import { Court } from './components/Court'
 import { PlannedSubsCard } from './components/PlannedSubsCard'
 import { SetTabs } from './components/SetTabs'
@@ -27,6 +29,7 @@ import {
   type SetPlan,
   type SetPlans,
 } from './setPlan'
+import type { StoredSetPlans } from './setPlanRows'
 import { rotatePlayers } from './systems'
 
 /** "Rotación" tab of a match: loads the match and its call-ups, then hands them to the editor. */
@@ -36,13 +39,14 @@ export function SetPlanPage() {
   const matches = useMatches(team.id)
   const players = usePlayers(team.id)
   const callups = useCallups(matchId)
+  const setPlans = useSetPlans(matchId)
 
   if (!hasRole(role, 'assistant'))
     return <PageMessage>No tienes acceso a esta sección.</PageMessage>
-  if (matches.isPending || players.isPending || callups.isPending) {
+  if (matches.isPending || players.isPending || callups.isPending || setPlans.isPending) {
     return <PageMessage>Cargando…</PageMessage>
   }
-  if (matches.isError || players.isError || callups.isError) {
+  if (matches.isError || players.isError || callups.isError || setPlans.isError) {
     return <PageMessage>No se ha podido cargar. ¿Hay conexión?</PageMessage>
   }
   const match = matches.data.find((m) => m.id === matchId)
@@ -53,7 +57,6 @@ export function SetPlanPage() {
     const player = players.data.find((p) => p.id === callup.playerId)
     return player ? [asCalledUp(player, callup)] : []
   })
-  // Remounting per match resets the local plan when switching matches.
   return (
     <SetPlanEditor
       key={match.id}
@@ -61,6 +64,7 @@ export function SetPlanPage() {
       match={match}
       players={players.data}
       calledUp={calledUp}
+      stored={setPlans.data}
     />
   )
 }
@@ -71,19 +75,25 @@ interface SetPlanEditorProps {
   players: Player[]
   /** Called-up players: the only ones who can take part. */
   calledUp: Player[]
+  /** Saved plans (with changes still waiting to be sent). */
+  stored: StoredSetPlans
 }
 
-function SetPlanEditor({ team, match, players, calledUp }: SetPlanEditorProps) {
+function SetPlanEditor({ team, match, players, calledUp, stored }: SetPlanEditorProps) {
   const teamPath = useTeamPath()
-  const [currentSet, setCurrentSet] = useState(1)
-  const [plans, setPlans] = useState<SetPlans>({})
+  // `?set=3` opens that set directly (the match mode links here).
+  const [searchParams] = useSearchParams()
+  const [currentSet, setCurrentSet] = useState(Number(searchParams.get('set')) || 1)
   const [showAll, setShowAll] = useState(false)
 
+  const plans = Object.fromEntries(
+    Object.entries(stored).map(([setNumber, saved]) => [setNumber, saved!.plan]),
+  ) as SetPlans
   const plan = plans[currentSet] ?? newSetPlan(plans[currentSet - 1], team.defaultSystem)
   const updatePlan = (changes: Partial<SetPlan>) =>
-    setPlans({ ...plans, [currentSet]: { ...plan, ...changes } })
+    savePlan(match.id, currentSet, { ...plan, ...changes })
   const copyPlanFrom = (setNumber: number) =>
-    setPlans({ ...plans, [currentSet]: structuredClone(plans[setNumber]) })
+    savePlan(match.id, currentSet, structuredClone(plans[setNumber]!))
 
   function changeSystem(system: GameSystem) {
     updatePlan({ system, startRotation: validStartRotation(system, plan.startRotation) })
@@ -130,9 +140,16 @@ function SetPlanEditor({ team, match, players, calledUp }: SetPlanEditorProps) {
         showRotation={team.enabledModules.includes('lineup')}
       />
       <div>
-        <p className="text-sm text-slate-500">
-          {calledUp.length} convocados · el plan aún no se guarda (llegará en la fase 2)
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-slate-500">{calledUp.length} convocados · se guarda solo</p>
+          <Link
+            to={teamPath(`partidos/${match.id}/partido`)}
+            className="rounded-xl bg-blue-800 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-900"
+          >
+            Ir al partido
+          </Link>
+        </div>
+        <OfflineStatus teamId={team.id} matchId={match.id} />
         {calledUp.length === 0 && (
           <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">
             Aún no hay convocados. Convócalos en la pestaña Gestión para colocarlos en la pista.

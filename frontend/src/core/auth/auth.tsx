@@ -2,6 +2,7 @@
 // email address so players never need a real email (see spec "Registro y sesión").
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
+import { clearOfflineData } from '@/core/offline/db'
 import { queryClient } from '@/core/query/queryClient'
 import { supabase } from '@/core/supabase/client'
 import {
@@ -122,8 +123,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signOut()
     // Offline, revoking the session server-side fails; still sign out on this device.
     if (error) await supabase.auth.signOut({ scope: 'local' })
-    // The next account must not see this account's cached teams.
+    // The next account must not see this account's cached teams or downloaded matches.
     queryClient.clear()
+    await clearOfflineData()
   }
 
   return (

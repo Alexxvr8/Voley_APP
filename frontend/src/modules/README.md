@@ -5,11 +5,14 @@ Cada carpeta es una funcionalidad independiente que un equipo puede activar o de
 | Módulo | Para qué sirve | En el menú | Rol mínimo | Sin conexión |
 | --- | --- | --- | --- | --- |
 | `matches/` | Calendario mensual (partidos y entrenamientos), crear, editar y borrar partidos, info con mapa y resultado por sets, disponibilidad y la pestaña Gestión (convocatoria con dorsal y posiciones del partido) | Partidos | Jugador | No |
-| `roster/` | Plantilla. El staff añade y edita jugadores (dorsal, posición principal y otras) y marca quién compite o solo entrena; los jugadores la ven sin poder cambiarla | Plantilla | Jugador | No |
-| `lineup/` | Pestaña Rotación del partido: sistema, R inicial, alineación, líberos y cambios. En la fase 2, modo partido | — (pestaña del partido) | Segundo entrenador | Sí |
+| `roster/` | Plantilla. El staff añade y edita jugadores (dorsal, posición principal y otras) y marca quién compite o solo entrena; los jugadores la ven sin poder cambiarla. Se descarga para verla sin conexión | Plantilla | Jugador | Solo lectura |
+| `lineup/` | Pestaña Rotación del partido (plan por set guardado en el servidor) y modo partido. Funciona sin conexión | — (pestaña y botón "Ir al partido") | Segundo entrenador | Sí |
+| `results/` | Partidos jugados con su resultado y tabla de liga no oficial (rellena a mano, con "Actualizada el dd/mm") | Resultados | Jugador | No |
 | `teams/` | Ajustes del equipo: datos y sistema predeterminado, color, secciones activas, códigos, solicitudes, miembros (quitar, transferir), horario, pabellones, rivales y borrar el equipo | Ajustes | Entrenador | No |
 
-Previsto: `results/` (resultados y tabla) y `mvp/`.
+Previsto: `mvp/`.
+
+Un módulo que funciona sin conexión pone `offline: true` y un `prepareOffline(teamId)` que descarga lo que necesita a la caché y devuelve los partidos que deja disponibles. Sus cambios van por la bandeja de salida de `core/offline/outbox.ts`.
 
 ## Anatomía de un módulo
 
@@ -57,9 +60,14 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 
 | Fichero | Qué hace |
 | --- | --- |
-| `SetPlanPage.tsx` | Pestaña Rotación. Carga partido y convocados (con el dorsal y las posiciones del partido) y guarda en el móvil el plan de cada set. Cada set es independiente: un jugador con varias posiciones puede ir en una zona distinta en cada set. Aún no se guarda en el servidor (fase 2) |
+| `SetPlanPage.tsx` | Pestaña Rotación. Carga partido y convocados (con el dorsal y las posiciones del partido) y edita el plan de cada set; cada cambio se guarda solo. Cada set es independiente: un jugador con varias posiciones puede ir en una zona distinta en cada set. `?set=3` abre ese set |
+| `MatchModePage.tsx` | Modo partido: set y R actuales en grande, pista con dorsales y nombres, Rotar / Atrás, líberos, hacer o deshacer los cambios previstos, sistema y R inicial antes de empezar cada set y "Terminar set". Recuerda por dónde iba (en el móvil) |
+| `matchMode.ts` | Estado del modo partido y quién está en pista: alineación rotada con los cambios hechos |
+| `api.ts` | Jugadores, partidos, convocatoria y planes. `savePlan` mete el cambio en la bandeja de salida; `useSetPlans` muestra el servidor con los cambios pendientes encima; `prepareLineupOffline` descarga los 5 próximos partidos con convocatoria y planes |
+| `setPlanRows.ts` | Conversión entre el plan del editor y la tabla `set_plans` / la RPC `save_set_plan` |
+| `components/LiveCourt.tsx`, `LiveSubsCard.tsx` | Pista grande y cambios previstos del modo partido |
 | `setPlan.ts` | `SetPlan`, `PlannedSub`, `newSetPlan` (hereda el sistema del set anterior), `canPlay`, `replacementPositions` (misma posición, o colocador ↔ opuesto) |
-| `systems.ts` | Plantilla de roles por zona de cada sistema (5-1, 6-0, 4-2, 6-2) y cómo gira. La R es la zona del colocador que coloca (`availableRotations`: R1–R6 en 5-1, R2–R4 en 4-2, R1/R5/R6 en 6-2, ninguna en 6-0) |
+| `systems.ts` | Plantilla de roles por zona de cada sistema (5-1, 6-0, 4-2, 6-2) y cómo gira. La R es la zona del colocador que coloca (`availableRotations`: R1–R6 en 5-1, R2–R4 en 4-2, R1/R5/R6 en 6-2, ninguna en 6-0). Al rotar, la R va R1 → R6 → R5 → R4 → R3 → R2 (`advanceLineup`, `rotationAfter`, `zoneRolesAfter`) |
 | `components/SetTabs.tsx` | Pestañas Set 1–5 |
 | `components/SystemPicker.tsx` | Selector de sistema, de rotación inicial (R1, R2…) y "copiar de otro set" |
 | `components/Court.tsx` | Pista con las 6 zonas coloreadas según sistema y R, y dos casillas grises para líberos |
@@ -89,3 +97,12 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 | `components/VenuesCard.tsx`, `OpponentsCard.tsx` | Pabellones (con enlace de Maps) y rivales habituales |
 | `components/DeleteTeamCard.tsx` | Borrar el equipo escribiendo su nombre |
 | `components/MembersCard.tsx` | Miembros: contraseña temporal, quitar del equipo y hacer entrenador (transferir), todo con confirmación |
+
+## Ficheros del módulo `results`
+
+| Fichero | Qué hace |
+| --- | --- |
+| `ResultsPage.tsx` | Partidos jugados y tabla de liga |
+| `components/PlayedMatchesCard.tsx` | Jugados, del más reciente al más antiguo, con "3-1", los puntos de cada set y el balance ganados/perdidos |
+| `components/LeagueTableCard.tsx` | Tabla no oficial (PJ, PG, PP, Pts) con "Actualizada el dd/mm". El staff la añade, edita o quita |
+| `leagueTable.ts` | Orden de la tabla: puntos, partidos ganados y nombre |

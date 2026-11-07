@@ -44,10 +44,10 @@ npm run dev          # http://localhost:5173
 
 ## Estado
 
-Fase 1 en curso. Ya funciona con datos reales:
+Fases 1 y 2 hechas. Funciona con datos reales:
 - Registro con código de recuperación, recuperar la contraseña uno mismo y la lista de tus equipos.
 - Crear equipo o unirse con código; los jugadores quedan pendientes hasta que el entrenador los acepta.
 - Calendario mensual con partidos y entrenamientos, disponibilidad y convocatoria con dorsal y posición por partido.
 - Plantilla con "compite / solo entrena".
 
-El plan de rotación aún no se guarda en el servidor (fase 2).
+Fase 2 completada: rotaciones guardadas en el servidor, modo partido y funcionamiento sin conexión (plantilla, plan por set y modo partido), con sincronización al volver la red; resultados y tabla de liga.

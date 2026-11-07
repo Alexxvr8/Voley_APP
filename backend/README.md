@@ -40,6 +40,9 @@ Cada cambio en la base de datos es un fichero SQL nuevo en `supabase/migrations/
 | `20261107000400_team_ownership_and_email_recovery.sql` | Un equipo nunca se queda sin entrenador (trigger `keep_a_coach`), `transfer_team` y recuperación por correo (`account_recovery_email` y sus funciones) |
 | `20261107000500_warmup_venues_team_color.sql` | Calentamiento como duración (`matches.warmup_minutes` sustituye a `warmup_time`), pabellones del equipo (`team_venues`), color del equipo (`teams.color`) y `my_teams` devuelve el color |
 | `20261107000600_team_opponents.sql` | Lista de rivales del equipo (`team_opponents`) |
+| `20261108000000_save_set_plan.sql` | RPC `save_set_plan` para guardar el plan de un set (también los cambios hechos sin conexión) avisando si otra persona lo había cambiado |
+| `20261108000100_fix_save_set_plan_ambiguity.sql` | Corrige `save_set_plan`: el parámetro `set_number` chocaba con la columna y ningún guardado funcionaba |
+| `20261108000200_results_module.sql` | Módulo Resultados activo en todos los equipos y permiso para quitar la tabla de liga |
 
 Se aplican al proyecto con el conector de Supabase (`apply_migration`) o con la CLI (`supabase db push`, desde `backend/`).
 
@@ -113,6 +116,7 @@ Las acciones que tocan varias tablas o necesitan saltarse RLS de forma controlad
 | `reset_password_with_code(username, code, new_password)` | **Sin sesión** | Pone una contraseña nueva si el código es correcto y devuelve `{ok, code}` con el código nuevo. 5 fallos bloquean 15 minutos. Devuelve en vez de lanzar error para que los fallos queden contados |
 | `coach_reset_password(team, member)` | Entrenador | Pone una contraseña temporal a un miembro que no sea entrenador y la devuelve |
 | `transfer_team(team, new_coach)` | Entrenador | Hace entrenador a otro miembro; el actual pasa a segundo entrenador |
+| `save_set_plan(match, set_number, …, base_updated_at)` | Entrenador y segundo (RLS de `set_plans`) | Guarda el plan de un set. Si otra persona lo había guardado después de la versión de la que partía el cambio (`base_updated_at`), lo guarda igual (gana el último) y devuelve `overwritten` y quién era, para avisar |
 | `set_recovery_email(email)` / `my_recovery_email()` | Cualquier usuario con sesión | Guarda (vacío = quita) o lee tu correo de recuperación |
 | `reset_password_with_email_token(username, token, new_password)` | **Sin sesión** | Contraseña nueva con el enlace del correo: un solo uso y 1 hora. Devuelve `{ok, code}` con un código de recuperación nuevo |
 | `issue_email_reset_token(username)` | Solo `service_role` (la Edge Function) | Crea el enlace de 1 hora y devuelve a qué correo mandarlo; como mucho uno por minuto |

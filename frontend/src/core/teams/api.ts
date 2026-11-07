@@ -18,17 +18,21 @@ export function useMyTeams() {
   })
 }
 
-/** Team settings (default system, enabled modules). Only readable once the user is accepted. */
-export function useTeam(teamId: string, enabled: boolean) {
-  return useQuery({
+/** Query of a team's settings (default system, enabled modules, colour), shared by screens and downloads. */
+export function teamQuery(teamId: string) {
+  return {
     queryKey: ['team', teamId],
-    enabled,
     queryFn: async () => {
       const { data, error } = await supabase.from('teams').select('*').eq('id', teamId).single()
       if (error) throw error
       return toTeam(data as TeamRow)
     },
-  })
+  }
+}
+
+/** Team settings. Only readable once the user is accepted. */
+export function useTeam(teamId: string, enabled: boolean) {
+  return useQuery({ ...teamQuery(teamId), enabled })
 }
 
 export function useCreateTeam() {

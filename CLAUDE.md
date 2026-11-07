@@ -13,7 +13,7 @@ PWA para gestionar equipos de voleibol (plantilla, partidos, disponibilidad, con
 - Supabase (Auth + Postgres + RLS), proyecto `voley-app` en la organización Alexxvr8 (ref `djjeodajgsfvcisrrkzk`). Migraciones en `backend/supabase/migrations/`; cada cambio de esquema va en un archivo nuevo (nunca se edita uno aplicado) y se aplica al proyecto. Variables en `frontend/.env.local` (plantilla en `frontend/.env.example`).
 - TanStack Query para leer y cambiar datos de Supabase (un `api.ts` por módulo)
 - Hosting en Vercel (`voley-app-gold.vercel.app`), despliegue automático al subir a `main`
-- Previsto en fases siguientes (ver especificación): Dexie (IndexedDB) para el modo sin conexión
+- Dexie (IndexedDB) para lo que funciona sin conexión: caché guardada, partidos descargados y bandeja de salida (`frontend/src/core/offline/`)
 
 Todo debe funcionar en planes gratuitos.
 
@@ -56,7 +56,7 @@ docs/especificacion.md
 - Lógica pura nueva (cálculos, conversiones) con su test en `*.test.ts`.
 - Diseño móvil primero: los usuarios son jugadores jóvenes con poca soltura tecnológica; las acciones de jugador deben requerir dos toques como máximo.
 - También cómodo en PC (sobre todo para el entrenador): desde `lg` (1024 px) el marco usa barra lateral y las pantallas reparten el contenido en columnas con clases `lg:`. El móvil no cambia.
-- Offline: solo la plantilla (lectura) y las rotaciones (plan por set y modo partido) funcionan sin red; todo lo demás requiere conexión (ver "Funciones online y offline" en la especificación). Ten en cuenta esto al diseñar datos y estado desde el principio.
+- Offline: solo la plantilla (lectura) y las rotaciones (plan por set y modo partido) funcionan sin red; todo lo demás requiere conexión (ver "Funciones online y offline" en la especificación). Un cambio que deba funcionar sin red va por la bandeja de salida (`enqueue` + `registerOutboxHandler` en `core/offline/outbox.ts`), nunca por mutaciones de TanStack Query; el módulo declara `prepareOffline` para descargar lo que necesita.
 
 ## Comandos
 

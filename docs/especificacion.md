@@ -252,6 +252,11 @@ Cada decisión cerrada se añade aquí con su fecha; este documento es la refere
 | 2026-11-07 | Comentario opcional en la disponibilidad; borrar fichas de la plantilla |
 | 2026-11-07 | Puede haber varios partidos contra el mismo rival |
 | 2026-11-07 | Tests unitarios (Vitest) y CI en GitHub Actions: lint, formato, tests y build en cada subida |
+| 2026-11-08 | Fase 2: el plan por set se guarda en el servidor (RPC `save_set_plan`); los cambios hechos sin conexión van a una bandeja de salida en el móvil (IndexedDB) y se envían al volver la red; si otra persona cambió el mismo set, gana el último y se avisa |
+| 2026-11-08 | Descarga automática de los 5 próximos partidos (convocatoria, plantilla y planes) al abrir la app con red; indicador "Disponible sin conexión · hh:mm" y botón "Preparar para sin conexión" |
+| 2026-11-08 | Modo partido: R en grande, rotar (R1 → R6 → R5…), líberos, hacer/deshacer cambios previstos, sistema y R inicial antes de cada set; recuerda por dónde iba. El resultado del set se apunta con conexión en Info |
+| 2026-11-08 | Módulo Resultados: partidos jugados y tabla de liga no oficial con "Actualizada el dd/mm" |
+| 2026-11-08 | Prueba de aceptación de la fase 2 superada en navegador: app abierta en modo avión, plantilla visible, partido de 5 sets cambiando sistema y rotación, recarga a mitad y sincronización completa al volver la red |
 | 2026-11-07 | Calidad de código: ESLint (flat config, typescript-eslint, reglas de hooks) y Prettier en `frontend/` |
 
 **Temas abiertos**

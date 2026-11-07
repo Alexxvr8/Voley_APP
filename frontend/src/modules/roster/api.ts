@@ -7,18 +7,25 @@ import type { Position } from '@/shared/domain/types'
 
 const playersKey = (teamId: string) => ['players', teamId]
 
+const playersQuery = (teamId: string) => ({
+  queryKey: playersKey(teamId),
+  queryFn: async () => {
+    const { data, error } = await supabase.from('players').select('*').eq('team_id', teamId)
+    if (error) throw error
+    return (data as PlayerRow[]).map(toPlayer)
+  },
+})
+
 export function usePlayers(teamId: string) {
-  return useQuery({
-    queryKey: playersKey(teamId),
-    queryFn: async () => {
-      const { data, error } = await supabase.from('players').select('*').eq('team_id', teamId)
-      if (error) throw error
-      return (data as PlayerRow[]).map(toPlayer)
-    },
-  })
+  return useQuery(playersQuery(teamId))
 }
 
-/** Editable fields of a roster entry. */
+/** Downloads the roster so it can be read offline. It prepares no match of its own. */
+export async function prepareRosterOffline(teamId: string): Promise<string[]> {
+  await queryClient.fetchQuery({ ...playersQuery(teamId), staleTime: 0 })
+  return []
+}
+
 export interface PlayerInput {
   firstName: string
   lastName: string

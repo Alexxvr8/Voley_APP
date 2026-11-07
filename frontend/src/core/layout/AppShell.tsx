@@ -1,7 +1,11 @@
 // Shell around every screen once signed in. PC (lg): sidebar with the teams menu always visible.
 // Phones: header with a ☰ button that opens the same menu, plus bottom tabs while a team is open.
+// Also shows the connection strip and notices, and downloads what offline modules need.
 import { useState } from 'react'
 import { Outlet } from 'react-router'
+import { ConnectionBanner } from '@/core/offline/components/ConnectionBanner'
+import { NoticeList } from '@/core/offline/components/NoticeList'
+import { useAutoPrepareOffline } from '@/core/offline/prepare'
 import { BottomNav } from './components/BottomNav'
 import { MobileDrawer } from './components/MobileDrawer'
 import { MobileHeader } from './components/MobileHeader'
@@ -9,6 +13,7 @@ import { SideNav } from './components/SideNav'
 
 export function AppShell() {
   const [menuOpen, setMenuOpen] = useState(false)
+  useAutoPrepareOffline()
 
   return (
     <div className="min-h-dvh bg-slate-50 lg:flex">
@@ -17,12 +22,14 @@ export function AppShell() {
 
       <div className="mx-auto flex min-h-dvh w-full max-w-md min-w-0 flex-col lg:mx-0 lg:max-w-none lg:flex-1">
         <MobileHeader onOpenMenu={() => setMenuOpen(true)} />
+        <ConnectionBanner />
         <main className="w-full flex-1 px-4 pt-4 pb-24 lg:max-w-7xl lg:px-10 lg:pt-8 lg:pb-10">
           <Outlet />
         </main>
       </div>
 
       <BottomNav />
+      <NoticeList />
     </div>
   )
 }

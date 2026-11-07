@@ -34,4 +34,9 @@ export interface ModuleDefinition {
   minRole: TeamRole
   /** Whether the module must work without network (see spec "Funciones online y offline"). */
   offline: boolean
+  /**
+   * Downloads what the module needs offline for a team (into the query cache, which is kept on the
+   * device) and returns the ids of the matches it made available. Only for offline modules.
+   */
+  prepareOffline?: (teamId: string) => Promise<string[]>
 }

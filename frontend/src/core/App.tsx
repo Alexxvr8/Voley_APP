@@ -1,7 +1,7 @@
 // App root: auth gate, then the router. Every screen shares the shell with the teams menu.
 // Inside `/equipos/:teamId`: the screens of the team's enabled modules allowed for the user's role.
 import { useState, type ReactNode } from 'react'
-import { QueryClientProvider } from '@tanstack/react-query'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { createBrowserRouter, Outlet, RouterProvider, type RouteObject } from 'react-router'
 import { AccountPage } from '@/core/account/AccountPage'
 import { AuthProvider, useAuth } from '@/core/auth/auth'
@@ -12,6 +12,9 @@ import { AppShell } from '@/core/layout/AppShell'
 import { ModuleCatalogContext } from '@/core/modules/catalog'
 import { modules } from '@/core/modules/registry'
 import type { ModuleDefinition } from '@/core/modules/types'
+import { setOfflineModules } from '@/core/offline/prepare'
+import { startOutbox } from '@/core/offline/outbox'
+import { PERSIST_MAX_AGE, queryPersister } from '@/core/offline/persister'
 import { queryClient } from '@/core/query/queryClient'
 import { AddTeamPage } from '@/core/teams/AddTeamPage'
 import { CurrentTeamProvider, hasRole, useCurrentTeam } from '@/core/teams/currentTeam'
@@ -38,6 +41,9 @@ const moduleRoutes: RouteObject[] = modules.flatMap((module) =>
     ),
   })),
 )
+
+setOfflineModules(modules)
+startOutbox()
 
 const notFound = { path: '*', element: <PageMessage>Página no encontrada.</PageMessage> }
 
@@ -91,12 +97,16 @@ function AuthGate() {
 
 export function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      // Only data is kept on the device; changes made offline live in the outbox (core/offline/outbox).
+      persistOptions={{ persister: queryPersister, maxAge: PERSIST_MAX_AGE }}
+    >
       <ModuleCatalogContext.Provider value={modules}>
         <AuthProvider>
           <AuthGate />
         </AuthProvider>
       </ModuleCatalogContext.Provider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   )
 }

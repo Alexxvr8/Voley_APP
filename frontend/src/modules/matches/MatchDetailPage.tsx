@@ -81,6 +81,14 @@ export function MatchDetailPage() {
               failed={setResult.isError}
               onSave={(sets) => setResult.mutate(sets)}
             />
+            {team.enabledModules.includes('lineup') && (
+              <Link
+                to={teamPath(`partidos/${match.id}/partido`)}
+                className="block rounded-xl bg-blue-800 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-blue-900"
+              >
+                Ir al partido
+              </Link>
+            )}
             <Link
               to={teamPath(`partidos/${match.id}/editar`)}
               className={`block text-center ${SECONDARY_BUTTON_CLASS}`}

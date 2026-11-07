@@ -113,3 +113,34 @@ export function rotatePlayers(
   }
   return rotated
 }
+
+/** Moves every placed player `steps` rotations forward (zone 2 → 1, 1 → 6, 6 → 5…). */
+export function advanceLineup(
+  rotation: Partial<Record<Zone, string>>,
+  steps: number,
+): Partial<Record<Zone, string>> {
+  const moved: Partial<Record<Zone, string>> = {}
+  for (const zone of ROTATION_ORDER) {
+    const playerId = rotation[zone]
+    if (playerId) moved[rotateZone(zone, steps)] = playerId
+  }
+  return moved
+}
+
+/** Rotation number (zone of the setter who sets) after `steps` rotations from the start one; null in 6-0. */
+export function rotationAfter(
+  system: GameSystem,
+  startRotation: number,
+  steps: number,
+): number | null {
+  return settingSetterZone(system, stepsTo(system, startRotation) + steps) ?? null
+}
+
+/** Expected role per zone after `steps` rotations from the start rotation. */
+export function zoneRolesAfter(
+  system: GameSystem,
+  startRotation: number,
+  steps: number,
+): Record<Zone, Position> {
+  return rolesAfterSteps(system, stepsTo(system, startRotation) + steps)
+}
