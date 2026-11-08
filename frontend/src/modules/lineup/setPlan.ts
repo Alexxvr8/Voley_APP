@@ -3,9 +3,6 @@
 import type { GameSystem, Player, Position } from '@/shared/domain/types'
 import { availableRotations, zoneRoles, type Zone } from './systems'
 
-/** Sets in a match: best of five. */
-export const SET_NUMBERS = [1, 2, 3, 4, 5] as const
-
 /** A substitution the coach plans in advance: `outId` leaves the court, `inId` comes in. */
 export interface PlannedSub {
   outId: string

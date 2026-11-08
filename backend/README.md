@@ -44,6 +44,7 @@ Cada cambio en la base de datos es un fichero SQL nuevo en `supabase/migrations/
 | `20261108000100_fix_save_set_plan_ambiguity.sql` | Corrige `save_set_plan`: el parámetro `set_number` chocaba con la columna y ningún guardado funcionaba |
 | `20261108000200_results_module.sql` | Módulo Resultados activo en todos los equipos y permiso para quitar la tabla de liga |
 | `20261108000300_training_attendance_and_final_score.sql` | Asistencia a entrenamientos (`training_attendance`), formato del partido (`matches.sets_format`) y marcador final sin puntos por set (`matches.final_score`) |
+| `20261108000400_merge_players.sql` | RPC `merge_players` (solo entrenador): junta dos fichas de la misma persona pasando cuenta, disponibilidad, convocatorias, asistencia y planes por set a la que se queda |
 
 Se aplican al proyecto con el conector de Supabase (`apply_migration`) o con la CLI (`supabase db push`, desde `backend/`).
 

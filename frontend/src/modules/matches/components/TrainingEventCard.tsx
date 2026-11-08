@@ -1,11 +1,20 @@
 // A weekly training on a specific date. Players answer whether they come (Sí / No / Duda); staff see
-// how many answered each and can cancel the training for that day or bring it back.
+// how many answered each (and who, on tap) and can cancel the training for that day or bring it back.
+import { useState } from 'react'
 import type { AvailabilityStatus } from '@/shared/domain/types'
 import { AvailabilityButtons } from '@/shared/ui/AvailabilityButtons'
 import { Card } from '@/shared/ui/Card'
 import type { TrainingOnDate } from '@/shared/utils/calendar'
-import { formatShortDate } from '@/shared/utils/format'
+import { formatShortDate, playerName } from '@/shared/utils/format'
 import { mapsOpenUrl } from '@/shared/utils/maps'
+import type { AnswerGroups } from '../trainingAnswers'
+
+const GROUPS: { key: keyof AnswerGroups; label: string; color: string }[] = [
+  { key: 'yes', label: 'Sí', color: 'text-emerald-700' },
+  { key: 'no', label: 'No', color: 'text-rose-700' },
+  { key: 'maybe', label: 'Duda', color: 'text-amber-700' },
+  { key: 'none', label: 'Sin responder', color: 'text-slate-500' },
+]
 
 interface TrainingEventCardProps {
   training: TrainingOnDate
@@ -16,8 +25,8 @@ interface TrainingEventCardProps {
     status: AvailabilityStatus | undefined
     onChange: (status: AvailabilityStatus) => void
   }
-  /** Present for staff: how many answered yes, no or maybe. */
-  counts?: Record<AvailabilityStatus, number>
+  /** Present for staff: the players grouped by their answer. */
+  groups?: AnswerGroups
   /** Present for staff: toggles the cancellation of this date. */
   onToggleCancelled?: () => void
 }
@@ -26,10 +35,11 @@ export function TrainingEventCard({
   training,
   showDate = false,
   attendance,
-  counts,
+  groups,
   onToggleCancelled,
 }: TrainingEventCardProps) {
   const { slot, cancelled } = training
+  const [showNames, setShowNames] = useState(false)
 
   return (
     <Card
@@ -70,12 +80,34 @@ export function TrainingEventCard({
         )}
       </div>
 
-      {counts && !cancelled && (
-        <p className="flex gap-4 text-sm">
-          <span className="text-emerald-700">Sí {counts.yes}</span>
-          <span className="text-rose-700">No {counts.no}</span>
-          <span className="text-amber-700">Duda {counts.maybe}</span>
-        </p>
+      {groups && !cancelled && (
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => setShowNames(!showNames)}
+            aria-expanded={showNames}
+            className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 text-left text-sm"
+          >
+            {GROUPS.map((group) => (
+              <span key={group.key} className={group.color}>
+                {group.label} {groups[group.key].length}
+              </span>
+            ))}
+            <span className="ml-auto text-xs font-medium text-blue-800 underline">
+              {showNames ? 'Ocultar' : 'Ver quién'}
+            </span>
+          </button>
+          {showNames && (
+            <dl className="space-y-1 text-sm">
+              {GROUPS.filter((group) => groups[group.key].length > 0).map((group) => (
+                <div key={group.key} className="flex gap-2">
+                  <dt className={`shrink-0 font-semibold ${group.color}`}>{group.label}:</dt>
+                  <dd className="text-slate-700">{groups[group.key].map(playerName).join(', ')}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </div>
       )}
       {attendance && !cancelled && (
         <div className="space-y-1">

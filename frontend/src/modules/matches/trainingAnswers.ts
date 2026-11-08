@@ -2,6 +2,7 @@
 // training on one date (no React here).
 import type {
   AvailabilityStatus,
+  Player,
   TrainingAnswer,
   TrainingCancellation,
   TrainingSlot,
@@ -40,15 +41,19 @@ export function answerOf(
   )?.status
 }
 
-/** How many said yes, no or maybe to one training on one date. */
-export function answerCounts(
+/** Players of one training on one date, grouped by their answer ("none" = not answered yet). */
+export type AnswerGroups = Record<AvailabilityStatus | 'none', Player[]>
+
+/** Who said yes, no or maybe to one training on one date, and who has not answered. */
+export function answerGroups(
   answers: TrainingAnswer[],
+  players: Player[],
   slotId: string,
   date: string,
-): Record<AvailabilityStatus, number> {
-  const counts = { yes: 0, no: 0, maybe: 0 }
-  for (const answer of answers) {
-    if (answer.slotId === slotId && answer.date === date) counts[answer.status]++
+): AnswerGroups {
+  const groups: AnswerGroups = { yes: [], no: [], maybe: [], none: [] }
+  for (const player of players) {
+    groups[answerOf(answers, { slotId, date }, player.id) ?? 'none'].push(player)
   }
-  return counts
+  return groups
 }

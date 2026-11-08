@@ -333,6 +333,7 @@ export interface MatchInput {
   mapsUrl: string
   homeAway: 'home' | 'away'
   notes: string
+  setsFormat: SetsFormat
 }
 
 function toMatchColumns(match: MatchInput) {
@@ -345,6 +346,7 @@ function toMatchColumns(match: MatchInput) {
     maps_url: match.mapsUrl,
     home_away: match.homeAway,
     notes: match.notes,
+    sets_format: match.setsFormat,
   }
 }
 

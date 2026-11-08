@@ -33,7 +33,8 @@ Cada usuario se registra por su cuenta y entra en un equipo con un código; el r
 **Unirse a un equipo**
 
 - El entrenador genera un código por rol (jugador / segundo entrenador). Se puede regenerar o desactivar.
-- Quien entra con código de jugador queda pendiente (no ve nada del equipo) hasta que el entrenador lo acepta vinculándolo a una ficha de la plantilla (o creando una nueva).
+- Quien entra con código de jugador queda pendiente (no ve nada del equipo) hasta que el entrenador lo acepta vinculándolo a una ficha de la plantilla (o creando una nueva). La app propone la ficha sin cuenta cuyo nombre coincide y avisa si se va a crear una nueva habiendo fichas libres: así quien se creó a mano conserva su historial (convocatorias, respuestas, entrenamientos, rotaciones y, más adelante, MVP), que va ligado a la ficha y no a la cuenta.
+- Si aun así alguien acaba con dos fichas, el entrenador las junta en **Ajustes → Juntar fichas repetidas**: todo pasa a la ficha que se queda y la otra se borra (RPC `merge_players`).
 - Al entrar se ve la lista de tus equipos (cada tarjeta rellena con el color del equipo) y un botón **+** para crear uno o unirse con código. Siempre hay un menú (barra lateral en PC, botón ☰ en móvil) con tus equipos y el **+**. En PC, bajo el equipo abierto aparecen sus secciones (Partidos, Plantilla y, para el entrenador, Ajustes); en el móvil esas secciones ya están en las pestañas de abajo, así que el menú solo lista los equipos. En el móvil, tocar el nombre del equipo en la cabecera también abre el menú para cambiar de equipo.
 - En cada equipo solo se ve la vista del rol que tienes; no se puede cambiar de rol desde la app.
 
@@ -68,7 +69,7 @@ Siete módulos forman el núcleo; el plan de partido por set es el que más trab
 
 - **Calendario mensual** con una burbuja en cada día con evento: azul para partido, verde para entrenamiento. Al tocar un día se ve lo que hay; debajo, los próximos partidos y los próximos entrenamientos.
 - Los entrenamientos salen del horario semanal del equipo; el staff puede cancelar un día suelto.
-- **Asistencia a entrenamientos:** cada jugador aceptado (también quien solo entrena) marca Sí / No / Duda en cada entrenamiento de hoy en adelante, desde el día del calendario o desde "Próximos entrenamientos". El staff ve cuántos han dicho Sí, No y Duda.
+- **Asistencia a entrenamientos:** cada jugador aceptado (también quien solo entrena) marca Sí / No / Duda en cada entrenamiento de hoy en adelante, desde el día del calendario o desde "Próximos entrenamientos". El staff ve cuántos han dicho Sí, No, Duda y cuántos no han respondido, y con un toque, quiénes.
 - Detalle: rival, fecha, hora de partido (24 h), calentamiento como duración antes del partido (de 15 en 15 minutos, p. ej. "45 min (desde 17:15)"), pabellón (con enlace de Google Maps pegado por el entrenador y el mapa visible en la app), local/visitante, notas y, una vez jugado, el resultado por sets.
 - Botón de disponibilidad: Sí / No / Duda, con comentario opcional.
 - Los jugadores ven si están convocados.
@@ -83,7 +84,7 @@ Siete módulos forman el núcleo; el plan de partido por set es el que más trab
 
 ### 4. Gestión de partido (entrenador)
 
-- Crear, editar y borrar partidos (borrar pide confirmación).
+- Crear, editar y borrar partidos (borrar pide confirmación). Al crear se elige el formato (al mejor de 5, al mejor de 3, 3 sets fijos o 1 set); por defecto, el del último partido del equipo. Rotación y modo partido solo muestran los sets de ese formato.
 - Marcar el resultado: primero el **formato** (al mejor de 5, al mejor de 3, 3 sets fijos o 1 set) y después, o bien **solo el marcador** con un toque (los resultados posibles del formato: 3-0, 3-1…), o bien los **puntos de cada set** (tantas filas como sets permite el formato). El partido pasa a jugado y se ve "Ganado 3-1" en el calendario y en el detalle; los puntos por set solo se muestran si se apuntaron.
 - El partido tiene tres pestañas: **Info** (datos y disponibilidad), **Gestión** y **Rotación** (plan por set). Gestión y Rotación son del staff.
 - **Gestión:** ver disponibilidad de los que compiten y convocar a cualquiera, haya respondido o no; para cada convocado, cambiar dorsal y las posiciones (varias a la vez) solo en ese partido. En la rotación, cada set es independiente: un jugador puede ir en una posición distinta en cada set.
@@ -268,6 +269,9 @@ Cada decisión cerrada se añade aquí con su fecha; este documento es la refere
 | 2026-11-08 | Posiciones de la ficha con lista de casillas (la primera marcada es la principal) en vez de desplegable de "posición principal" |
 | 2026-11-08 | "+ Jugador" sale de Plantilla: las fichas sin cuenta se crean en Ajustes → Jugadores sin cuenta |
 | 2026-11-08 | Tarjetas de equipo rellenas con el color del equipo (lista, menú y cabecera); en el móvil el menú solo lista equipos y el nombre del equipo en la cabecera lo abre |
+| 2026-11-08 | Al aceptar a un jugador se propone su ficha sin cuenta por el nombre; "Juntar fichas repetidas" en Ajustes une dos fichas de la misma persona sin perder historial (RPC `merge_players`, solo entrenador) |
+| 2026-11-08 | El formato del partido se elige al crearlo (por defecto el del último partido) y limita los sets de Rotación y del modo partido |
+| 2026-11-08 | El staff ve quién va a cada entrenamiento (Sí / No / Duda / Sin responder), no solo el recuento; el staff que está en la plantilla también responde su disponibilidad |
 | 2026-11-07 | Calidad de código: ESLint (flat config, typescript-eslint, reglas de hooks) y Prettier en `frontend/` |
 
 **Temas abiertos**

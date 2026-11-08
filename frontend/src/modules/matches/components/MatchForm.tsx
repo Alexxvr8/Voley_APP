@@ -1,6 +1,8 @@
 // Match fields form, shared by "Nuevo partido" and "Editar partido": opponent (suggested from the
-// team's list or typed), date, 24 h match time, warm-up duration, venue (team list or another) and notes.
+// team's list or typed), date, 24 h match time, warm-up duration, venue (team list or another), format
+// (how many sets) and notes.
 import { useState, type FormEvent } from 'react'
+import { SETS_FORMATS, SETS_FORMAT_LABELS } from '@/shared/domain/results'
 import type { TeamVenue } from '@/shared/domain/types'
 import {
   ERROR_CLASS,
@@ -158,6 +160,27 @@ export function MatchForm({
           ))}
         </div>
       </fieldset>
+      <fieldset>
+        <legend className={LABEL_TEXT_CLASS}>Formato</legend>
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {SETS_FORMATS.map((format) => (
+            <button
+              key={format}
+              type="button"
+              onClick={() => update({ setsFormat: format })}
+              aria-pressed={match.setsFormat === format}
+              className={`rounded-xl py-2.5 text-sm font-semibold ring-1 ${
+                match.setsFormat === format
+                  ? 'bg-blue-800 text-white ring-blue-800'
+                  : 'bg-white text-slate-700 ring-slate-300'
+              }`}
+            >
+              {SETS_FORMAT_LABELS[format]}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
       <label className={LABEL_CLASS}>
         <span className={LABEL_TEXT_CLASS}>Notas (opcional)</span>
         <textarea

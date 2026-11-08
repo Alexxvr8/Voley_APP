@@ -1,5 +1,6 @@
 // "Info" tab of a match: practical details, map and result. Competing players answer their
-// availability here; staff see a summary of the answers, record the result and edit the match.
+// availability here (also staff who are on the roster); staff see a summary of the answers, record
+// the result and edit the match.
 import { Link, useParams } from 'react-router'
 import { hasRole, useCurrentTeam, useTeamPath } from '@/core/teams/currentTeam'
 import { Card } from '@/shared/ui/Card'
@@ -96,6 +97,16 @@ export function MatchDetailPage() {
               Editar o borrar partido
             </Link>
           </div>
+        )}
+
+        {isStaff && me?.competes && match.status !== 'played' && (
+          <MyAvailabilityCard
+            answer={availability.data[me.id]}
+            isCalledUp={callups.data.some((callup) => callup.playerId === me.id)}
+            onChange={(status, comment) =>
+              setAvailability.mutate({ matchId: match.id, playerId: me.id, status, comment })
+            }
+          />
         )}
 
         {!isStaff &&

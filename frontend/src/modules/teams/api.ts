@@ -149,6 +149,25 @@ export function useAcceptMember(teamId: string) {
   })
 }
 
+/**
+ * Merges two roster entries of the same person: account, answers, call-ups, training attendance and
+ * set plans of `duplicate` move to `keep`, and `duplicate` is deleted. Coach only.
+ */
+export function useMergePlayers(teamId: string) {
+  return useMutation({
+    mutationFn: async ({ keep, duplicate }: { keep: string; duplicate: string }) =>
+      check(await supabase.rpc('merge_players', { team: teamId, keep, duplicate })),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: keys.members(teamId) })
+      queryClient.invalidateQueries({ queryKey: keys.players(teamId) })
+      // Answers and call-ups of every match changed owner.
+      queryClient.invalidateQueries({ queryKey: ['availability'] })
+      queryClient.invalidateQueries({ queryKey: ['callups'] })
+      queryClient.invalidateQueries({ queryKey: ['training-answers', teamId] })
+    },
+  })
+}
+
 /** Rejects a pending player or removes a member from the team. */
 export function useRemoveMember(teamId: string) {
   return useMutation({

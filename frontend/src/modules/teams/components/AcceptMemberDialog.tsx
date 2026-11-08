@@ -1,4 +1,5 @@
-// Accepting a pending player: link their account to a roster entry without account, or create a new one.
+// Accepting a pending player: link their account to a roster entry without account (suggested by name,
+// so a player created by hand keeps their history), or create a new one.
 import { useState, type FormEvent } from 'react'
 import { fromPositionList } from '@/shared/domain/positions'
 import type { Player, Position } from '@/shared/domain/types'
@@ -14,6 +15,7 @@ import { PositionChecklist } from '@/shared/ui/PositionChecklist'
 import { playerName, shirtNumber } from '@/shared/utils/format'
 import { useAcceptMember } from '../api'
 import type { Member } from '../members'
+import { suggestPlayer } from '../playerMatch'
 
 interface AcceptMemberDialogProps {
   teamId: string
@@ -32,7 +34,10 @@ export function AcceptMemberDialog({
   onClose,
 }: AcceptMemberDialogProps) {
   const accept = useAcceptMember(teamId)
-  const [choice, setChoice] = useState<string>(freePlayers.length ? '' : NEW_PLAYER)
+  const suggested = suggestPlayer(member, freePlayers)
+  const [choice, setChoice] = useState<string>(
+    suggested?.id ?? (freePlayers.length ? '' : NEW_PLAYER),
+  )
   const [firstName, setFirstName] = useState(member.displayName)
   const [lastName, setLastName] = useState('')
   const [number, setNumber] = useState('')
@@ -93,6 +98,18 @@ export function AcceptMemberDialog({
             <option value={NEW_PLAYER}>+ Crear ficha nueva</option>
           </select>
         </label>
+
+        {suggested && choice === suggested.id && (
+          <p className="rounded-xl bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
+            Parece que es <strong>{playerName(suggested)}</strong>. Al unirlo a su ficha conserva
+            sus convocatorias, respuestas y entrenamientos.
+          </p>
+        )}
+        {choice === NEW_PLAYER && freePlayers.length > 0 && (
+          <p className="rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-900">
+            Si ya le habías creado una ficha, elígela arriba: así no pierde su historial.
+          </p>
+        )}
 
         {choice === NEW_PLAYER && (
           <div className="grid grid-cols-2 gap-3">

@@ -22,6 +22,11 @@ export const MAX_SETS: Record<SetsFormat, number> = {
   fixed_1: 1,
 }
 
+/** Set numbers a match of this format can have: best of 3 → [1, 2, 3]. Unknown format → 5 sets. */
+export function setNumbersFor(format: SetsFormat | undefined): number[] {
+  return Array.from({ length: (format && MAX_SETS[format]) || 5 }, (_, i) => i + 1)
+}
+
 /** Sets won by each side. A set counts for whoever scored more points. */
 export function setsWon(sets: SetScore[]): FinalScore {
   return {

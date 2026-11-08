@@ -34,7 +34,7 @@ export function MyAvailabilityCard({ answer, isCalledUp, onChange }: MyAvailabil
         className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm disabled:bg-slate-50"
       />
       <p className={`text-sm ${isCalledUp ? 'text-emerald-700' : 'text-slate-500'}`}>
-        {isCalledUp ? '✓ Estás convocada/o' : 'Convocatoria aún no publicada para ti'}
+        {isCalledUp ? '✓ Estás convocada/o' : 'Aún no estás en la convocatoria'}
       </p>
     </Card>
   )

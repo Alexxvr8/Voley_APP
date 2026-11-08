@@ -9,7 +9,7 @@ import type { TrainingOnDate } from '@/shared/utils/calendar'
 import { PRIMARY_BUTTON_CLASS } from '@/shared/ui/form'
 import { PageMessage } from '@/shared/ui/PageMessage'
 import { monthOf, type CalendarMonth } from '@/shared/utils/calendar'
-import { formatLongDate, todayIso } from '@/shared/utils/format'
+import { byShirtNumber, formatLongDate, todayIso } from '@/shared/utils/format'
 import {
   useMatches,
   useMyAvailability,
@@ -26,7 +26,7 @@ import { eventsOn, upcomingMatches } from './calendarEvents'
 import { MatchEventCard } from './components/MatchEventCard'
 import { MonthCalendar } from './components/MonthCalendar'
 import { TrainingEventCard } from './components/TrainingEventCard'
-import { answerCounts, answerOf, upcomingTrainings } from './trainingAnswers'
+import { answerGroups, answerOf, upcomingTrainings } from './trainingAnswers'
 
 const UPCOMING_COUNT = 3
 
@@ -72,7 +72,10 @@ export function CalendarPage() {
     }
   }
 
-  /** Props of a training card: the player's answer, the staff counts and the cancel toggle. */
+  const roster = [...players.data].sort(byShirtNumber)
+  const nextTrainings = upcomingTrainings(slots.data, cancellations.data, today, UPCOMING_COUNT)
+
+  /** Props of a training card: the player's answer, the staff view of answers and the cancel toggle. */
   function trainingProps(training: TrainingOnDate) {
     const answers = trainingAnswers.data ?? []
     const slotId = training.slot.id
@@ -87,7 +90,7 @@ export function CalendarPage() {
                 setTrainingAnswer.mutate({ slotId, date: training.date, playerId, status }),
             }
           : undefined,
-      counts: isStaff && !isPast ? answerCounts(answers, slotId, training.date) : undefined,
+      groups: isStaff && !isPast ? answerGroups(answers, roster, slotId, training.date) : undefined,
       onToggleCancelled: isStaff
         ? () => setCancelled.mutate({ slotId, date: training.date, cancelled: !training.cancelled })
         : undefined,
@@ -169,15 +172,18 @@ export function CalendarPage() {
           {slots.data.length > 0 && (
             <div className="space-y-2">
               <p className="font-semibold text-slate-900">Próximos entrenamientos</p>
-              {upcomingTrainings(slots.data, cancellations.data, today, UPCOMING_COUNT).map(
-                (training) => (
-                  <TrainingEventCard
-                    key={`${training.slot.id}-${training.date}`}
-                    showDate
-                    {...trainingProps(training)}
-                  />
-                ),
+              {nextTrainings.length === 0 && (
+                <p className="text-sm text-slate-500">
+                  No hay entrenamientos en las próximas dos semanas.
+                </p>
               )}
+              {nextTrainings.map((training) => (
+                <TrainingEventCard
+                  key={`${training.slot.id}-${training.date}`}
+                  showDate
+                  {...trainingProps(training)}
+                />
+              ))}
             </div>
           )}
         </div>

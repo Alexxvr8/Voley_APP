@@ -15,6 +15,7 @@ import { savePlan, useCallups, useMatches, usePlayers, useSetPlans } from './api
 import { Court } from './components/Court'
 import { PlannedSubsCard } from './components/PlannedSubsCard'
 import { SetTabs } from './components/SetTabs'
+import { setNumbersFor } from '@/shared/domain/results'
 import { SystemPicker } from './components/SystemPicker'
 import {
   canPlay,
@@ -23,7 +24,6 @@ import {
   playersOnCourt,
   replacementPositions,
   roleOnCourt,
-  SET_NUMBERS,
   validStartRotation,
   type LiberoSlots,
   type SetPlan,
@@ -83,7 +83,10 @@ function SetPlanEditor({ team, match, players, calledUp, stored }: SetPlanEditor
   const teamPath = useTeamPath()
   // `?set=3` opens that set directly (the match mode links here).
   const [searchParams] = useSearchParams()
-  const [currentSet, setCurrentSet] = useState(Number(searchParams.get('set')) || 1)
+  const lastSet = setNumbersFor(match.setsFormat).length
+  const [currentSet, setCurrentSet] = useState(
+    Math.min(Number(searchParams.get('set')) || 1, lastSet),
+  )
   const [showAll, setShowAll] = useState(false)
 
   const plans = Object.fromEntries(
@@ -118,7 +121,8 @@ function SetPlanEditor({ team, match, players, calledUp, stored }: SetPlanEditor
   const bench = calledUp.filter(
     (player) => !onCourtIds.includes(player.id) && !liberoIds.includes(player.id),
   )
-  const copyableSets = SET_NUMBERS.filter(
+  const setNumbers = setNumbersFor(match.setsFormat)
+  const copyableSets = setNumbers.filter(
     (setNumber) => setNumber !== currentSet && plans[setNumber],
   )
 
@@ -157,7 +161,12 @@ function SetPlanEditor({ team, match, players, calledUp, stored }: SetPlanEditor
         )}
       </div>
 
-      <SetTabs currentSet={currentSet} plans={plans} onSelect={setCurrentSet} />
+      <SetTabs
+        setNumbers={setNumbers}
+        currentSet={currentSet}
+        plans={plans}
+        onSelect={setCurrentSet}
+      />
 
       {/* Wide screens: court on the left, planned substitutions beside it. */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">

@@ -1,7 +1,14 @@
 // Tests for match results and per-match call-up positions.
 import { describe, expect, it } from 'vitest'
 import { asCalledUp } from './callups'
-import { matchScore, possibleScores, resultSummary, setsDetail, setsWon } from './results'
+import {
+  matchScore,
+  possibleScores,
+  resultSummary,
+  setNumbersFor,
+  setsDetail,
+  setsWon,
+} from './results'
 import type { Player } from './types'
 
 const player: Player = {
@@ -43,6 +50,14 @@ describe('score-only results', () => {
     expect(asText('best_of_3')).toEqual(['2-0', '2-1', '1-2', '0-2'])
     expect(asText('fixed_3')).toEqual(['3-0', '2-1', '1-2', '0-3'])
     expect(asText('fixed_1')).toEqual(['1-0', '0-1'])
+  })
+})
+
+describe('setNumbersFor', () => {
+  it('follows the match format', () => {
+    expect(setNumbersFor('best_of_3')).toEqual([1, 2, 3])
+    expect(setNumbersFor('fixed_1')).toEqual([1])
+    expect(setNumbersFor(undefined)).toEqual([1, 2, 3, 4, 5])
   })
 })
 

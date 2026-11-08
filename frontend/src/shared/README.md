@@ -7,7 +7,7 @@ Piezas reutilizables que cualquier módulo puede usar. No dependen de `core/` ni
 | `domain/types.ts` | Tipos del dominio: `Team`, `MyTeam`, `Player` (con `competes`), `Match`, `Callup`, `TrainingSlot`, `Position`, `GameSystem`, `TeamRole`… Los valores coinciden con los de la base de datos |
 | `domain/rows.ts` | Convierte las filas de Supabase (`snake_case`) en esos tipos |
 | `domain/callups.ts` | `asCalledUp()`: aplica el dorsal y las posiciones del partido a un jugador |
-| `domain/results.ts` | Formatos de partido, marcadores posibles de cada uno, sets ganados (del marcador o contados de los puntos) y textos del resultado ("Ganado 3-1", "25-20 · 23-25…") |
+| `domain/results.ts` | Formatos de partido, sets de cada uno (`setNumbersFor`), marcadores posibles, sets ganados (del marcador o contados de los puntos) y textos del resultado ("Ganado 3-1", "25-20 · 23-25…") |
 | `domain/positions.ts` | Paso entre posición principal + otras y la lista ordenada de casillas (la primera es la principal) |
 | `domain/teamColors.ts` | Los 20 colores que se pueden dar a un equipo |
 | `domain/labels.ts` | Traducción al español y colores de cada valor de dominio (`setter` → "Colocador", roles, días de la semana) |

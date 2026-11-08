@@ -51,8 +51,10 @@ export function PlayerRow({ teamId, player, editable }: PlayerRowProps) {
             onCancel={() => setConfirmingDelete(false)}
             onConfirm={() => deletePlayer.mutate(player.id)}
           >
-            Se borran también sus respuestas y convocatorias. Si tiene cuenta, seguirá en el equipo
-            pero como pendiente, hasta que la vincules a otra ficha.
+            Se borran también sus respuestas, convocatorias y asistencia a entrenamientos. Si tiene
+            cuenta, seguirá en el equipo pero como pendiente, hasta que la vincules a otra ficha. Si
+            es una ficha repetida, mejor usa "Juntar fichas repetidas" en Ajustes para no perder
+            nada.
           </ConfirmDialog>
         )}
       </div>

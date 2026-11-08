@@ -1,7 +1,7 @@
 // Tests for the training attendance helpers.
 import { describe, expect, it } from 'vitest'
-import type { TrainingAnswer, TrainingSlot } from '@/shared/domain/types'
-import { answerCounts, answerOf, upcomingTrainings } from './trainingAnswers'
+import type { Player, TrainingAnswer, TrainingSlot } from '@/shared/domain/types'
+import { answerGroups, answerOf, upcomingTrainings } from './trainingAnswers'
 
 const slot = (id: string, weekday: number): TrainingSlot =>
   ({ id, weekday, startTime: '18:00', endTime: '19:30' }) as TrainingSlot
@@ -33,7 +33,13 @@ describe('answers', () => {
     expect(answerOf(answers, { slotId: 's', date: '2026-11-16' }, 'a')).toBe('no')
     expect(answerOf(answers, { slotId: 's', date: '2026-11-16' }, 'b')).toBeUndefined()
   })
-  it('counts the answers of one date', () => {
-    expect(answerCounts(answers, 's', '2026-11-09')).toEqual({ yes: 1, no: 0, maybe: 1 })
+  it('groups the players of one date by answer', () => {
+    const players = ['a', 'b', 'c'].map((id) => ({ id }) as Player)
+    const ids = (list: Player[]) => list.map((player) => player.id)
+    const groups = answerGroups(answers, players, 's', '2026-11-09')
+    expect(ids(groups.yes)).toEqual(['a'])
+    expect(ids(groups.maybe)).toEqual(['b'])
+    expect(ids(groups.none)).toEqual(['c'])
+    expect(groups.no).toEqual([])
   })
 })

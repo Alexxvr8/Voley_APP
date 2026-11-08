@@ -24,7 +24,8 @@ import {
   type MatchModeState,
   type SetProgress,
 } from './matchMode'
-import { newSetPlan, SET_NUMBERS, validStartRotation, type SetPlans } from './setPlan'
+import { setNumbersFor } from '@/shared/domain/results'
+import { newSetPlan, validStartRotation, type SetPlans } from './setPlan'
 import { rotatePlayers, rotationAfter, zoneRolesAfter } from './systems'
 
 /** Progress of the match mode for a match, loaded from and saved to the device. */
@@ -125,6 +126,7 @@ export function MatchModePage() {
       <h1 className="text-xl font-bold text-slate-900 lg:text-2xl">Partido vs {match.opponent}</h1>
 
       <SetTabs
+        setNumbers={setNumbersFor(match.setsFormat)}
         currentSet={set}
         plans={plans}
         onSelect={(currentSet) => setState({ ...state, currentSet })}
@@ -186,7 +188,7 @@ export function MatchModePage() {
         </Card>
       )}
 
-      {set < SET_NUMBERS.length && (
+      {set < setNumbersFor(match.setsFormat).length && (
         <button
           type="button"
           onClick={() => setState({ ...state, currentSet: set + 1 })}

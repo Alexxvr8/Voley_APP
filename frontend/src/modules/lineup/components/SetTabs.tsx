@@ -1,16 +1,23 @@
-// Tabs to switch between sets 1–5. A dot marks other sets that already have a plan.
-import { SET_NUMBERS, type SetPlans } from '../setPlan'
+// Tabs to switch between the sets of the match (as many as its format allows). A dot marks other sets
+// that already have a plan.
+import type { SetPlans } from '../setPlan'
 
 interface SetTabsProps {
+  /** Set numbers of the match, from its format. */
+  setNumbers: number[]
   currentSet: number
   plans: SetPlans
   onSelect: (setNumber: number) => void
 }
 
-export function SetTabs({ currentSet, plans, onSelect }: SetTabsProps) {
+export function SetTabs({ setNumbers, currentSet, plans, onSelect }: SetTabsProps) {
+  if (setNumbers.length < 2) return null
   return (
-    <div className="grid grid-cols-5 gap-1 rounded-xl bg-slate-200 p-1">
-      {SET_NUMBERS.map((setNumber) => {
+    <div
+      className="grid gap-1 rounded-xl bg-slate-200 p-1"
+      style={{ gridTemplateColumns: `repeat(${setNumbers.length}, minmax(0, 1fr))` }}
+    >
+      {setNumbers.map((setNumber) => {
         const isCurrent = setNumber === currentSet
         const hasPlan = plans[setNumber] !== undefined
         return (
