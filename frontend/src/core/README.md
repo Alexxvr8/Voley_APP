@@ -16,11 +16,12 @@ Infraestructura que comparten todas las pantallas: login, equipos del usuario, n
 | `auth/errors.ts` | Mensajes de error comprensibles y validación de contraseña nueva |
 | `teams/api.ts` | `useMyTeams()` (RPC `my_teams`: equipos, rol y si estás pendiente), `useTeam()`, crear equipo y unirse con código |
 | `teams/currentTeam.tsx` | `CurrentTeamProvider`: el equipo de la URL y tu rol en él. Si estás pendiente, muestra la espera. `useCurrentTeam()`, `useTeamPath()` (enlaces dentro del equipo) y `hasRole()` |
-| `teams/TeamsPage.tsx`, `teams/AddTeamPage.tsx` | "Mis equipos" (con el color de cada equipo y "Salir del equipo" para quien no es entrenador) y el "+" (tengo un código / crear equipo) |
+| `teams/TeamsPage.tsx`, `teams/AddTeamPage.tsx` | "Mis equipos" (cada tarjeta rellena con el color del equipo, y "Salir del equipo" para quien no es entrenador) y el "+" (tengo un código / crear equipo) |
 | `teams/TeamHome.tsx` | `/equipos/:id` abre la primera sección que puedes ver |
 | `account/AccountPage.tsx` | "Mi cuenta": código de recuperación nuevo, correo de recuperación, cambiar contraseña, cerrar sesión |
 | `layout/AppShell.tsx` | Marco de todas las pantallas. PC (`lg`, desde 1024 px): barra lateral siempre visible. Móvil: cabecera con botón ☰ que abre el mismo menú, y pestañas abajo mientras hay un equipo abierto |
-| `layout/components/TeamsMenu.tsx` | El menú: "Mis equipos" con el "+", la lista de tus equipos y, bajo el equipo abierto, sus secciones (Partidos, Plantilla y, para el entrenador, Ajustes) |
+| `layout/components/TeamsMenu.tsx` | El menú: "Mis equipos" con el "+" y tus equipos, cada uno sobre su color. En PC, bajo el equipo abierto, sus secciones; en el móvil (`MobileDrawer`) no, porque ya están en las pestañas de abajo |
+| `layout/components/MobileHeader.tsx` | Cabecera del móvil: ☰ y el nombre del equipo sobre su color; los dos abren el menú para cambiar de equipo |
 | `layout/teamMenu.ts` | `useOpenTeam()` (equipo de la URL) y `useTeamMenu()` (secciones según módulos activos y rol) |
 | `modules/types.ts` | `ModuleDefinition`: el contrato que cumple cada módulo. Las rutas y el menú van **relativos al equipo** (`partidos`, `partidos/:matchId`…) |
 | `modules/registry.ts` | Lista de módulos de la app. Añadir un módulo = añadirlo aquí |

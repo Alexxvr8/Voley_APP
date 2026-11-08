@@ -34,7 +34,7 @@ Cada usuario se registra por su cuenta y entra en un equipo con un código; el r
 
 - El entrenador genera un código por rol (jugador / segundo entrenador). Se puede regenerar o desactivar.
 - Quien entra con código de jugador queda pendiente (no ve nada del equipo) hasta que el entrenador lo acepta vinculándolo a una ficha de la plantilla (o creando una nueva).
-- Al entrar se ve la lista de tus equipos y un botón **+** para crear uno o unirse con código. Siempre hay un menú (barra lateral en PC, botón ☰ en móvil) con tus equipos y el **+**; bajo el equipo abierto aparecen sus secciones: Partidos, Plantilla y, para el entrenador, Ajustes.
+- Al entrar se ve la lista de tus equipos (cada tarjeta rellena con el color del equipo) y un botón **+** para crear uno o unirse con código. Siempre hay un menú (barra lateral en PC, botón ☰ en móvil) con tus equipos y el **+**. En PC, bajo el equipo abierto aparecen sus secciones (Partidos, Plantilla y, para el entrenador, Ajustes); en el móvil esas secciones ya están en las pestañas de abajo, así que el menú solo lista los equipos. En el móvil, tocar el nombre del equipo en la cabecera también abre el menú para cambiar de equipo.
 - En cada equipo solo se ve la vista del rol que tienes; no se puede cambiar de rol desde la app.
 
 **Permisos por rol**
@@ -43,14 +43,16 @@ Cada usuario se registra por su cuenta y entra en un equipo con un código; el r
 | --- | --- | --- | --- |
 | Ver partidos, resultados y tabla | Sí | Sí | Sí |
 | Marcar su disponibilidad | Sí | Sí | Sí |
+| Marcar si va a un entrenamiento (Sí / No / Duda) | Sí | Sí | Sí |
+| Ver cuántos van a cada entrenamiento | Sí | Sí | No |
 | Ver plantilla | Sí | Sí | Sí (solo lectura) |
 | Editar plantilla y marcar quién compite | Sí | Sí | No |
 | Crear y editar partidos | Sí | Sí | No |
 | Convocar | Sí | Sí | No |
-| Planificar rotaciones y modo partido | Sí | Sí | Ver (si el entrenador lo publica) |
+| Planificar rotaciones y modo partido | Sí | Sí | No |
 | Votar MVP del partido | Sí | No | Sí (si está convocada) |
 | Resolver empate de MVP y ver recuento | Sí | No | No |
-| Ajustes del equipo (nombre, códigos, horario), aceptar jugadores, módulos | Sí | No | No |
+| Ajustes del equipo (nombre, códigos, horario), aceptar jugadores, fichas sin cuenta, módulos | Sí | No | No |
 | Borrar equipo o transferirlo | Sí | No | No |
 
 ## Módulos
@@ -64,15 +66,17 @@ Siete módulos forman el núcleo; el plan de partido por set es el que más trab
 
 ### 2. Próximos partidos
 
-- **Calendario mensual** con una burbuja en cada día con evento: azul para partido, verde para entrenamiento. Al tocar un día se ve lo que hay; debajo, los próximos partidos.
+- **Calendario mensual** con una burbuja en cada día con evento: azul para partido, verde para entrenamiento. Al tocar un día se ve lo que hay; debajo, los próximos partidos y los próximos entrenamientos.
 - Los entrenamientos salen del horario semanal del equipo; el staff puede cancelar un día suelto.
+- **Asistencia a entrenamientos:** cada jugador aceptado (también quien solo entrena) marca Sí / No / Duda en cada entrenamiento de hoy en adelante, desde el día del calendario o desde "Próximos entrenamientos". El staff ve cuántos han dicho Sí, No y Duda.
 - Detalle: rival, fecha, hora de partido (24 h), calentamiento como duración antes del partido (de 15 en 15 minutos, p. ej. "45 min (desde 17:15)"), pabellón (con enlace de Google Maps pegado por el entrenador y el mapa visible en la app), local/visitante, notas y, una vez jugado, el resultado por sets.
 - Botón de disponibilidad: Sí / No / Duda, con comentario opcional.
 - Los jugadores ven si están convocados.
 
 ### 3. Plantilla (entrenador)
 
-- Ficha: nombre, apellidos, año de nacimiento, dorsal, posición principal y secundarias, días de entrenamiento.
+- Ficha: nombre, apellidos, año de nacimiento, dorsal, posiciones, días de entrenamiento. Las posiciones se marcan en una lista de casillas; la primera marcada es la principal y el resto, las secundarias (igual al aceptar a un jugador creando su ficha).
+- Las fichas llegan al aceptar a quien entra con código. Para alguien que no usa la app, el entrenador crea la ficha a mano en **Ajustes → Jugadores sin cuenta**; en Plantilla ya no hay botón de añadir.
 - Vinculación ficha ↔ cuenta de usuario (una ficha puede existir sin cuenta).
 - **Compite / solo entrena:** el entrenador lo marca o desmarca con doble comprobación. Quien solo entrena no aparece en la disponibilidad ni en la convocatoria de los partidos, pero ve el calendario.
 - **Sistema de juego predeterminado** del equipo: cada set nuevo arranca con él.
@@ -80,7 +84,7 @@ Siete módulos forman el núcleo; el plan de partido por set es el que más trab
 ### 4. Gestión de partido (entrenador)
 
 - Crear, editar y borrar partidos (borrar pide confirmación).
-- Marcar el resultado: puntos de cada set (hasta 5); el partido pasa a jugado y se ve "Ganado 3-1" en el calendario y en el detalle.
+- Marcar el resultado: primero el **formato** (al mejor de 5, al mejor de 3, 3 sets fijos o 1 set) y después, o bien **solo el marcador** con un toque (los resultados posibles del formato: 3-0, 3-1…), o bien los **puntos de cada set** (tantas filas como sets permite el formato). El partido pasa a jugado y se ve "Ganado 3-1" en el calendario y en el detalle; los puntos por set solo se muestran si se apuntaron.
 - El partido tiene tres pestañas: **Info** (datos y disponibilidad), **Gestión** y **Rotación** (plan por set). Gestión y Rotación son del staff.
 - **Gestión:** ver disponibilidad de los que compiten y convocar a cualquiera, haya respondido o no; para cada convocado, cambiar dorsal y las posiciones (varias a la vez) solo en ese partido. En la rotación, cada set es independiente: un jugador puede ir en una posición distinta en cada set.
 - Botón **Ir al partido** → modo partido (fase 2).
@@ -114,13 +118,13 @@ Para cada set se guarda un plan independiente:
 
 ### Módulos futuros
 
-Asistencia a entrenamientos, notificaciones push, estadísticas por jugador, tablón de avisos, importación desde Google Sheets.
+Notificaciones push, estadísticas por jugador, tablón de avisos, importación desde Google Sheets.
 
 ## Funciones online y offline
 
 **Sin conexión:** ver la plantilla y los convocados de los partidos descargados, y crear y editar las rotaciones (plan por set, sistema, líbero, cambios previstos y modo partido). Cada equipo tiene un sistema predeterminado con el que arranca cada set.
 
-**Con conexión:** todo lo demás: registro, unirse a equipos, disponibilidad, convocatorias, resultados, tabla, MVP y ajustes.
+**Con conexión:** todo lo demás: registro, unirse a equipos, disponibilidad, asistencia a entrenamientos, convocatorias, resultados, tabla, MVP y ajustes.
 
 **Cómo funciona**
 
@@ -175,11 +179,12 @@ La pieza clave es `team_members`: une usuario, equipo y rol, y todas las reglas 
 | `team_members` | team\_id, user\_id, role, player\_id | role: coach / assistant / player; player\_id enlaza con la ficha |
 | `join_codes` | team\_id, code, role, active, expires\_at | Un código por rol, regenerable |
 | `players` | id, team\_id, first\_name, last\_name, birth\_year, number, main\_position, other\_positions, training\_days, competes | Ficha de plantilla, puede no tener cuenta. `competes = false`: solo entrena |
-| `matches` | id, team\_id, opponent, date, match\_time, warmup\_minutes, venue, maps\_url, home\_away, status, sets\_result, notes, mvp\_status, mvp\_closes\_at, mvp\_winners | status: scheduled / played / cancelled; mvp\_status: closed / open / tie\_pending / finished |
+| `matches` | id, team\_id, opponent, date, match\_time, warmup\_minutes, venue, maps\_url, home\_away, status, sets\_format, sets\_result, final\_score, notes, mvp\_status, mvp\_closes\_at, mvp\_winners | status: scheduled / played / cancelled; sets\_format: best\_of\_5 / best\_of\_3 / fixed\_3 / fixed\_1; final\_score `{us, them}` cuando solo se apunta el marcador; mvp\_status: closed / open / tie\_pending / finished |
 | `availability` | match\_id, player\_id, status, comment, updated\_at | status: yes / no / maybe |
 | `callups` | match\_id, player\_id, number, positions | Convocados; dorsal y posiciones del partido (vacío = los de la ficha) |
 | `training_slots` | id, team\_id, weekday, start\_time, end\_time, venue, maps\_url | Horario semanal de entrenamientos |
 | `training_cancellations` | slot\_id, date | Entrenamiento que no se hace un día concreto |
+| `training_attendance` | slot\_id, date, player\_id, status, updated\_at | Si un jugador va a un entrenamiento ese día: yes / no / maybe. Cada jugador cambia la suya; el staff, cualquiera |
 | `account_recovery` | user\_id, code\_hash, failed\_attempts, locked\_until | Código de recuperación (solo el hash). Sin acceso directo: solo vía RPC |
 | `account_recovery_email` | user\_id, email, token\_hash, token\_expires\_at | Correo de recuperación opcional y enlace de un solo uso. Sin acceso directo |
 | `team_venues` | id, team\_id, name, maps\_url | Pabellones habituales |
@@ -201,7 +206,7 @@ Cuatro fases sin fechas fijas; no se pasa a la siguiente hasta superar la prueba
 | 0 · Base | Repo en GitHub, Supabase + Vercel, PWA instalable, login y sesión larga, estructura modular | Login funciona en el móvil |
 | 1 · MVP | Equipos y roles, códigos de acceso, plantilla, partidos y calendario, disponibilidad, convocatoria | Tu equipo lo usa dos semanas |
 | 2 · Partido | Plan por set, sistemas y rotaciones, cambios previstos, modo partido, offline y sincronización, resultados y tabla | Partido real en modo avión |
-| 3 · Extras | Entrenamientos, notificaciones, estadísticas, importar Sheets, APK (opcional) | — |
+| 3 · Extras | Entrenamientos (la asistencia ya está hecha), notificaciones, estadísticas, importar Sheets, APK (opcional) | — |
 
 La fase 2 es la crítica: el offline se diseña desde la fase 0 (estructura de datos local), pero se completa y prueba aquí. El módulo MVP entra después de la fase 1, porque depende de la convocatoria.
 
@@ -257,12 +262,18 @@ Cada decisión cerrada se añade aquí con su fecha; este documento es la refere
 | 2026-11-08 | Modo partido: R en grande, rotar (R1 → R6 → R5…), líberos, hacer/deshacer cambios previstos, sistema y R inicial antes de cada set; recuerda por dónde iba. El resultado del set se apunta con conexión en Info |
 | 2026-11-08 | Módulo Resultados: partidos jugados y tabla de liga no oficial con "Actualizada el dd/mm" |
 | 2026-11-08 | Prueba de aceptación de la fase 2 superada en navegador: app abierta en modo avión, plantilla visible, partido de 5 sets cambiando sistema y rotación, recarga a mitad y sincronización completa al volver la red |
+| 2026-11-08 | Los jugadores no ven las rotaciones: plan por set y modo partido son solo del staff (cierra el tema abierto) |
+| 2026-11-08 | Asistencia a entrenamientos (adelantada de la fase 3): Sí / No / Duda por entrenamiento y fecha para todos los jugadores aceptados; el staff ve el recuento. Tabla `training_attendance` |
+| 2026-11-08 | Resultado con formato del partido (al mejor de 5 o de 3, 3 sets fijos, 1 set) y opción de apuntar solo el marcador final con un toque, sin puntos por set |
+| 2026-11-08 | Posiciones de la ficha con lista de casillas (la primera marcada es la principal) en vez de desplegable de "posición principal" |
+| 2026-11-08 | "+ Jugador" sale de Plantilla: las fichas sin cuenta se crean en Ajustes → Jugadores sin cuenta |
+| 2026-11-08 | Tarjetas de equipo rellenas con el color del equipo (lista, menú y cabecera); en el móvil el menú solo lista equipos y el nombre del equipo en la cabecera lo abre |
 | 2026-11-07 | Calidad de código: ESLint (flat config, typescript-eslint, reglas de hooks) y Prettier en `frontend/` |
 
 **Temas abiertos**
 
 - [ ] ¿Temporadas dentro del equipo o un equipo nuevo cada año? (el ranking de MVP "de temporada" depende de esto)
-- [ ] ¿Los jugadores ven la rotación planificada o solo el entrenador?
+- [x] ¿Los jugadores ven la rotación planificada o solo el entrenador? → Solo el staff (2026-11-08)
 - [ ] Nombre de la app
 - [ ] ¿Registrar en el modo partido el resultado punto a punto o solo por set?
 

@@ -1,10 +1,12 @@
 // "Ajustes" screen for the coach: team details and default system, sections, join codes, pending
-// requests, members (remove, hand over), training schedule and deleting the team.
+// requests, players without account, members (remove, hand over), training schedule and deleting
+// the team.
 import { useCurrentTeam } from '@/core/teams/currentTeam'
 import { PageMessage } from '@/shared/ui/PageMessage'
 import { useMembers, useTeamPlayers } from './api'
 import { DeleteTeamCard } from './components/DeleteTeamCard'
 import { JoinCodesCard } from './components/JoinCodesCard'
+import { ManualPlayerCard } from './components/ManualPlayerCard'
 import { MembersCard } from './components/MembersCard'
 import { ModulesCard } from './components/ModulesCard'
 import { OpponentsCard } from './components/OpponentsCard'
@@ -39,6 +41,7 @@ export function TeamSettingsPage() {
             freePlayers={freePlayers}
           />
           <JoinCodesCard teamId={team.id} />
+          <ManualPlayerCard teamId={team.id} />
           <TeamDetailsCard team={team} />
           <TeamColorCard team={team} />
           <ModulesCard team={team} />

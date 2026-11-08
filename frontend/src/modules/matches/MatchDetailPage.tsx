@@ -75,11 +75,11 @@ export function MatchDetailPage() {
               </p>
             </Card>
             <ResultEditor
-              key={JSON.stringify(match.setsResult)}
-              saved={match.setsResult}
+              key={JSON.stringify([match.setsFormat, match.setsResult, match.finalScore])}
+              match={match}
               busy={setResult.isPending}
               failed={setResult.isError}
-              onSave={(sets) => setResult.mutate(sets)}
+              onSave={(result) => setResult.mutate(result)}
             />
             {team.enabledModules.includes('lineup') && (
               <Link

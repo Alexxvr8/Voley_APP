@@ -7,7 +7,7 @@ import { playerName, shirtNumber } from '@/shared/utils/format'
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog'
 import { useDeletePlayer, useUpdatePlayer } from '../api'
 import { CompetesSwitch } from './CompetesSwitch'
-import { PlayerForm } from './PlayerForm'
+import { PlayerForm } from '@/shared/ui/PlayerForm'
 
 interface PlayerRowProps {
   teamId: string

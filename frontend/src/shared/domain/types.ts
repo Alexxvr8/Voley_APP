@@ -55,6 +55,15 @@ export interface SetScore {
 
 export type MatchStatus = 'scheduled' | 'played' | 'cancelled'
 
+/** How many sets a match has: best of 5 or 3, or a fixed number of sets that are always played. */
+export type SetsFormat = 'best_of_5' | 'best_of_3' | 'fixed_3' | 'fixed_1'
+
+/** Sets won by each side, from the team's point of view. */
+export interface FinalScore {
+  us: number
+  them: number
+}
+
 export interface Match {
   id: string
   opponent: string
@@ -69,8 +78,11 @@ export interface Match {
   homeAway: 'home' | 'away'
   notes: string
   status: MatchStatus
-  /** One entry per set played; empty until the result is recorded. */
+  /** One entry per set played; empty until the result is recorded or when only the score is known. */
   setsResult: SetScore[]
+  setsFormat: SetsFormat
+  /** Sets won when only the final score was recorded ("2-1"), without the points of each set. */
+  finalScore: FinalScore | null
 }
 
 /** A called-up player and the number/positions they use in that match (null = the roster values). */
@@ -101,6 +113,24 @@ export interface TrainingSlot {
   endTime: string
   venue: string
   mapsUrl: string
+}
+
+/** Editable fields of a roster entry, as filled in the player form. */
+export interface PlayerInput {
+  firstName: string
+  lastName: string
+  birthYear: number | null
+  number: number | null
+  mainPosition: Position
+  otherPositions: Position[]
+}
+
+/** A player's answer for one training on one date. */
+export interface TrainingAnswer {
+  slotId: string
+  date: string
+  playerId: string
+  status: AvailabilityStatus
 }
 
 /** A training slot that does not happen on one specific date. */

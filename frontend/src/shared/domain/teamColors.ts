@@ -1,4 +1,4 @@
-// The 20 base colours a coach can choose for a team (shown next to its name in the menu).
+// The 20 base colours a coach can choose for a team (they fill its card in the teams list and menu; all dark enough for white text).
 
 export const TEAM_COLORS: { value: string; label: string }[] = [
   { value: '#1e40af', label: 'Azul' },

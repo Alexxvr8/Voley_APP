@@ -1,4 +1,4 @@
-// Base colour of the team, shown next to its name in the menu. Tapping a colour saves it.
+// Base colour of the team, which fills its card in the teams list and menu. Tapping a colour saves it.
 import { TEAM_COLORS } from '@/shared/domain/teamColors'
 import type { Team } from '@/shared/domain/types'
 import { Card } from '@/shared/ui/Card'

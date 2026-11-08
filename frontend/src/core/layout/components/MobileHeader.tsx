@@ -1,4 +1,5 @@
-// Top bar on phones and tablets: the ☰ button that opens the menu and the name of the open team.
+// Top bar on phones and tablets: the ☰ button and the open team's name, on its colour. Both open the
+// menu, so changing team is one tap away.
 import { useOpenTeam } from '../teamMenu'
 import { ROLE_LABELS } from '@/shared/domain/labels'
 
@@ -15,19 +16,16 @@ export function MobileHeader({ onOpenMenu }: { onOpenMenu: () => void }) {
       >
         ☰
       </button>
-      <div className="min-w-0">
-        <p className="flex items-center gap-2 truncate text-lg leading-tight font-bold">
-          {openTeam && (
-            <span
-              className="size-3 shrink-0 rounded-full ring-2 ring-white/70"
-              style={{ backgroundColor: openTeam.color }}
-              aria-hidden
-            />
-          )}
-          {openTeam?.name ?? 'Voley APP'}
-        </p>
-        {openTeam && <p className="text-xs text-blue-200">{ROLE_LABELS[openTeam.role]}</p>}
-      </div>
+      <button
+        type="button"
+        onClick={onOpenMenu}
+        aria-label="Cambiar de equipo"
+        style={openTeam ? { backgroundColor: openTeam.color } : undefined}
+        className="min-w-0 flex-1 rounded-lg px-3 py-1 text-left hover:brightness-110"
+      >
+        <p className="truncate text-lg leading-tight font-bold">{openTeam?.name ?? 'Voley APP'}</p>
+        {openTeam && <p className="text-xs text-white/80">{ROLE_LABELS[openTeam.role]}</p>}
+      </button>
     </header>
   )
 }

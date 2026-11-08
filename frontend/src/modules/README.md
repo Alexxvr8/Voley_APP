@@ -4,11 +4,11 @@ Cada carpeta es una funcionalidad independiente que un equipo puede activar o de
 
 | Módulo | Para qué sirve | En el menú | Rol mínimo | Sin conexión |
 | --- | --- | --- | --- | --- |
-| `matches/` | Calendario mensual (partidos y entrenamientos), crear, editar y borrar partidos, info con mapa y resultado por sets, disponibilidad y la pestaña Gestión (convocatoria con dorsal y posiciones del partido) | Partidos | Jugador | No |
-| `roster/` | Plantilla. El staff añade y edita jugadores (dorsal, posición principal y otras) y marca quién compite o solo entrena; los jugadores la ven sin poder cambiarla. Se descarga para verla sin conexión | Plantilla | Jugador | Solo lectura |
+| `matches/` | Calendario mensual (partidos y entrenamientos, con asistencia Sí / No / Duda a cada entrenamiento), crear, editar y borrar partidos, info con mapa y resultado (solo marcador o puntos por set), disponibilidad y la pestaña Gestión (convocatoria con dorsal y posiciones del partido) | Partidos | Jugador | No |
+| `roster/` | Plantilla. El staff edita jugadores (dorsal y posiciones) y marca quién compite o solo entrena; los jugadores la ven sin poder cambiarla. Se descarga para verla sin conexión | Plantilla | Jugador | Solo lectura |
 | `lineup/` | Pestaña Rotación del partido (plan por set guardado en el servidor) y modo partido. Funciona sin conexión | — (pestaña y botón "Ir al partido") | Segundo entrenador | Sí |
 | `results/` | Partidos jugados con su resultado y tabla de liga no oficial (rellena a mano, con "Actualizada el dd/mm") | Resultados | Jugador | No |
-| `teams/` | Ajustes del equipo: datos y sistema predeterminado, color, secciones activas, códigos, solicitudes, miembros (quitar, transferir), horario, pabellones, rivales y borrar el equipo | Ajustes | Entrenador | No |
+| `teams/` | Ajustes del equipo: datos y sistema predeterminado, color, secciones activas, códigos, solicitudes, jugadores sin cuenta, miembros (quitar, transferir), horario, pabellones, rivales y borrar el equipo | Ajustes | Entrenador | No |
 
 Previsto: `mvp/`.
 
@@ -22,7 +22,7 @@ modules/matches/
 ├── api.ts              Consultas y cambios en Supabase con TanStack Query (useQuery / useMutation)
 ├── CalendarPage.tsx    Página: lee los datos, guarda el estado y reparte el trabajo entre componentes
 ├── components/         Bloques visuales de la página, cada uno en su fichero
-└── calendarEvents.ts   Tipos y funciones puras del módulo (sin React)
+└── calendarEvents.ts   Tipos y funciones puras del módulo (sin React), con su *.test.ts
 ```
 
 No hace falta tener todas las piezas: un módulo pequeño puede ser solo `index.ts` y una página.
@@ -41,17 +41,19 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 
 | Fichero | Qué hace |
 | --- | --- |
-| `CalendarPage.tsx` | Calendario del mes, lo que pasa el día elegido y los próximos partidos. El jugador que compite responde ahí mismo; el staff crea partidos y cancela un entrenamiento suelto |
+| `CalendarPage.tsx` | Calendario del mes, lo que pasa el día elegido, los próximos partidos y los próximos entrenamientos. El jugador que compite responde a los partidos ahí mismo y todo jugador dice si va a cada entrenamiento; el staff crea partidos, ve cuántos van a entrenar y cancela un entrenamiento suelto |
 | `MatchDetailPage.tsx` | Pestaña Info: datos, mapa y resultado. Jugador: "¿Puedes venir?" mientras no se haya jugado (o aviso si solo entrena). Staff: recuento de respuestas, resultado por sets y "Editar o borrar partido" |
 | `EditMatchPage.tsx` | Editar los datos del partido o borrarlo (con confirmación) |
 | `components/MatchForm.tsx` | Formulario común de crear y editar: rival sugerido de la lista o escrito (con "guardar en la lista"), hora en 24 h, calentamiento en pasos de 15 min y pabellón de la lista u otro con su enlace de Maps |
-| `components/ResultEditor.tsx`, `ResultSummary.tsx` | Puntos de cada set (hasta 5) y "Ganado 3-1" con el detalle |
+| `components/ResultEditor.tsx`, `ResultSummary.tsx` | Formato del partido y resultado: solo el marcador con un toque (3-0, 3-1…) o los puntos de cada set (tantos como permite el formato); y "Ganado 3-1" con el detalle si lo hay |
+| `resultDraft.ts` | Conversión entre los puntos guardados y las casillas del editor |
 | `ManagementPage.tsx` | Pestaña Gestión (staff): convocatoria entre los que compiten, con dorsal y posiciones solo para ese partido. Cada cambio envía solo el campo tocado, para que dos cambios seguidos no se pisen |
 | `NewMatchPage.tsx` | Formulario de partido nuevo (staff) |
-| `api.ts` | Partidos, entrenamientos y cancelaciones, disponibilidad y convocatoria. Disponibilidad y convocatoria se actualizan al momento en pantalla y se deshacen si el servidor falla |
+| `api.ts` | Partidos, entrenamientos y cancelaciones, asistencia a entrenamientos, disponibilidad y convocatoria. Disponibilidad, asistencia y convocatoria se actualizan al momento en pantalla y se deshacen si el servidor falla |
 | `calendarEvents.ts` | Qué hay cada día y próximos partidos |
+| `trainingAnswers.ts` | Próximos entrenamientos (sin los cancelados), la respuesta de un jugador y el recuento Sí / No / Duda |
 | `components/MonthCalendar.tsx` | Mes de lunes a domingo; burbuja azul = partido, verde = entrenamiento. Las burbujas crecen con el ancho del propio calendario (container queries): punto, hora, u hora y texto |
-| `components/MatchEventCard.tsx`, `TrainingEventCard.tsx` | Tarjetas de partido y de entrenamiento del día |
+| `components/MatchEventCard.tsx`, `TrainingEventCard.tsx` | Tarjetas de partido y de entrenamiento; la de entrenamiento lleva "¿Vienes?" para el jugador y el recuento para el staff |
 | `components/MatchInfoCard.tsx` | Horarios, pabellón (enlace a Maps), local o visitante, notas |
 | `components/MyAvailabilityCard.tsx` | "¿Puedes venir?" para el jugador, con comentario opcional |
 | `components/CallupList.tsx` + `CallupDetailsEditor.tsx` | Jugadores con su respuesta y la casilla para convocar; bajo cada convocado, dorsal y las posiciones (varias a la vez) que cubre en este partido |
@@ -77,8 +79,7 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 
 | Fichero | Qué hace |
 | --- | --- |
-| `RosterPage.tsx` | Plantilla por dorsal. El staff añade jugadores |
-| `components/PlayerForm.tsx` | Formulario de ficha para añadir y para editar |
+| `RosterPage.tsx` | Plantilla por dorsal. Las fichas nuevas llegan al aceptar cuentas o desde Ajustes → Jugadores sin cuenta |
 | `components/PlayerRow.tsx` | Fila de jugador; para el staff, con el interruptor "Compite / Solo entrena", "Editar" y "Borrar ficha" |
 | `components/CompetesSwitch.tsx` | El interruptor, con confirmación antes de cambiar (doble comprobación) |
 
@@ -89,10 +90,11 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 | `TeamSettingsPage.tsx` | Ajustes del equipo (entrenador) |
 | `members.ts` | Miembros del equipo y cómo separar pendientes, activos y fichas ya enlazadas |
 | `components/PendingRequestsCard.tsx` + `AcceptMemberDialog.tsx` | Solicitudes de jugadores: aceptar (vincular a una ficha sin cuenta o crear una nueva) o rechazar |
+| `components/ManualPlayerCard.tsx` | Jugadores sin cuenta: crear a mano la ficha de quien no usa la app |
 | `components/JoinCodesCard.tsx` | Códigos de jugador y de segundo entrenador: crear, renovar, activar o desactivar |
 | `components/TeamDetailsCard.tsx` | Nombre, categoría y temporada |
 | `components/TrainingScheduleCard.tsx` | Horario semanal de entrenamientos (24 h, de 15 en 15 min) con pabellón de la lista u otro |
-| `components/TeamColorCard.tsx` | 20 colores para el equipo |
+| `components/TeamColorCard.tsx` | 20 colores para el equipo (rellenan su tarjeta en la lista y el menú) |
 | `components/ModulesCard.tsx` | Activar o desactivar secciones (Ajustes siempre activo) |
 | `components/VenuesCard.tsx`, `OpponentsCard.tsx` | Pabellones (con enlace de Maps) y rivales habituales |
 | `components/DeleteTeamCard.tsx` | Borrar el equipo escribiendo su nombre |

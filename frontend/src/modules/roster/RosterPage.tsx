@@ -1,22 +1,17 @@
-// Team roster sorted by shirt number. Staff add players and mark who competes or only trains;
-// players see it read-only.
-import { useState } from 'react'
+// Team roster sorted by shirt number. Staff edit players and mark who competes or only trains;
+// players see it read-only. New entries come from accepting accounts or from Ajustes.
 import { hasRole, useCurrentTeam } from '@/core/teams/currentTeam'
 import { SYSTEM_LABELS } from '@/shared/domain/labels'
 import { Card } from '@/shared/ui/Card'
-import { PRIMARY_BUTTON_CLASS } from '@/shared/ui/form'
 import { PageMessage } from '@/shared/ui/PageMessage'
 import { byShirtNumber } from '@/shared/utils/format'
-import { useAddPlayer, usePlayers } from './api'
-import { PlayerForm } from './components/PlayerForm'
+import { usePlayers } from './api'
 import { PlayerRow } from './components/PlayerRow'
 
 export function RosterPage() {
   const { team, role } = useCurrentTeam()
   const isStaff = hasRole(role, 'assistant')
   const players = usePlayers(team.id)
-  const addPlayer = useAddPlayer(team.id)
-  const [adding, setAdding] = useState(false)
 
   if (players.isPending) return <PageMessage>Cargando…</PageMessage>
   if (players.isError)
@@ -27,35 +22,19 @@ export function RosterPage() {
 
   return (
     <section className="space-y-3 lg:max-w-3xl">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 lg:text-2xl">Plantilla</h1>
-          <p className="text-sm text-slate-500">
-            {sorted.length} en total · {competing} compiten · sistema{' '}
-            {SYSTEM_LABELS[team.defaultSystem]}
-          </p>
-        </div>
-        {isStaff && !adding && (
-          <button type="button" onClick={() => setAdding(true)} className={PRIMARY_BUTTON_CLASS}>
-            + Jugador
-          </button>
-        )}
+      <div>
+        <h1 className="text-xl font-bold text-slate-900 lg:text-2xl">Plantilla</h1>
+        <p className="text-sm text-slate-500">
+          {sorted.length} en total · {competing} compiten · sistema{' '}
+          {SYSTEM_LABELS[team.defaultSystem]}
+        </p>
       </div>
-
-      {adding && (
-        <PlayerForm
-          title="Nuevo jugador"
-          submitLabel="Añadir"
-          busy={addPlayer.isPending}
-          failed={addPlayer.isError}
-          onSubmit={(player) => addPlayer.mutate(player, { onSuccess: () => setAdding(false) })}
-          onCancel={() => setAdding(false)}
-        />
-      )}
 
       {sorted.length === 0 ? (
         <PageMessage>
-          Aún no hay jugadores. Añádelos o acepta a los que entren con el código.
+          {isStaff
+            ? 'Aún no hay jugadores. Acepta a los que entren con el código o añádelos en Ajustes.'
+            : 'Aún no hay jugadores.'}
         </PageMessage>
       ) : (
         <Card className="divide-y divide-slate-100 overflow-hidden p-0">

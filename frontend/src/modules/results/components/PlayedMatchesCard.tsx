@@ -1,7 +1,7 @@
-// Played matches, newest first, with the result and the points of each set.
+// Played matches, newest first, with the result and the points of each set (when recorded).
 import { Link } from 'react-router'
-import { resultSummary, setsDetail, setsWon } from '@/shared/domain/results'
-import type { Match } from '@/shared/domain/types'
+import { matchScore, outcomeLabel, setsDetail } from '@/shared/domain/results'
+import type { FinalScore, Match } from '@/shared/domain/types'
 import { Card } from '@/shared/ui/Card'
 import { formatShortDate } from '@/shared/utils/format'
 
@@ -11,13 +11,18 @@ interface PlayedMatchesCardProps {
   matchHref: (matchId: string) => string
 }
 
+/** Matches with a result, each with its score in sets. */
+function withScores(matches: Match[]): { match: Match; score: FinalScore }[] {
+  return matches.flatMap((match) => {
+    const score = matchScore(match)
+    return score ? [{ match, score }] : []
+  })
+}
+
 export function PlayedMatchesCard({ matches, matchHref }: PlayedMatchesCardProps) {
-  const played = matches
-    .filter((match) => match.setsResult.length > 0)
-    .sort((a, b) => b.date.localeCompare(a.date))
+  const played = withScores(matches).sort((a, b) => b.match.date.localeCompare(a.match.date))
   const totals = played.reduce(
-    (sum, match) => {
-      const { us, them } = setsWon(match.setsResult)
+    (sum, { score: { us, them } }) => {
       return us > them
         ? { ...sum, won: sum.won + 1 }
         : us < them
@@ -42,8 +47,9 @@ export function PlayedMatchesCard({ matches, matchHref }: PlayedMatchesCardProps
           Aún no hay resultados. Se apuntan en la pestaña Info de cada partido.
         </p>
       )}
-      {played.map((match) => {
-        const { us, them } = setsWon(match.setsResult)
+      {played.map(({ match, score }) => {
+        const { us, them } = score
+        const detail = setsDetail(match.setsResult)
         return (
           <Link
             key={match.id}
@@ -62,12 +68,11 @@ export function PlayedMatchesCard({ matches, matchHref }: PlayedMatchesCardProps
                 vs {match.opponent}
               </span>
               <span className="block text-xs text-slate-500 first-letter:uppercase">
-                {formatShortDate(match.date)} · {setsDetail(match.setsResult)}
+                {formatShortDate(match.date)}
+                {detail && ` · ${detail}`}
               </span>
             </span>
-            <span className="text-xs font-semibold text-slate-600">
-              {resultSummary(match.setsResult).split(' ')[0]}
-            </span>
+            <span className="text-xs font-semibold text-slate-600">{outcomeLabel(score)}</span>
           </Link>
         )
       })}

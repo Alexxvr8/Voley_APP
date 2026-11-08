@@ -9,7 +9,7 @@ import {
   type PlayerRow,
   type TrainingSlotRow,
 } from '@/shared/domain/rows'
-import type { GameSystem, Position, Team } from '@/shared/domain/types'
+import type { GameSystem, PlayerInput, Position, Team } from '@/shared/domain/types'
 import { toMember, type MemberRow } from './members'
 
 /** Role a join code lets in. */
@@ -88,6 +88,26 @@ export interface NewPlayer {
   lastName: string
   number: number | null
   mainPosition: Position
+  otherPositions: Position[]
+}
+
+/** Adds a roster entry without account (a player who does not use the app, or before they join). */
+export function useAddPlayer(teamId: string) {
+  return useMutation({
+    mutationFn: async (player: PlayerInput) =>
+      check(
+        await supabase.from('players').insert({
+          team_id: teamId,
+          first_name: player.firstName,
+          last_name: player.lastName,
+          birth_year: player.birthYear,
+          number: player.number,
+          main_position: player.mainPosition,
+          other_positions: player.otherPositions,
+        }),
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.players(teamId) }),
+  })
 }
 
 /** Accepts a pending player, linking them to an existing roster entry or to a new one. */
@@ -113,6 +133,7 @@ export function useAcceptMember(teamId: string) {
               last_name: newPlayer.lastName,
               number: newPlayer.number,
               main_position: newPlayer.mainPosition,
+              other_positions: newPlayer.otherPositions,
             })
             .select('id')
             .single(),

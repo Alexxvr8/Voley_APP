@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import type { AvailabilityStatus, Match } from '@/shared/domain/types'
 import { AvailabilityButtons } from '@/shared/ui/AvailabilityButtons'
 import { Card } from '@/shared/ui/Card'
-import { resultSummary } from '@/shared/domain/results'
+import { hasResult, resultSummary } from '@/shared/domain/results'
 import { formatShortDate } from '@/shared/utils/format'
 
 interface MatchEventCardProps {
@@ -33,10 +33,8 @@ export function MatchEventCard({ match, href, availability }: MatchEventCardProp
         </div>
         <p className="mt-1 text-lg font-bold text-slate-900">vs {match.opponent}</p>
         {match.venue && <p className="text-sm text-slate-500">{match.venue}</p>}
-        {match.setsResult.length > 0 && (
-          <p className="mt-1 text-sm font-semibold text-slate-800">
-            {resultSummary(match.setsResult)}
-          </p>
+        {hasResult(match) && (
+          <p className="mt-1 text-sm font-semibold text-slate-800">{resultSummary(match)}</p>
         )}
       </Link>
       {availability && (

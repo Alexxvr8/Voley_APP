@@ -6,20 +6,31 @@ import {
   toMatch,
   toPlayer,
   toTeamVenue,
+  toTrainingAnswer,
   toTrainingCancellation,
   toTrainingSlot,
   type MatchRow,
   type PlayerRow,
+  type TrainingAnswerRow,
   type TrainingSlotRow,
 } from '@/shared/domain/rows'
 import { toCallup, type CallupRow } from '@/shared/domain/callups'
-import type { AvailabilityEntry, AvailabilityStatus, Callup, SetScore } from '@/shared/domain/types'
+import type {
+  AvailabilityEntry,
+  AvailabilityStatus,
+  Callup,
+  FinalScore,
+  SetScore,
+  SetsFormat,
+  TrainingAnswer,
+} from '@/shared/domain/types'
 
 const keys = {
   matches: (teamId: string) => ['matches', teamId],
   players: (teamId: string) => ['players', teamId],
   slots: (teamId: string) => ['training-slots', teamId],
   cancellations: (teamId: string) => ['training-cancellations', teamId],
+  trainingAnswers: (teamId: string) => ['training-answers', teamId],
   availability: (matchId: string) => ['availability', matchId],
   myAvailability: (playerId: string) => ['my-availability', playerId],
   callups: (matchId: string) => ['callups', matchId],
@@ -83,6 +94,60 @@ export function useTrainingCancellations(teamId: string) {
             .eq('training_slots.team_id', teamId),
         ) as { slot_id: string; date: string }[]
       ).map(toTrainingCancellation),
+  })
+}
+
+/** Every training attendance answer of the team from today on (they are few: one per player and date). */
+export function useTrainingAnswers(teamId: string, fromDate: string) {
+  return useQuery({
+    queryKey: [...keys.trainingAnswers(teamId), fromDate],
+    queryFn: async () =>
+      (
+        check(
+          await supabase
+            .from('training_attendance')
+            .select('slot_id, date, player_id, status, training_slots!inner(team_id)')
+            .eq('training_slots.team_id', teamId)
+            .gte('date', fromDate),
+        ) as TrainingAnswerRow[]
+      ).map(toTrainingAnswer),
+  })
+}
+
+/** Saves whether a player comes to a training. The buttons update at once and go back on error. */
+export function useSetTrainingAnswer(teamId: string) {
+  const prefix = keys.trainingAnswers(teamId)
+  return useMutation({
+    mutationFn: async (answer: TrainingAnswer) =>
+      check(
+        await supabase.from('training_attendance').upsert({
+          slot_id: answer.slotId,
+          date: answer.date,
+          player_id: answer.playerId,
+          status: answer.status,
+          updated_at: new Date().toISOString(),
+        }),
+      ),
+    onMutate: async (answer) => {
+      await queryClient.cancelQueries({ queryKey: prefix })
+      const previous = queryClient.getQueriesData<TrainingAnswer[]>({ queryKey: prefix })
+      queryClient.setQueriesData<TrainingAnswer[]>({ queryKey: prefix }, (current) => [
+        ...(current ?? []).filter(
+          (a) =>
+            !(
+              a.slotId === answer.slotId &&
+              a.date === answer.date &&
+              a.playerId === answer.playerId
+            ),
+        ),
+        answer,
+      ])
+      return previous
+    },
+    onError: (_error, _answer, previous) => {
+      previous?.forEach(([key, data]) => queryClient.setQueryData(key, data))
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: prefix }),
   })
 }
 
@@ -316,14 +381,26 @@ export function useDeleteMatch(teamId: string) {
   })
 }
 
-/** Saves the points of each set. With sets the match is "played"; without them, back to "scheduled". */
+/** A match result as saved: the format plus either the points of each set or only the final score. */
+export interface MatchResultInput {
+  format: SetsFormat
+  sets: SetScore[]
+  finalScore: FinalScore | null
+}
+
+/** Saves the result. With a result the match is "played"; without one, back to "scheduled". */
 export function useSetMatchResult(teamId: string, matchId: string) {
   return useMutation({
-    mutationFn: async (sets: SetScore[]) =>
+    mutationFn: async ({ format, sets, finalScore }: MatchResultInput) =>
       check(
         await supabase
           .from('matches')
-          .update({ sets_result: sets, status: sets.length ? 'played' : 'scheduled' })
+          .update({
+            sets_format: format,
+            sets_result: sets,
+            final_score: finalScore,
+            status: sets.length || finalScore ? 'played' : 'scheduled',
+          })
           .eq('id', matchId),
       ),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.matches(teamId) }),

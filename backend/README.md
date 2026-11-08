@@ -43,6 +43,7 @@ Cada cambio en la base de datos es un fichero SQL nuevo en `supabase/migrations/
 | `20261108000000_save_set_plan.sql` | RPC `save_set_plan` para guardar el plan de un set (también los cambios hechos sin conexión) avisando si otra persona lo había cambiado |
 | `20261108000100_fix_save_set_plan_ambiguity.sql` | Corrige `save_set_plan`: el parámetro `set_number` chocaba con la columna y ningún guardado funcionaba |
 | `20261108000200_results_module.sql` | Módulo Resultados activo en todos los equipos y permiso para quitar la tabla de liga |
+| `20261108000300_training_attendance_and_final_score.sql` | Asistencia a entrenamientos (`training_attendance`), formato del partido (`matches.sets_format`) y marcador final sin puntos por set (`matches.final_score`) |
 
 Se aplican al proyecto con el conector de Supabase (`apply_migration`) o con la CLI (`supabase db push`, desde `backend/`).
 
@@ -57,13 +58,14 @@ La pieza central es `team_members`: une usuario, equipo y rol, y todas las regla
 | `team_members` | Quién pertenece a qué equipo y con qué rol (`coach`, `assistant`, `player`) | `player_id` enlaza la cuenta con su ficha. Si está vacío, el jugador está **pendiente** |
 | `join_codes` | Código de acceso por equipo y rol | Uno por rol; se regenera con `regenerate_join_code` |
 | `players` | Fichas de la plantilla | Una ficha puede existir sin cuenta. `competes = false`: solo entrena, no puede tener disponibilidad ni ser convocado |
-| `matches` | Partidos: rival, fecha, hora, calentamiento en minutos (`warmup_minutes`, de 15 en 15), pabellón y enlace de Maps, estado, resultado por sets | `sets_result` = `[{"us": 25, "them": 20}, …]`; con resultado, `status = played` |
+| `matches` | Partidos: rival, fecha, hora, calentamiento en minutos (`warmup_minutes`, de 15 en 15), pabellón y enlace de Maps, estado, formato y resultado | `sets_format` = `best_of_5` / `best_of_3` / `fixed_3` / `fixed_1`; `sets_result` = `[{"us": 25, "them": 20}, …]` o, si solo se apunta el marcador, `final_score` = `{"us": 2, "them": 1}`; con resultado, `status = played` |
 | `availability` | Respuesta de cada jugador a cada partido (`yes`, `no`, `maybe`) | |
 | `callups` | Convocados de cada partido | `number` y `positions`: dorsal y posiciones solo para ese partido (vacío = los de la ficha; la primera posición es la principal) |
 | `set_plans` | Plan de cada set: sistema, rotación inicial, alineación, líberos, cambios previstos | `start_rotation` = 1–6 (R1…R6); `rotation` = `{"1": player_id, …, "6": player_id}`; `libero_id` y `second_libero_id`; `planned_subs` = `[{"out", "in", "note"}]` |
 | `league_table` | Tabla de liga no oficial, rellenada a mano | Filas en JSON |
 | `training_slots` | Horario semanal de entrenamientos: día (1 = lunes … 7 = domingo), hora de inicio y fin, lugar y enlace de Google Maps | Se repite cada semana en el calendario |
 | `training_cancellations` | Fechas en que un entrenamiento del horario no se hace | |
+| `training_attendance` | Si cada jugador va a un entrenamiento en una fecha (`yes`, `no`, `maybe`) | Clave: entrenamiento + fecha + jugador |
 | `account_recovery` | Hash del código de recuperación de cada cuenta, intentos fallidos y bloqueo | Sin políticas: solo se usa desde las funciones de recuperación |
 | `account_recovery_email` | Correo de recuperación (opcional) y el hash del enlace de un solo uso, con caducidad | Sin políticas: solo vía funciones. Nadie del equipo lo ve |
 | `team_venues` | Pabellones habituales del equipo con su enlace de Google Maps | Partidos y entrenamientos copian nombre y enlace |
@@ -83,9 +85,10 @@ Todas las tablas tienen RLS activado. Resumen de quién puede qué:
 | `join_codes` | Entrenador | Entrenador |
 | `players`, `matches`, `callups`, `league_table`, `training_slots`, `training_cancellations`, `team_venues`, `team_opponents` | Miembros del equipo | Entrenador y segundo |
 | `availability` | Miembros del equipo | El jugador la suya (si su cuenta está enlazada a la ficha); entrenador y segundo, la de cualquiera |
+| `training_attendance` | Miembros del equipo | El jugador la suya; entrenador y segundo, la de cualquiera (siempre de un jugador del mismo equipo) |
 | `set_plans` | Entrenador y segundo | Entrenador y segundo |
 
-Que los jugadores vean los planes por set sigue siendo un tema abierto de la especificación. Por ahora no los ven.
+Los jugadores no ven los planes por set: rotaciones y modo partido son solo del staff (decisión del 2026-11-08).
 
 ### Funciones auxiliares de las políticas
 

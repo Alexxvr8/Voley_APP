@@ -1,6 +1,6 @@
 // Accepting a pending player: link their account to a roster entry without account, or create a new one.
 import { useState, type FormEvent } from 'react'
-import { POSITION_LABELS, POSITIONS } from '@/shared/domain/labels'
+import { fromPositionList } from '@/shared/domain/positions'
 import type { Player, Position } from '@/shared/domain/types'
 import {
   ERROR_CLASS,
@@ -10,6 +10,7 @@ import {
   PRIMARY_BUTTON_CLASS,
   SECONDARY_BUTTON_CLASS,
 } from '@/shared/ui/form'
+import { PositionChecklist } from '@/shared/ui/PositionChecklist'
 import { playerName, shirtNumber } from '@/shared/utils/format'
 import { useAcceptMember } from '../api'
 import type { Member } from '../members'
@@ -35,19 +36,22 @@ export function AcceptMemberDialog({
   const [firstName, setFirstName] = useState(member.displayName)
   const [lastName, setLastName] = useState('')
   const [number, setNumber] = useState('')
-  const [position, setPosition] = useState<Position>('outside')
+  const [positions, setPositions] = useState<Position[]>([])
+  const chosen = fromPositionList(positions)
+  const missingPositions = choice === NEW_PLAYER && !chosen
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
+    if (missingPositions) return
     const input =
-      choice === NEW_PLAYER
+      choice === NEW_PLAYER && chosen
         ? {
             member: member.userId,
             newPlayer: {
               firstName: firstName.trim(),
               lastName: lastName.trim(),
               number: number ? Number(number) : null,
-              mainPosition: position,
+              ...chosen,
             },
           }
         : { member: member.userId, playerId: choice }
@@ -120,20 +124,7 @@ export function AcceptMemberDialog({
                 onChange={(e) => setNumber(e.target.value)}
               />
             </label>
-            <label className={LABEL_CLASS}>
-              <span className={LABEL_TEXT_CLASS}>Posición</span>
-              <select
-                className={INPUT_CLASS}
-                value={position}
-                onChange={(e) => setPosition(e.target.value as Position)}
-              >
-                {POSITIONS.map((value) => (
-                  <option key={value} value={value}>
-                    {POSITION_LABELS[value]}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <PositionChecklist value={positions} onChange={setPositions} className="col-span-2" />
           </div>
         )}
 
@@ -145,7 +136,11 @@ export function AcceptMemberDialog({
           <button type="button" onClick={onClose} className={SECONDARY_BUTTON_CLASS}>
             Cancelar
           </button>
-          <button type="submit" disabled={accept.isPending} className={PRIMARY_BUTTON_CLASS}>
+          <button
+            type="submit"
+            disabled={accept.isPending || missingPositions}
+            className={PRIMARY_BUTTON_CLASS}
+          >
             {accept.isPending ? 'Guardando…' : 'Aceptar'}
           </button>
         </div>

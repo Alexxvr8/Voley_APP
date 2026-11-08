@@ -1,12 +1,18 @@
-// The app menu: the user's teams (with their colour) and a "+" to add one. The open team unfolds its
-// sections below its name.
+// The app menu: the user's teams (each card filled with its colour) and a "+" to add one. On PC the
+// open team unfolds its sections below its name; on phones those are already in the bottom tabs.
 import { Link, NavLink } from 'react-router'
 import { useMyTeams } from '@/core/teams/api'
 import { ROLE_LABELS } from '@/shared/domain/labels'
 import { useOpenTeam, useTeamMenu } from '../teamMenu'
 
-/** `onNavigate` closes the phone drawer after a tap. */
-export function TeamsMenu({ onNavigate }: { onNavigate?: () => void }) {
+interface TeamsMenuProps {
+  /** Closes the phone drawer after a tap. */
+  onNavigate?: () => void
+  /** Lists the open team's sections under it (off on phones, where the bottom tabs show them). */
+  showSections?: boolean
+}
+
+export function TeamsMenu({ onNavigate, showSections = true }: TeamsMenuProps) {
   const myTeams = useMyTeams()
   const openTeam = useOpenTeam()
   const sections = useTeamMenu(openTeam)
@@ -38,7 +44,7 @@ export function TeamsMenu({ onNavigate }: { onNavigate?: () => void }) {
             Pulsa + para crear un equipo o entrar con un código.
           </p>
         )}
-        <ul className="space-y-1">
+        <ul className="space-y-2">
           {myTeams.data?.map((team) => {
             const isOpen = team.id === openTeam?.id
             return (
@@ -46,22 +52,16 @@ export function TeamsMenu({ onNavigate }: { onNavigate?: () => void }) {
                 <Link
                   to={`/equipos/${team.id}`}
                   onClick={onNavigate}
-                  style={{ borderLeftColor: team.color }}
-                  className={`block rounded-lg border-l-4 px-3 py-2 ${isOpen ? 'bg-blue-800' : 'hover:bg-blue-800/60'}`}
+                  style={{ backgroundColor: team.color }}
+                  aria-current={isOpen ? 'true' : undefined}
+                  className={`block rounded-lg px-3 py-2 text-white hover:brightness-110 ${isOpen ? 'ring-2 ring-white' : ''}`}
                 >
-                  <span className="flex items-center gap-2">
-                    <span
-                      className="size-3 shrink-0 rounded-full ring-2 ring-white/70"
-                      style={{ backgroundColor: team.color }}
-                      aria-hidden
-                    />
-                    <span className="truncate font-semibold">{team.name}</span>
-                  </span>
-                  <span className="block pl-5 text-xs text-blue-200">
+                  <span className="block truncate font-semibold">{team.name}</span>
+                  <span className="block text-xs text-white/80">
                     {team.pending ? 'Pendiente de aceptar' : ROLE_LABELS[team.role]}
                   </span>
                 </Link>
-                {isOpen && (
+                {isOpen && showSections && (
                   <ul className="mt-1 ml-4 space-y-1 border-l border-blue-700 pl-3">
                     {sections.map((section) => (
                       <li key={section.path}>

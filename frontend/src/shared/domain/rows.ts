@@ -1,5 +1,7 @@
 // Converts database rows (snake_case, as returned by Supabase) into the domain types used by the UI.
 import type {
+  AvailabilityStatus,
+  FinalScore,
   GameSystem,
   Match,
   MatchStatus,
@@ -7,9 +9,11 @@ import type {
   Player,
   Position,
   SetScore,
+  SetsFormat,
   Team,
   TeamRole,
   TeamVenue,
+  TrainingAnswer,
   TrainingCancellation,
   TrainingSlot,
 } from './types'
@@ -102,6 +106,8 @@ export interface MatchRow {
   notes: string
   status: string
   sets_result: SetScore[]
+  sets_format: string
+  final_score: FinalScore | null
 }
 
 export function toMatch(row: MatchRow): Match {
@@ -117,6 +123,8 @@ export function toMatch(row: MatchRow): Match {
     notes: row.notes,
     status: row.status as MatchStatus,
     setsResult: row.sets_result,
+    setsFormat: row.sets_format as SetsFormat,
+    finalScore: row.final_score,
   }
 }
 
@@ -149,4 +157,20 @@ export function toTrainingCancellation(row: {
   date: string
 }): TrainingCancellation {
   return { slotId: row.slot_id, date: row.date }
+}
+
+export interface TrainingAnswerRow {
+  slot_id: string
+  date: string
+  player_id: string
+  status: string
+}
+
+export function toTrainingAnswer(row: TrainingAnswerRow): TrainingAnswer {
+  return {
+    slotId: row.slot_id,
+    date: row.date,
+    playerId: row.player_id,
+    status: row.status as AvailabilityStatus,
+  }
 }

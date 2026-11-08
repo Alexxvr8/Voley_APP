@@ -1,9 +1,11 @@
-// "Partidos" screen: monthly calendar with matches and trainings, the selected day and the next matches.
-// Players who compete answer availability from here; staff create matches and cancel single trainings.
+// "Partidos" screen: monthly calendar with matches and trainings, the selected day, the next matches
+// and the next trainings. Players who compete answer match availability from here and every player
+// answers training attendance; staff create matches, see training answers and cancel single trainings.
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { hasRole, useCurrentTeam, useTeamPath } from '@/core/teams/currentTeam'
 import type { AvailabilityStatus, Match } from '@/shared/domain/types'
+import type { TrainingOnDate } from '@/shared/utils/calendar'
 import { PRIMARY_BUTTON_CLASS } from '@/shared/ui/form'
 import { PageMessage } from '@/shared/ui/PageMessage'
 import { monthOf, type CalendarMonth } from '@/shared/utils/calendar'
@@ -14,7 +16,9 @@ import {
   useMyCallups,
   usePlayers,
   useSetAvailability,
+  useSetTrainingAnswer,
   useSetTrainingCancelled,
+  useTrainingAnswers,
   useTrainingCancellations,
   useTrainingSlots,
 } from './api'
@@ -22,6 +26,7 @@ import { eventsOn, upcomingMatches } from './calendarEvents'
 import { MatchEventCard } from './components/MatchEventCard'
 import { MonthCalendar } from './components/MonthCalendar'
 import { TrainingEventCard } from './components/TrainingEventCard'
+import { answerCounts, answerOf, upcomingTrainings } from './trainingAnswers'
 
 const UPCOMING_COUNT = 3
 
@@ -40,6 +45,8 @@ export function CalendarPage() {
   const myCallups = useMyCallups(playerId)
   const setAvailability = useSetAvailability()
   const setCancelled = useSetTrainingCancelled(team.id)
+  const trainingAnswers = useTrainingAnswers(team.id, today)
+  const setTrainingAnswer = useSetTrainingAnswer(team.id)
 
   if (matches.isPending || slots.isPending || cancellations.isPending || players.isPending) {
     return <PageMessage>Cargando…</PageMessage>
@@ -62,6 +69,28 @@ export function CalendarPage() {
       calledUp: myCallups.data?.includes(match.id) ?? false,
       onChange: (status: AvailabilityStatus) =>
         setAvailability.mutate({ matchId: match.id, playerId, status }),
+    }
+  }
+
+  /** Props of a training card: the player's answer, the staff counts and the cancel toggle. */
+  function trainingProps(training: TrainingOnDate) {
+    const answers = trainingAnswers.data ?? []
+    const slotId = training.slot.id
+    const isPast = training.date < today
+    return {
+      training,
+      attendance:
+        playerId && !isPast
+          ? {
+              status: answerOf(answers, { slotId, date: training.date }, playerId),
+              onChange: (status: AvailabilityStatus) =>
+                setTrainingAnswer.mutate({ slotId, date: training.date, playerId, status }),
+            }
+          : undefined,
+      counts: isStaff && !isPast ? answerCounts(answers, slotId, training.date) : undefined,
+      onToggleCancelled: isStaff
+        ? () => setCancelled.mutate({ slotId, date: training.date, cancelled: !training.cancelled })
+        : undefined,
     }
   }
 
@@ -118,20 +147,7 @@ export function CalendarPage() {
               />
             ))}
             {selected.trainings.map((training) => (
-              <TrainingEventCard
-                key={training.slot.id}
-                training={training}
-                onToggleCancelled={
-                  isStaff
-                    ? () =>
-                        setCancelled.mutate({
-                          slotId: training.slot.id,
-                          date: training.date,
-                          cancelled: !training.cancelled,
-                        })
-                    : undefined
-                }
-              />
+              <TrainingEventCard key={training.slot.id} {...trainingProps(training)} />
             ))}
           </div>
 
@@ -149,6 +165,21 @@ export function CalendarPage() {
               <p className="text-sm text-slate-500">No hay partidos programados.</p>
             )}
           </div>
+
+          {slots.data.length > 0 && (
+            <div className="space-y-2">
+              <p className="font-semibold text-slate-900">Próximos entrenamientos</p>
+              {upcomingTrainings(slots.data, cancellations.data, today, UPCOMING_COUNT).map(
+                (training) => (
+                  <TrainingEventCard
+                    key={`${training.slot.id}-${training.date}`}
+                    showDate
+                    {...trainingProps(training)}
+                  />
+                ),
+              )}
+            </div>
+          )}
         </div>
       </div>
     </section>

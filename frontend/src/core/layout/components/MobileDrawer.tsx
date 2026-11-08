@@ -22,7 +22,7 @@ export function MobileDrawer({ onClose }: { onClose: () => void }) {
             ✕
           </button>
         </div>
-        <TeamsMenu onNavigate={onClose} />
+        <TeamsMenu onNavigate={onClose} showSections={false} />
       </div>
     </div>
   )

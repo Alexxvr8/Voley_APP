@@ -8,7 +8,7 @@ import { ResultSummary } from './ResultSummary'
 export function MatchInfoCard({ match }: { match: Match }) {
   return (
     <Card className="space-y-4">
-      <ResultSummary sets={match.setsResult} />
+      <ResultSummary result={match} />
 
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
         <dt className="text-slate-500">Partido</dt>
