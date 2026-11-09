@@ -29,7 +29,7 @@ frontend/              # PWA (React + Vite). Its own package.json
     shared/            # reusable UI components, domain types/labels and utilities
 backend/
   supabase/migrations/ # SQL schema, RLS policies and RPC functions
-  supabase/functions/  # Edge Functions (send-reset-email)
+  supabase/functions/  # Edge Functions (send-reset-email, send-push)
 docs/especificacion.md
 ```
 

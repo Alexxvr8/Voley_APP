@@ -121,9 +121,23 @@ Para cada set se guarda un plan independiente:
 - **Empate:** al cerrar, si hay empate en cabeza (de dos o más), el entrenador elige a una de las empatadas o mantiene el empate y salen todas como co-MVP. Mientras decide, las jugadoras ven "Resultado pendiente". Si nadie vota, no hay MVP.
 - **Ranking de temporada:** MVP ganados por jugadora (un co-MVP suma uno a cada una). Las jugadoras ven solo a quienes tienen al menos uno; el entrenador ve el ranking completo y puede ocultarlo.
 
+### 8. Avisos (notificaciones push)
+
+Cada persona los activa en su móvil (franja "Activa los avisos" o Mi cuenta → Avisos, con "Enviar prueba"). En iPhone solo funcionan con la app añadida a la pantalla de inicio. Tocar un aviso abre la pantalla correspondiente.
+
+| Aviso | A quién | Cuándo |
+| --- | --- | --- |
+| Nuevo partido · ¿Puedes venir? | Jugadoras que pueden jugarlo (también invitadas de ese día) | Al crearlo |
+| Te han convocado | La convocada | Al convocarla |
+| Vota la MVP | Convocadas con cuenta y entrenador | Al abrirse la votación |
+| Mañana juegas (hora, calentamiento, pabellón) | Convocadas | Cada mañana |
+| ¿Puedes venir? | Quien no ha respondido, partido en 3 días o menos | Una vez por partido |
+| ¿Vienes hoy a entrenar? | Quien entrena ese día y no ha respondido | Cada mañana |
+| Última oportunidad para votar | Quien no ha votado, cierra en menos de un día | Una vez |
+
 ### Módulos futuros
 
-Notificaciones push, estadísticas por jugador, tablón de avisos, importación desde Google Sheets.
+Estadísticas por jugador, tablón de avisos, importación desde Google Sheets.
 
 ## Funciones online y offline
 
@@ -292,6 +306,7 @@ Cada decisión cerrada se añade aquí con su fecha; este documento es la refere
 | 2026-11-09 | Cambios previstos en grupos: cambio normal (cualquiera del banquillo, marcado con la posición de la zona; sustituye a la regla de "misma posición" del 2026-10-27), al saque (entra y vuelve) y doble cambio Co ↔ Op, el único que cambia la R (R4 → R1). `set_plans.planned_subs` pasa a `[{kind, swaps: [{out, in}], note}]`; las filas antiguas `{out, in, note}` se leen como cambio normal |
 | 2026-11-09 | Apodo en la ficha (lo pone el staff). Revisión en móvil (360–412 px): en Gestión y Plantilla los nombres se recortan con "…" en vez de partirse, posiciones abreviadas; en la pista de rotación cada zona muestra dorsal grande y apodo o nombre, y se toca entera para elegir |
 | 2026-11-09 | Cambiar el sistema de un set no mueve a nadie: se elige la R en la que la colocadora sigue en zona de colocadora (5-1 R1 → 4-2 R4). En 6-0 cualquier jugadora vale para cualquier zona y se conserva la R para cuando se vuelva a otro sistema |
+| 2026-11-10 | Notificaciones push (Web Push) en el plan gratuito: suscripciones en Supabase, la base de datos decide quién recibe qué (triggers con pg_net al momento y pg_cron cada mañana a las 08:00 UTC) y la Edge Function `send-push` las entrega. Claves VAPID y secreto en Vault; nadie las copia a mano |
 
 **Temas abiertos**
 

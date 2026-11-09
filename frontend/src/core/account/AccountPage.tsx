@@ -1,6 +1,8 @@
-// "Mi cuenta": new recovery code, recovery email, change password and sign out.
+// "Mi cuenta": notifications on this phone, new recovery code, recovery email, change password and
+// sign out.
 import { Link } from 'react-router'
 import { useAuth } from '@/core/auth/auth'
+import { PushCard } from '@/core/push/components/PushCard'
 import { SECONDARY_BUTTON_CLASS } from '@/shared/ui/form'
 import { ChangePasswordCard } from './components/ChangePasswordCard'
 import { RecoveryCodeCard } from './components/RecoveryCodeCard'
@@ -21,6 +23,7 @@ export function AccountPage() {
           <strong>{user?.user_metadata.username}</strong>
         </p>
       </div>
+      <PushCard />
       <RecoveryCodeCard />
       <RecoveryEmailCard />
       <ChangePasswordCard />

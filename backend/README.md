@@ -50,6 +50,7 @@ Cada cambio en la base de datos es un fichero SQL nuevo en `supabase/migrations/
 | `20261109000200_player_membership.sql` | Fichas que no son del equipo: `players.membership` (`member` / `regular` / `one_off`), `visit_weekdays` y `visit_date`; quita `training_days`, que no se usaba |
 | `20261109000300_private_policy_helpers.sql` | Seguridad: las funciones auxiliares de las políticas pasan al esquema `private` (la API no lo expone), así que ya no se pueden llamar como `/rest/v1/rpc/...`. Quedan en `public` dos envoltorios (`has_team_role`, `match_team`) que solo usan las RPC |
 | `20261109000400_player_nickname.sql` | `players.nickname`: apodo que pone el staff (hasta 20 caracteres); la app lo muestra en vez del nombre completo |
+| `20261109000500_push_notifications.sql` | Avisos push: `push_subscriptions`, `private.push_log`, extensiones pg_net y pg_cron, secreto del webhook en Vault, triggers (nuevo partido, convocatoria, votación MVP abierta), recordatorios diarios (`private.daily_reminders`, cron `daily-push-reminders` a las 08:00 UTC) y las RPC `vapid_public_key`, `send_test_push`, `push_config` y `save_vapid_keys` (estas dos, solo `service_role`) |
 
 Se aplican al proyecto con el conector de Supabase (`apply_migration`) o con la CLI (`supabase db push`, desde `backend/`).
 
@@ -77,6 +78,7 @@ La pieza central es `team_members`: une usuario, equipo y rol, y todas las regla
 | `account_recovery_email` | Correo de recuperación (opcional) y el hash del enlace de un solo uso, con caducidad | Sin políticas: solo vía funciones. Nadie del equipo lo ve |
 | `team_venues` | Pabellones habituales del equipo con su enlace de Google Maps | Partidos y entrenamientos copian nombre y enlace |
 | `team_opponents` | Rivales habituales del equipo | Nombre único dentro del equipo; los partidos guardan su propia copia del nombre |
+| `push_subscriptions` | Suscripción Web Push de cada móvil con avisos activados (endpoint, claves, usuaria) | Cada usuaria ve, crea y borra solo las suyas |
 | `mvp_votes` | Votos del MVP: partido, cuenta que vota y ficha votada (1 o 2 filas por votante) | Sin políticas: solo vía RPC, para que nadie vea quién votó a quién |
 
 Los valores fijos (posiciones, roles, sistemas, estados) se validan con `check` en la propia tabla.
@@ -154,7 +156,9 @@ El código vive en `supabase/functions/` y se despliega con el conector de Supab
 | --- | --- |
 | `send-reset-email` | "He olvidado la contraseña → Por correo". Recibe `{ username }`, pide un token a `issue_email_reset_token` y manda el enlace `https://voley-app-gold.vercel.app/?recuperar=<token>&usuario=<usuario>` con Brevo. Responde igual exista o no el usuario. Se despliega sin verificar JWT porque la usa quien no puede entrar |
 
-Secretos de la función (*Edge Functions → Secrets*): `BREVO_API_KEY` y `MAIL_SENDER_EMAIL` (remitente verificado en Brevo); opcionales `MAIL_SENDER_NAME` y `APP_URL`. Sin los dos primeros, la función responde `not_configured` y la app avisa de que el correo aún no está activado.
+| `send-push` | Entrega un aviso push a todos los móviles de unas usuarias (`{users, title, body, url, tag}`). Solo la llama la base de datos (pg_net) con el secreto `push_webhook_secret` de Vault en la cabecera `x-push-secret`; sin él responde 401. La primera vez crea las claves VAPID y las guarda en Vault (`vapid_keys`). Borra las suscripciones de móviles que ya no existen (404/410). Se despliega sin verificar JWT |
+
+Secretos de `send-reset-email` (*Edge Functions → Secrets*): `BREVO_API_KEY` y `MAIL_SENDER_EMAIL` (remitente verificado en Brevo); opcionales `MAIL_SENDER_NAME` y `APP_URL`. Sin los dos primeros, la función responde `not_configured` y la app avisa de que el correo aún no está activado.
 
 ## Registro de usuarios
 

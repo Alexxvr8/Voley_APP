@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Outlet } from 'react-router'
 import { ConnectionBanner } from '@/core/offline/components/ConnectionBanner'
 import { NoticeList } from '@/core/offline/components/NoticeList'
+import { PushPrompt } from '@/core/push/components/PushPrompt'
 import { useAutoPrepareOffline } from '@/core/offline/prepare'
 import { BottomNav } from './components/BottomNav'
 import { MobileDrawer } from './components/MobileDrawer'
@@ -23,6 +24,7 @@ export function AppShell() {
       <div className="mx-auto flex min-h-dvh w-full max-w-md min-w-0 flex-col lg:mx-0 lg:max-w-none lg:flex-1">
         <MobileHeader onOpenMenu={() => setMenuOpen(true)} />
         <ConnectionBanner />
+        <PushPrompt />
         <main className="w-full flex-1 px-4 pt-4 pb-24 lg:max-w-7xl lg:px-10 lg:pt-8 lg:pb-10">
           <Outlet />
         </main>

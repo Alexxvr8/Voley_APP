@@ -36,7 +36,7 @@ frontend/
 ├── vite.config.ts        Vite, Tailwind, alias @/ y configuración de la PWA
 ├── eslint.config.js      Reglas de ESLint
 ├── .prettierrc.json      Formato de Prettier (.prettierignore: qué no se formatea)
-├── public/               Iconos y ficheros que se sirven tal cual
+├── public/               Iconos y ficheros que se sirven tal cual (push-sw.js: muestra los avisos push y abre la app al tocarlos; se añade al service worker con workbox.importScripts)
 └── src/
     ├── main.tsx          Punto de entrada: monta <App />
     ├── index.css         Carga Tailwind

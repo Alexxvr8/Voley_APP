@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { clearOfflineData } from '@/core/offline/db'
+import { disablePush } from '@/core/push/push'
 import { queryClient } from '@/core/query/queryClient'
 import { supabase } from '@/core/supabase/client'
 import {
@@ -120,6 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut() {
+    // This phone must not keep receiving this account's notifications (best effort offline).
+    await disablePush().catch(() => {})
     const { error } = await supabase.auth.signOut()
     // Offline, revoking the session server-side fails; still sign out on this device.
     if (error) await supabase.auth.signOut({ scope: 'local' })

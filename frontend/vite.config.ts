@@ -37,6 +37,8 @@ export default defineConfig({
         // Precache the whole app shell so it opens without network.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
         navigateFallback: '/index.html',
+        // Push notifications: shown and opened by public/push-sw.js.
+        importScripts: ['push-sw.js'],
       },
     }),
   ],
