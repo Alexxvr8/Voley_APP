@@ -20,7 +20,11 @@ export function eventsOn(
   }
 }
 
-/** Matches from today on, soonest first. */
+/** Matches still to play, from today on, soonest first (by date and time). */
 export function upcomingMatches(matches: Match[], todayIso: string, limit: number): Match[] {
-  return matches.filter((match) => match.date >= todayIso).slice(0, limit)
+  // A match already played today is not "upcoming" any more.
+  return matches
+    .filter((match) => match.date >= todayIso && match.status === 'scheduled')
+    .sort((a, b) => a.date.localeCompare(b.date) || a.matchTime.localeCompare(b.matchTime))
+    .slice(0, limit)
 }

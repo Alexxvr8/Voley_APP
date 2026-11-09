@@ -121,7 +121,12 @@ registerOutboxHandler(OUTBOX_KIND, async (payload) => {
       `${result.overwritten_by ?? 'Otra persona'} había cambiado el set ${setNumber} mientras tanto. Se ha guardado tu versión.`,
     )
   }
-  void queryClient.invalidateQueries({ queryKey: setPlansKey(matchId) })
+  // Put the saved version in the cache before the queued change is removed, so the screen never
+  // shows the older server copy in between (and the next change starts from this version).
+  queryClient.setQueryData<StoredSetPlans>(setPlansKey(matchId), (old) => ({
+    ...old,
+    [setNumber]: { plan, updatedAt: result.updated_at },
+  }))
 })
 
 /**

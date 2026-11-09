@@ -25,7 +25,7 @@ import {
   playersOnCourt,
   doubleSwitchPair,
   roleOnCourt,
-  validStartRotation,
+  withSystem,
   type LiberoSlots,
   type SetPlan,
   type SetPlans,
@@ -98,7 +98,7 @@ function SetPlanEditor({ team, match, players, calledUp, stored }: SetPlanEditor
     savePlan(match.id, currentSet, structuredClone(plans[setNumber]!))
 
   function changeSystem(system: GameSystem) {
-    updatePlan({ system, startRotation: validStartRotation(system, plan.startRotation) })
+    savePlan(match.id, currentSet, withSystem(plan, system, calledUp))
   }
 
   function changeStartRotation(rotationNumber: number) {

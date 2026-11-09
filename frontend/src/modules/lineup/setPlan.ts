@@ -73,7 +73,7 @@ export function chosenLiberos(plan: SetPlan): string[] {
   return plan.liberos.filter((id): id is string => id !== undefined)
 }
 
-/** Keeps the start rotation if the system has it, otherwise falls back to its first one (e.g. 5-1 R1 → 4-2 R2). */
+/** Keeps the start rotation if the system has it, otherwise falls back to its first one. */
 export function validStartRotation(system: GameSystem, startRotation: number): number {
   const rotations = availableRotations(system)
   return rotations.includes(startRotation) ? startRotation : (rotations[0] ?? 1)
@@ -110,4 +110,42 @@ export function doubleSwitchPair(plan: SetPlan): { setterId: string; oppositeId:
   const setterId = setterZone && plan.rotation[setterZone]
   const oppositeId = oppositeZone && plan.rotation[oppositeZone]
   return setterId && oppositeId ? { setterId, oppositeId } : null
+}
+
+/**
+ * The plan with another system. Players stay in their zones and the start rotation is chosen so a
+ * setter player stands in a setter zone, preferring the one who was setting (5-1 R1 → 4-2 R4,
+ * 6-0 → 5-1 with the setter where she is…). A 6-0 has no rotations: the old one is kept for later.
+ */
+export function withSystem(plan: SetPlan, system: GameSystem, players: Player[]): SetPlan {
+  const rotations = availableRotations(system)
+  if (rotations.length === 0) return { ...plan, system }
+  const playerIn = (zone: Zone) => players.find((player) => player.id === plan.rotation[zone])
+  const oldRoles = zoneRoles(plan.system, plan.startRotation)
+  const zones = [1, 2, 3, 4, 5, 6] as Zone[]
+  // Zones to keep a setter in, best first: the setting setter, other setters on court, then the
+  // zone that named the old rotation (no players placed yet).
+  const isSetterPlayer = (zone: Zone) => playerIn(zone)?.mainPosition === 'setter'
+  const preferred = [
+    ...zones.filter((zone) => zone === plan.startRotation && isSetterPlayer(zone)),
+    ...zones.filter((zone) => zone !== plan.startRotation && isSetterPlayer(zone)),
+    ...zones.filter((zone) => zone === plan.startRotation && oldRoles[zone] === 'setter'),
+  ]
+  for (const zone of preferred) {
+    const fitting = rotations.find((r) => zoneRoles(system, r)[zone] === 'setter')
+    if (fitting) return { ...plan, system, startRotation: fitting }
+  }
+  return { ...plan, system, startRotation: validStartRotation(system, plan.startRotation) }
+}
+
+/** Whether the system has an opposite, i.e. allows the setter ↔ opposite double switch (5-1). */
+export function hasOpposite(system: GameSystem): boolean {
+  return Object.values(zoneRoles(system, availableRotations(system)[0] ?? 1)).includes('opposite')
+}
+
+/**
+ * Whether a player fits a zone's role. In a 6-0 every zone is the same, so anyone fits.
+ */
+export function fitsZone(system: GameSystem, player: Player, role: Position): boolean {
+  return system === '6-0' || canPlay(player, role)
 }

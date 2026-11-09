@@ -291,6 +291,7 @@ Cada decisión cerrada se añade aquí con su fecha; este documento es la refere
 | 2026-11-09 | Sin conexión, las secciones que necesitan internet muestran la plantilla y los partidos descargados con "Rotación" e "Ir al partido"; con mala cobertura se enseña lo guardado en vez de un error. En la pista de rotación, posiciones abreviadas (Co, Re, Ce, Op, LB) |
 | 2026-11-09 | Cambios previstos en grupos: cambio normal (cualquiera del banquillo, marcado con la posición de la zona; sustituye a la regla de "misma posición" del 2026-10-27), al saque (entra y vuelve) y doble cambio Co ↔ Op, el único que cambia la R (R4 → R1). `set_plans.planned_subs` pasa a `[{kind, swaps: [{out, in}], note}]`; las filas antiguas `{out, in, note}` se leen como cambio normal |
 | 2026-11-09 | Apodo en la ficha (lo pone el staff). Revisión en móvil (360–412 px): en Gestión y Plantilla los nombres se recortan con "…" en vez de partirse, posiciones abreviadas; en la pista de rotación cada zona muestra dorsal grande y apodo o nombre, y se toca entera para elegir |
+| 2026-11-09 | Cambiar el sistema de un set no mueve a nadie: se elige la R en la que la colocadora sigue en zona de colocadora (5-1 R1 → 4-2 R4). En 6-0 cualquier jugadora vale para cualquier zona y se conserva la R para cuando se vuelva a otro sistema |
 
 **Temas abiertos**
 

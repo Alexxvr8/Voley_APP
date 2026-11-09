@@ -31,7 +31,7 @@ import {
   type SetProgress,
 } from './matchMode'
 import { setNumbersFor } from '@/shared/domain/results'
-import { newSetPlan, validStartRotation, type SetPlans } from './setPlan'
+import { newSetPlan, withSystem, type SetPlans } from './setPlan'
 import { rotatePlayers, rotationAfter, zoneRolesAfter } from './systems'
 import { shortName } from '@/shared/utils/format'
 
@@ -99,11 +99,7 @@ export function MatchModePage() {
   }
 
   function changeSystem(system: GameSystem) {
-    savePlan(match!.id, set, {
-      ...plan,
-      system,
-      startRotation: validStartRotation(system, plan.startRotation),
-    })
+    savePlan(match!.id, set, withSystem(plan, system, [...playersById.values()]))
   }
 
   function changeStartRotation(rotationNumber: number) {

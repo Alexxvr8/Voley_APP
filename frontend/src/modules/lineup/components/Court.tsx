@@ -5,7 +5,7 @@ import { POSITION_COLORS, POSITION_LABELS, POSITION_SHORT_LABELS } from '@/share
 import type { GameSystem, Player } from '@/shared/domain/types'
 import { PlayerSelect } from '@/shared/ui/PlayerSelect'
 import { shortName } from '@/shared/utils/format'
-import { canPlay, type LiberoSlots } from '../setPlan'
+import { canPlay, fitsZone, type LiberoSlots } from '../setPlan'
 import { COURT_ROWS, zoneRoles, type Zone } from '../systems'
 
 interface CourtProps {
@@ -83,7 +83,7 @@ export function Court({
               </span>
               <SlotContent player={byId(rotation[zone])} />
               <PlayerSelect
-                players={optionsFor(rotation[zone], (player) => canPlay(player, role))}
+                players={optionsFor(rotation[zone], (player) => fitsZone(system, player, role))}
                 value={rotation[zone]}
                 onChange={(playerId) => onAssign(zone, playerId)}
                 className={SELECT_CLASS}

@@ -1,6 +1,6 @@
 // State of the match mode and how it turns a set plan into who is on court right now (no React here).
 // It is kept on the device only, so the coach can close the app and continue where they were.
-import { SUB_STEP_COUNT, type SetPlan } from './setPlan'
+import { hasOpposite, SUB_STEP_COUNT, type SetPlan } from './setPlan'
 import { advanceLineup, type Zone } from './systems'
 
 /**
@@ -57,6 +57,8 @@ export function liveLineup(plan: SetPlan, progress: SetProgress): Partial<Record
  * in effect (setter and opposite trade places, e.g. R4 → R1). Players do not move.
  */
 export function roleSteps(plan: SetPlan, progress: SetProgress): number {
+  // Only a system with an opposite has a setter ↔ opposite switch (a plan may keep one from a 5-1).
+  if (!hasOpposite(plan.system)) return progress.steps
   const doubles = plan.subs.filter(
     (sub, index) => sub.kind === 'double' && isActive(progress, index),
   )
