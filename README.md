@@ -50,5 +50,6 @@ Fases 1 y 2 hechas. Funciona con datos reales:
 - Calendario mensual con partidos y entrenamientos, disponibilidad, asistencia a entrenamientos (Sí / No / Duda) y convocatoria con dorsal y posición por partido.
 - Resultado de cada partido con su formato: solo el marcador con un toque o los puntos de cada set.
 - Plantilla con "compite / solo entrena".
+- Módulo opcional MVP del partido: votación secreta de 48 h, empates que decide el entrenador y ranking de la temporada.
 
 Fase 2 completada: rotaciones guardadas en el servidor, modo partido y funcionamiento sin conexión (plantilla, plan por set y modo partido), con sincronización al volver la red; resultados y tabla de liga.

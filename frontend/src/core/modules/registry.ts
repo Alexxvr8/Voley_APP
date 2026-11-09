@@ -1,6 +1,7 @@
 // Single list of feature modules. The core builds routes and menu from it.
 import { lineupModule } from '@/modules/lineup'
 import { matchesModule } from '@/modules/matches'
+import { mvpModule } from '@/modules/mvp'
 import { resultsModule } from '@/modules/results'
 import { rosterModule } from '@/modules/roster'
 import { teamsModule } from '@/modules/teams'
@@ -13,6 +14,7 @@ import type { ModuleDefinition } from './types'
 export const modules: ModuleDefinition[] = [
   matchesModule,
   resultsModule,
+  mvpModule,
   rosterModule,
   lineupModule,
   teamsModule,

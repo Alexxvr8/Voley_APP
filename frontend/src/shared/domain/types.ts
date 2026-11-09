@@ -19,6 +19,8 @@ export interface Team {
   defaultSystem: GameSystem
   /** Ids of the active modules, matching `ModuleDefinition.id`. */
   enabledModules: string[]
+  /** Whether players see the season MVP ranking (the coach always does). */
+  mvpRankingVisible: boolean
 }
 
 /** One of the current user's teams, as listed after signing in. */
@@ -55,6 +57,12 @@ export interface SetScore {
 
 export type MatchStatus = 'scheduled' | 'played' | 'cancelled'
 
+/**
+ * MVP vote of a match: `closed` (never opened), `open`, `tie_pending` (closed with a tie the coach
+ * has to resolve) or `finished` (winners known, possibly none if nobody voted).
+ */
+export type MvpStatus = 'closed' | 'open' | 'tie_pending' | 'finished'
+
 /** How many sets a match has: best of 5 or 3, or a fixed number of sets that are always played. */
 export type SetsFormat = 'best_of_5' | 'best_of_3' | 'fixed_3' | 'fixed_1'
 
@@ -83,6 +91,11 @@ export interface Match {
   setsFormat: SetsFormat
   /** Sets won when only the final score was recorded ("2-1"), without the points of each set. */
   finalScore: FinalScore | null
+  mvpStatus: MvpStatus
+  /** When the MVP vote closes or closed (ISO), null if it never opened. */
+  mvpClosesAt: string | null
+  /** Roster ids of the MVP (several = co-MVP); empty until the vote is finished. */
+  mvpWinners: string[]
 }
 
 /** A called-up player and the number/positions they use in that match (null = the roster values). */

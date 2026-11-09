@@ -45,6 +45,7 @@ Cada cambio en la base de datos es un fichero SQL nuevo en `supabase/migrations/
 | `20261108000200_results_module.sql` | Módulo Resultados activo en todos los equipos y permiso para quitar la tabla de liga |
 | `20261108000300_training_attendance_and_final_score.sql` | Asistencia a entrenamientos (`training_attendance`), formato del partido (`matches.sets_format`) y marcador final sin puntos por set (`matches.final_score`) |
 | `20261108000400_merge_players.sql` | RPC `merge_players` (solo entrenador): junta dos fichas de la misma persona pasando cuenta, disponibilidad, convocatorias, asistencia y planes por set a la que se queda |
+| `20261109000000_mvp_module.sql` | Módulo MVP: `matches.mvp_status` / `mvp_closes_at` / `mvp_winners`, `teams.mvp_ranking_visible`, tabla `mvp_votes` (sin acceso directo), trigger `matches_mvp_guard`, las RPC del MVP y `merge_players` también pasa votos y MVP ganados |
 
 Se aplican al proyecto con el conector de Supabase (`apply_migration`) o con la CLI (`supabase db push`, desde `backend/`).
 
@@ -55,11 +56,11 @@ La pieza central es `team_members`: une usuario, equipo y rol, y todas las regla
 | Tabla | Qué guarda | Notas |
 | --- | --- | --- |
 | `profiles` | Nombre de usuario y nombre visible de cada cuenta | Se crea sola al registrarse (trigger `on_auth_user_created`) |
-| `teams` | Equipos: nombre, categoría, temporada, color (`#rrggbb`), sistema por defecto, módulos activos | Se crean con la RPC `create_team` |
+| `teams` | Equipos: nombre, categoría, temporada, color (`#rrggbb`), sistema por defecto, módulos activos y si las jugadoras ven el ranking de MVP (`mvp_ranking_visible`) | Se crean con la RPC `create_team` |
 | `team_members` | Quién pertenece a qué equipo y con qué rol (`coach`, `assistant`, `player`) | `player_id` enlaza la cuenta con su ficha. Si está vacío, el jugador está **pendiente** |
 | `join_codes` | Código de acceso por equipo y rol | Uno por rol; se regenera con `regenerate_join_code` |
 | `players` | Fichas de la plantilla | Una ficha puede existir sin cuenta. `competes = false`: solo entrena, no puede tener disponibilidad ni ser convocado |
-| `matches` | Partidos: rival, fecha, hora, calentamiento en minutos (`warmup_minutes`, de 15 en 15), pabellón y enlace de Maps, estado, formato y resultado | `sets_format` = `best_of_5` / `best_of_3` / `fixed_3` / `fixed_1`; `sets_result` = `[{"us": 25, "them": 20}, …]` o, si solo se apunta el marcador, `final_score` = `{"us": 2, "them": 1}`; con resultado, `status = played` |
+| `matches` | Partidos: rival, fecha, hora, calentamiento en minutos (`warmup_minutes`, de 15 en 15), pabellón y enlace de Maps, estado, formato y resultado | `sets_format` = `best_of_5` / `best_of_3` / `fixed_3` / `fixed_1`; `sets_result` = `[{"us": 25, "them": 20}, …]` o, si solo se apunta el marcador, `final_score` = `{"us": 2, "them": 1}`; con resultado, `status = played`. MVP: `mvp_status` = `closed` / `open` / `tie_pending` / `finished`, `mvp_closes_at` y `mvp_winners` (fichas; varias = co-MVP), que solo cambian por las RPC del MVP |
 | `availability` | Respuesta de cada jugador a cada partido (`yes`, `no`, `maybe`) | |
 | `callups` | Convocados de cada partido | `number` y `positions`: dorsal y posiciones solo para ese partido (vacío = los de la ficha; la primera posición es la principal) |
 | `set_plans` | Plan de cada set: sistema, rotación inicial, alineación, líberos, cambios previstos | `start_rotation` = 1–6 (R1…R6); `rotation` = `{"1": player_id, …, "6": player_id}`; `libero_id` y `second_libero_id`; `planned_subs` = `[{"out", "in", "note"}]` |
@@ -71,6 +72,7 @@ La pieza central es `team_members`: une usuario, equipo y rol, y todas las regla
 | `account_recovery_email` | Correo de recuperación (opcional) y el hash del enlace de un solo uso, con caducidad | Sin políticas: solo vía funciones. Nadie del equipo lo ve |
 | `team_venues` | Pabellones habituales del equipo con su enlace de Google Maps | Partidos y entrenamientos copian nombre y enlace |
 | `team_opponents` | Rivales habituales del equipo | Nombre único dentro del equipo; los partidos guardan su propia copia del nombre |
+| `mvp_votes` | Votos del MVP: partido, cuenta que vota y ficha votada (1 o 2 filas por votante) | Sin políticas: solo vía RPC, para que nadie vea quién votó a quién |
 
 Los valores fijos (posiciones, roles, sistemas, estados) se validan con `check` en la propia tabla.
 
@@ -124,8 +126,17 @@ Las acciones que tocan varias tablas o necesitan saltarse RLS de forma controlad
 | `set_recovery_email(email)` / `my_recovery_email()` | Cualquier usuario con sesión | Guarda (vacío = quita) o lee tu correo de recuperación |
 | `reset_password_with_email_token(username, token, new_password)` | **Sin sesión** | Contraseña nueva con el enlace del correo: un solo uso y 1 hora. Devuelve `{ok, code}` con un código de recuperación nuevo |
 | `issue_email_reset_token(username)` | Solo `service_role` (la Edge Function) | Crea el enlace de 1 hora y devuelve a qué correo mandarlo; como mucho uno por minuto |
+| `cast_mvp_vote(match, ids)` | Entrenador y convocadas con cuenta | Guarda (o sustituye) tu voto: 1 o 2 convocadas distintas, nunca tú misma, con la votación abierta |
+| `my_mvp_vote(match)` | Miembros del equipo | A quién has votado tú (vacío si no has votado) |
+| `settle_mvp(match)` | Miembros del equipo | Cierra la votación si ya pasaron sus 48 h. El cierre es perezoso: lo hace la primera pantalla o voto que llega después del plazo, sin tareas programadas |
+| `open_mvp_vote(match)` | Entrenador | Abre 48 h la votación de un partido jugado que nunca la tuvo (p. ej. si el módulo se activó después) |
+| `close_mvp_vote(match)` | Entrenador | Cierra antes de tiempo. Sin votos: sin MVP; una líder: MVP; empate: `tie_pending` |
+| `resolve_mvp_tie(match, ids)` | Entrenador | Elige entre las empatadas; varias = co-MVP |
+| `mvp_results(match)` | Entrenador | Recuento: votos por jugadora, cuántas han votado y cuántas pueden (nunca quién votó a quién) |
 
 **Trigger `keep_a_coach`:** impide quitar o degradar al último entrenador de un equipo (para irse, antes hay que transferirlo). Borrar el equipo entero sí se permite.
+
+**Trigger `matches_mvp_guard`:** las columnas `mvp_*` de `matches` ignoran los cambios directos (solo las cambian las RPC del MVP, que activan `app.mvp_rpc`). Al pasar un partido a jugado, si el equipo tiene el módulo `mvp`, abre su votación 48 h.
 
 ## Edge Functions
 

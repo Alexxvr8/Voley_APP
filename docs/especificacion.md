@@ -176,7 +176,7 @@ La pieza clave es `team_members`: une usuario, equipo y rol, y todas las reglas 
 | Tabla | Campos principales | Notas |
 | --- | --- | --- |
 | `profiles` | id (= auth user), username, display\_name | Uno por cuenta |
-| `teams` | id, name, category, season, color, default\_system, enabled\_modules, settings, created\_by | `enabled_modules` = lista de módulos activos; `settings` incluye `mvp_ranking_visible` |
+| `teams` | id, name, category, season, color, default\_system, enabled\_modules, mvp\_ranking\_visible, created\_by | `enabled_modules` = lista de módulos activos; `mvp_ranking_visible` = si las jugadoras ven el ranking de MVP |
 | `team_members` | team\_id, user\_id, role, player\_id | role: coach / assistant / player; player\_id enlaza con la ficha |
 | `join_codes` | team\_id, code, role, active, expires\_at | Un código por rol, regenerable |
 | `players` | id, team\_id, first\_name, last\_name, birth\_year, number, main\_position, other\_positions, training\_days, competes | Ficha de plantilla, puede no tener cuenta. `competes = false`: solo entrena |
@@ -196,7 +196,7 @@ La pieza clave es `team_members`: une usuario, equipo y rol, y todas las reglas 
 
 Posiciones como valores fijos: `setter` (colocador), `outside` (receptor), `middle` (central), `opposite` (opuesto), `libero`. Los nombres en pantalla van en español.
 
-**RPC del MVP:** `cast_mvp_vote(match, ids)` (comprueba que vota el entrenador o una convocada con cuenta, que las votadas están convocadas, que no se vota a sí misma, máx. 2 y votación abierta), `close_mvp_vote(match)`, `resolve_mvp_tie(match, ids)` y `mvp_results(match)` (recuento, solo entrenador).
+**RPC del MVP:** `cast_mvp_vote(match, ids)` (comprueba que vota el entrenador o una convocada con cuenta, que las votadas están convocadas, que no se vota a sí misma, máx. 2 y votación abierta), `my_mvp_vote(match)`, `settle_mvp(match)` (cierra si pasaron las 48 h), `open_mvp_vote(match)`, `close_mvp_vote(match)`, `resolve_mvp_tie(match, ids)` y `mvp_results(match)` (recuento, solo entrenador). Las columnas `mvp_*` de `matches` solo cambian por estas RPC.
 
 ## Fases y roadmap
 
@@ -273,6 +273,9 @@ Cada decisión cerrada se añade aquí con su fecha; este documento es la refere
 | 2026-11-08 | El formato del partido se elige al crearlo (por defecto el del último partido) y limita los sets de Rotación y del modo partido |
 | 2026-11-08 | El staff ve quién va a cada entrenamiento (Sí / No / Duda / Sin responder), no solo el recuento; el staff que está en la plantilla también responde su disponibilidad |
 | 2026-11-07 | Calidad de código: ESLint (flat config, typescript-eslint, reglas de hooks) y Prettier en `frontend/` |
+| 2026-11-09 | MVP: la votación se cierra de forma perezosa (la primera pantalla o voto tras las 48 h la cierra), sin tareas programadas |
+| 2026-11-09 | MVP: el entrenador puede abrir la votación de un partido ya jugado que no la tuvo (p. ej. si activó el módulo después) |
+| 2026-11-09 | MVP: `mvp_ranking_visible` es una columna de `teams` (no hay campo `settings`); el ranking cuenta todos los partidos del equipo hasta resolver el tema abierto de las temporadas |
 
 **Temas abiertos**
 

@@ -8,9 +8,8 @@ Cada carpeta es una funcionalidad independiente que un equipo puede activar o de
 | `roster/` | Plantilla. El staff edita jugadores (dorsal y posiciones) y marca quién compite o solo entrena; los jugadores la ven sin poder cambiarla. Se descarga para verla sin conexión | Plantilla | Jugador | Solo lectura |
 | `lineup/` | Pestaña Rotación del partido (plan por set guardado en el servidor) y modo partido. Funciona sin conexión | — (pestaña y botón "Ir al partido") | Segundo entrenador | Sí |
 | `results/` | Partidos jugados con su resultado y tabla de liga no oficial (rellena a mano, con "Actualizada el dd/mm") | Resultados | Jugador | No |
+| `mvp/` | Votación secreta de la MVP de cada partido jugado (1 o 2 convocadas, 48 h), empates que resuelve el entrenador y ranking de la temporada. Opcional: se activa en Ajustes | MVP | Jugador | No |
 | `teams/` | Ajustes del equipo: datos y sistema predeterminado, color, secciones activas, códigos, solicitudes, jugadores sin cuenta, miembros (quitar, transferir), horario, pabellones, rivales y borrar el equipo | Ajustes | Entrenador | No |
-
-Previsto: `mvp/`.
 
 Un módulo que funciona sin conexión pone `offline: true` y un `prepareOffline(teamId)` que descarga lo que necesita a la caché y devuelve los partidos que deja disponibles. Sus cambios van por la bandeja de salida de `core/offline/outbox.ts`.
 
@@ -110,3 +109,16 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 | `components/PlayedMatchesCard.tsx` | Jugados, del más reciente al más antiguo, con "3-1", los puntos de cada set y el balance ganados/perdidos |
 | `components/LeagueTableCard.tsx` | Tabla no oficial (PJ, PG, PP, Pts) con "Actualizada el dd/mm". El staff la añade, edita o quita |
 | `leagueTable.ts` | Orden de la tabla: puntos, partidos ganados y nombre |
+
+## Ficheros del módulo `mvp`
+
+| Fichero | Qué hace |
+| --- | --- |
+| `MvpPage.tsx` | Votaciones abiertas (con "Votar" si puedes votar), empates por resolver, partidos sin votación (entrenador, para abrirla), la MVP de cada partido y el ranking. Cierra las votaciones que ya pasaron sus 48 h |
+| `MvpMatchPage.tsx` | Votación de un partido: votar o cambiar el voto; el entrenador ve el recuento, cierra antes de tiempo (con confirmación), abre la votación si no la hubo y resuelve el empate. Las jugadoras ven "Resultado pendiente" mientras tanto |
+| `api.ts` | Partidos, fichas y convocatoria (mismas claves de caché que los demás módulos), tu voto, las RPC del entrenador y mostrar u ocultar el ranking. `useSettleExpiredVotes` llama a `settle_mvp` para las votaciones caducadas |
+| `mvp.ts` | Estado de la votación (`votePhase`, incluida la abierta con el plazo pasado), elegir 1 o 2 (`togglePick`: con dos elegidas, tocar otra quita la primera), "Cierra en 23 h", las más votadas (`topVoted`) y el ranking (`seasonRanking`: co-MVP suma uno a cada una; sin ceros para las jugadoras) |
+| `components/PlayerPickList.tsx` | Lista de jugadoras para tocar y marcar con ★ |
+| `components/VoteCard.tsx`, `TieCard.tsx` | Votar / cambiar voto; elegir entre las empatadas (varias = co-MVP) |
+| `components/TallyCard.tsx`, `WinnerCard.tsx` | Recuento del entrenador ("Han votado 5 de 9"); MVP o co-MVP del partido, o "Sin MVP" |
+| `components/MatchVotesCard.tsx`, `RankingCard.tsx` | Lista de partidos con el estado de su votación; ranking con el interruptor "Visible para las jugadoras" (entrenador) |

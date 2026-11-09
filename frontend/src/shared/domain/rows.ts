@@ -5,6 +5,7 @@ import type {
   GameSystem,
   Match,
   MatchStatus,
+  MvpStatus,
   MyTeam,
   Player,
   Position,
@@ -31,6 +32,7 @@ export interface TeamRow {
   color: string
   default_system: string
   enabled_modules: string[]
+  mvp_ranking_visible: boolean
 }
 
 export function toTeam(row: TeamRow): Team {
@@ -42,6 +44,7 @@ export function toTeam(row: TeamRow): Team {
     color: row.color,
     defaultSystem: row.default_system as GameSystem,
     enabledModules: row.enabled_modules,
+    mvpRankingVisible: row.mvp_ranking_visible,
   }
 }
 
@@ -108,6 +111,9 @@ export interface MatchRow {
   sets_result: SetScore[]
   sets_format: string
   final_score: FinalScore | null
+  mvp_status: string
+  mvp_closes_at: string | null
+  mvp_winners: string[]
 }
 
 export function toMatch(row: MatchRow): Match {
@@ -125,6 +131,9 @@ export function toMatch(row: MatchRow): Match {
     setsResult: row.sets_result,
     setsFormat: row.sets_format as SetsFormat,
     finalScore: row.final_score,
+    mvpStatus: row.mvp_status as MvpStatus,
+    mvpClosesAt: row.mvp_closes_at,
+    mvpWinners: row.mvp_winners,
   }
 }
 
