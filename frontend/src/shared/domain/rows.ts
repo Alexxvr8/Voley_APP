@@ -10,6 +10,7 @@ import type {
   Player,
   Position,
   SetScore,
+  Season,
   SetsFormat,
   Team,
   TeamRole,
@@ -33,6 +34,7 @@ export interface TeamRow {
   default_system: string
   enabled_modules: string[]
   mvp_ranking_visible: boolean
+  current_season_id: string
 }
 
 export function toTeam(row: TeamRow): Team {
@@ -45,6 +47,7 @@ export function toTeam(row: TeamRow): Team {
     defaultSystem: row.default_system as GameSystem,
     enabledModules: row.enabled_modules,
     mvpRankingVisible: row.mvp_ranking_visible,
+    currentSeasonId: row.current_season_id,
   }
 }
 
@@ -82,6 +85,7 @@ export interface PlayerRow {
   main_position: string
   other_positions: string[]
   competes: boolean
+  active: boolean
 }
 
 export function toPlayer(row: PlayerRow): Player {
@@ -94,11 +98,13 @@ export function toPlayer(row: PlayerRow): Player {
     mainPosition: row.main_position as Position,
     otherPositions: row.other_positions as Position[],
     competes: row.competes,
+    active: row.active,
   }
 }
 
 export interface MatchRow {
   id: string
+  season_id: string
   opponent: string
   date: string
   match_time: string | null
@@ -119,6 +125,7 @@ export interface MatchRow {
 export function toMatch(row: MatchRow): Match {
   return {
     id: row.id,
+    seasonId: row.season_id,
     opponent: row.opponent,
     date: row.date,
     matchTime: shortTime(row.match_time),
@@ -182,4 +189,14 @@ export function toTrainingAnswer(row: TrainingAnswerRow): TrainingAnswer {
     playerId: row.player_id,
     status: row.status as AvailabilityStatus,
   }
+}
+
+export interface SeasonRow {
+  id: string
+  name: string
+  started_on: string
+}
+
+export function toSeason(row: SeasonRow): Season {
+  return { id: row.id, name: row.name, startedOn: row.started_on }
 }

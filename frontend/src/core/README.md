@@ -14,7 +14,7 @@ Infraestructura que comparten todas las pantallas: login, equipos del usuario, n
 | `auth/LoginPage.tsx` + `auth/components/` | Entrar, crear cuenta (contraseña dos veces, correo opcional y consentimiento) y "He olvidado la contraseña" (con mi código / por correo) |
 | `auth/RecoveryCodeScreen.tsx` | Pantalla "Guarda tu código de recuperación", tras registrarse o tras recuperar la contraseña |
 | `auth/errors.ts` | Mensajes de error comprensibles y validación de contraseña nueva |
-| `teams/api.ts` | `useMyTeams()` (RPC `my_teams`: equipos, rol y si estás pendiente), `useTeam()`, crear equipo y unirse con código |
+| `teams/api.ts` | `useMyTeams()` (RPC `my_teams`: equipos, rol y si estás pendiente), `useTeam()`, `useSeasons()` (temporadas del equipo, la más reciente primero), crear equipo y unirse con código |
 | `teams/currentTeam.tsx` | `CurrentTeamProvider`: el equipo de la URL y tu rol en él. Si estás pendiente, muestra la espera. `useCurrentTeam()`, `useTeamPath()` (enlaces dentro del equipo) y `hasRole()` |
 | `teams/TeamsPage.tsx`, `teams/AddTeamPage.tsx` | "Mis equipos" (cada tarjeta rellena con el color del equipo, y "Salir del equipo" para quien no es entrenador) y el "+" (tengo un código / crear equipo) |
 | `teams/TeamHome.tsx` | `/equipos/:id` abre la primera sección que puedes ver |

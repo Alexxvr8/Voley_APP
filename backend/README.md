@@ -46,6 +46,7 @@ Cada cambio en la base de datos es un fichero SQL nuevo en `supabase/migrations/
 | `20261108000300_training_attendance_and_final_score.sql` | Asistencia a entrenamientos (`training_attendance`), formato del partido (`matches.sets_format`) y marcador final sin puntos por set (`matches.final_score`) |
 | `20261108000400_merge_players.sql` | RPC `merge_players` (solo entrenador): junta dos fichas de la misma persona pasando cuenta, disponibilidad, convocatorias, asistencia y planes por set a la que se queda |
 | `20261109000000_mvp_module.sql` | Módulo MVP: `matches.mvp_status` / `mvp_closes_at` / `mvp_winners`, `teams.mvp_ranking_visible`, tabla `mvp_votes` (sin acceso directo), trigger `matches_mvp_guard`, las RPC del MVP y `merge_players` también pasa votos y MVP ganados |
+| `20261109000100_seasons.sql` | Temporadas dentro del equipo: tabla `seasons`, `teams.current_season_id`, `matches.season_id` y `league_table.season_id` (una tabla por temporada), bajas (`players.active`), RPC `start_season` y triggers que ponen la temporada actual |
 
 Se aplican al proyecto con el conector de Supabase (`apply_migration`) o con la CLI (`supabase db push`, desde `backend/`).
 
@@ -59,12 +60,13 @@ La pieza central es `team_members`: une usuario, equipo y rol, y todas las regla
 | `teams` | Equipos: nombre, categoría, temporada, color (`#rrggbb`), sistema por defecto, módulos activos y si las jugadoras ven el ranking de MVP (`mvp_ranking_visible`) | Se crean con la RPC `create_team` |
 | `team_members` | Quién pertenece a qué equipo y con qué rol (`coach`, `assistant`, `player`) | `player_id` enlaza la cuenta con su ficha. Si está vacío, el jugador está **pendiente** |
 | `join_codes` | Código de acceso por equipo y rol | Uno por rol; se regenera con `regenerate_join_code` |
-| `players` | Fichas de la plantilla | Una ficha puede existir sin cuenta. `competes = false`: solo entrena, no puede tener disponibilidad ni ser convocado |
-| `matches` | Partidos: rival, fecha, hora, calentamiento en minutos (`warmup_minutes`, de 15 en 15), pabellón y enlace de Maps, estado, formato y resultado | `sets_format` = `best_of_5` / `best_of_3` / `fixed_3` / `fixed_1`; `sets_result` = `[{"us": 25, "them": 20}, …]` o, si solo se apunta el marcador, `final_score` = `{"us": 2, "them": 1}`; con resultado, `status = played`. MVP: `mvp_status` = `closed` / `open` / `tie_pending` / `finished`, `mvp_closes_at` y `mvp_winners` (fichas; varias = co-MVP), que solo cambian por las RPC del MVP |
+| `players` | Fichas de la plantilla | Una ficha puede existir sin cuenta. `competes = false`: solo entrena, no puede tener disponibilidad ni ser convocado. `active = false`: baja de una temporada anterior, solo para el historial (tampoco responde ni se convoca) |
+| `matches` | Partidos (cada uno en su temporada, `season_id`; al crearlo, la actual): rival, fecha, hora, calentamiento en minutos (`warmup_minutes`, de 15 en 15), pabellón y enlace de Maps, estado, formato y resultado | `sets_format` = `best_of_5` / `best_of_3` / `fixed_3` / `fixed_1`; `sets_result` = `[{"us": 25, "them": 20}, …]` o, si solo se apunta el marcador, `final_score` = `{"us": 2, "them": 1}`; con resultado, `status = played`. MVP: `mvp_status` = `closed` / `open` / `tie_pending` / `finished`, `mvp_closes_at` y `mvp_winners` (fichas; varias = co-MVP), que solo cambian por las RPC del MVP |
 | `availability` | Respuesta de cada jugador a cada partido (`yes`, `no`, `maybe`) | |
 | `callups` | Convocados de cada partido | `number` y `positions`: dorsal y posiciones solo para ese partido (vacío = los de la ficha; la primera posición es la principal) |
 | `set_plans` | Plan de cada set: sistema, rotación inicial, alineación, líberos, cambios previstos | `start_rotation` = 1–6 (R1…R6); `rotation` = `{"1": player_id, …, "6": player_id}`; `libero_id` y `second_libero_id`; `planned_subs` = `[{"out", "in", "note"}]` |
-| `league_table` | Tabla de liga no oficial, rellenada a mano | Filas en JSON |
+| `league_table` | Tabla de liga no oficial, rellenada a mano, una por temporada | Clave `season_id`; filas en JSON |
+| `seasons` | Temporadas del equipo: nombre y fecha de inicio | Solo lectura para el equipo; se crean al crear el equipo (trigger) y con `start_season`. `teams.current_season_id` es la actual y `teams.season` su nombre (renombrarlo renombra la temporada) |
 | `training_slots` | Horario semanal de entrenamientos: día (1 = lunes … 7 = domingo), hora de inicio y fin, lugar y enlace de Google Maps | Se repite cada semana en el calendario |
 | `training_cancellations` | Fechas en que un entrenamiento del horario no se hace | |
 | `training_attendance` | Si cada jugador va a un entrenamiento en una fecha (`yes`, `no`, `maybe`) | Clave: entrenamiento + fecha + jugador |
@@ -117,7 +119,7 @@ Las acciones que tocan varias tablas o necesitan saltarse RLS de forma controlad
 | `regenerate_join_code(team, code_role)` | Entrenador | Crea o renueva el código del rol: 8 caracteres sin letras ni números que se confundan (0/O, 1/I) |
 | `my_teams()` | Cualquier usuario con sesión | Tus equipos con tu rol, tu ficha y si estás pendiente |
 | `team_members_overview(team)` | Entrenador y segundo | Miembros con usuario y nombre visible |
-| `accept_member(team, member, player)` | Entrenador | Acepta a un jugador pendiente vinculándolo a una ficha del equipo que no tenga cuenta |
+| `accept_member(team, member, player)` | Entrenador | Acepta a un jugador pendiente vinculándolo a una ficha del equipo que no tenga cuenta. Si la ficha era una baja, vuelve a la plantilla |
 | `create_recovery_code()` | Cualquier usuario con sesión | Crea o sustituye tu código de recuperación y lo devuelve (solo esa vez) |
 | `reset_password_with_code(username, code, new_password)` | **Sin sesión** | Pone una contraseña nueva si el código es correcto y devuelve `{ok, code}` con el código nuevo. 5 fallos bloquean 15 minutos. Devuelve en vez de lanzar error para que los fallos queden contados |
 | `coach_reset_password(team, member)` | Entrenador | Pone una contraseña temporal a un miembro que no sea entrenador y la devuelve |
@@ -132,9 +134,12 @@ Las acciones que tocan varias tablas o necesitan saltarse RLS de forma controlad
 | `open_mvp_vote(match)` | Entrenador | Abre 48 h la votación de un partido jugado que nunca la tuvo (p. ej. si el módulo se activó después) |
 | `close_mvp_vote(match)` | Entrenador | Cierra antes de tiempo. Sin votos: sin MVP; una líder: MVP; empate: `tie_pending` |
 | `resolve_mvp_tie(match, ids)` | Entrenador | Elige entre las empatadas; varias = co-MVP |
+| `start_season(team, season_name, leaving)` | Entrenador | Empieza una temporada nueva (pasa a ser la actual) y da de baja las fichas de `leaving`: pierden convocatorias y respuestas pendientes, y si son jugadores con cuenta, el acceso al equipo. Su historial se queda |
 | `mvp_results(match)` | Entrenador | Recuento: votos por jugadora, cuántas han votado y cuántas pueden (nunca quién votó a quién) |
 
 **Trigger `keep_a_coach`:** impide quitar o degradar al último entrenador de un equipo (para irse, antes hay que transferirlo). Borrar el equipo entero sí se permite.
+
+**Triggers de temporada:** `teams_create_first_season` crea la primera temporada de cada equipo nuevo; `matches_default_season` y `league_table_default_season` ponen la temporada actual si no se indica; `teams_sync_current_season` impide cambiar la temporada actual a mano (solo `start_season`) y pasa los cambios de `teams.season` a su nombre.
 
 **Trigger `matches_mvp_guard`:** las columnas `mvp_*` de `matches` ignoran los cambios directos (solo las cambian las RPC del MVP, que activan `app.mvp_rpc`). Al pasar un partido a jugado, si el equipo tiene el módulo `mvp`, abre su votación 48 h.
 

@@ -20,7 +20,7 @@ import { suggestPlayer } from '../playerMatch'
 interface AcceptMemberDialogProps {
   teamId: string
   member: Member
-  /** Roster entries not linked to any account yet. */
+  /** Roster entries not linked to any account yet (leavers too: accepting one brings them back). */
   freePlayers: Player[]
   onClose: () => void
 }
@@ -93,6 +93,7 @@ export function AcceptMemberDialog({
             {freePlayers.map((player) => (
               <option key={player.id} value={player.id}>
                 {shirtNumber(player)}. {playerName(player)}
+                {player.active ? '' : ' (baja, vuelve)'}
               </option>
             ))}
             <option value={NEW_PLAYER}>+ Crear ficha nueva</option>

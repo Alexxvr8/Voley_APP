@@ -72,7 +72,7 @@ export function CalendarPage() {
     }
   }
 
-  const roster = [...players.data].sort(byShirtNumber)
+  const roster = players.data.filter((player) => player.active).sort(byShirtNumber)
   const nextTrainings = upcomingTrainings(slots.data, cancellations.data, today, UPCOMING_COUNT)
 
   /** Props of a training card: the player's answer, the staff view of answers and the cancel toggle. */

@@ -20,6 +20,7 @@ const player: Player = {
   mainPosition: 'outside',
   otherPositions: ['libero'],
   competes: true,
+  active: true,
 }
 
 describe('results', () => {

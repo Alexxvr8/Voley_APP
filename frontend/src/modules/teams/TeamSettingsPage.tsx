@@ -1,10 +1,11 @@
-// "Ajustes" screen for the coach: team details and default system, sections, join codes, pending
-// requests, players without account (and merging repeated entries), members (remove, hand over), training schedule and deleting
-// the team.
+// "Ajustes" screen for the coach: pending requests, join codes, players without account (and merging
+// repeated entries), season (start a new one, leavers), team details and default system, colour,
+// sections, training schedule, venues, opponents, members (remove, hand over) and deleting the team.
 import { useCurrentTeam } from '@/core/teams/currentTeam'
 import { PageMessage } from '@/shared/ui/PageMessage'
 import { useMembers, useTeamPlayers } from './api'
 import { DeleteTeamCard } from './components/DeleteTeamCard'
+import { FormerPlayersCard } from './components/FormerPlayersCard'
 import { JoinCodesCard } from './components/JoinCodesCard'
 import { ManualPlayerCard } from './components/ManualPlayerCard'
 import { MergePlayersCard } from './components/MergePlayersCard'
@@ -12,6 +13,7 @@ import { MembersCard } from './components/MembersCard'
 import { ModulesCard } from './components/ModulesCard'
 import { OpponentsCard } from './components/OpponentsCard'
 import { PendingRequestsCard } from './components/PendingRequestsCard'
+import { SeasonCard } from './components/SeasonCard'
 import { TeamColorCard } from './components/TeamColorCard'
 import { TeamDetailsCard } from './components/TeamDetailsCard'
 import { TrainingScheduleCard } from './components/TrainingScheduleCard'
@@ -44,6 +46,11 @@ export function TeamSettingsPage() {
           <JoinCodesCard teamId={team.id} />
           <ManualPlayerCard teamId={team.id} />
           <MergePlayersCard teamId={team.id} players={players.data} linked={linked} />
+          <SeasonCard team={team} activePlayers={players.data.filter((player) => player.active)} />
+          <FormerPlayersCard
+            teamId={team.id}
+            former={players.data.filter((player) => !player.active)}
+          />
           <TeamDetailsCard team={team} />
           <TeamColorCard team={team} />
           <ModulesCard team={team} />

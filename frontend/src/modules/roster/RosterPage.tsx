@@ -17,7 +17,8 @@ export function RosterPage() {
   if (players.isError)
     return <PageMessage>No se ha podido cargar la plantilla. ¿Hay conexión?</PageMessage>
 
-  const sorted = [...players.data].sort(byShirtNumber)
+  // Players who left in a past season ("bajas") are only kept for their history.
+  const sorted = players.data.filter((player) => player.active).sort(byShirtNumber)
   const competing = sorted.filter((player) => player.competes).length
 
   return (

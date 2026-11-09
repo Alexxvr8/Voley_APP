@@ -1,5 +1,5 @@
 // Text formatting helpers for dates and names, in Spanish.
-import type { Player } from '@/shared/domain/types'
+import type { Player, Season } from '@/shared/domain/types'
 
 const dateFormatter = new Intl.DateTimeFormat('es-ES', {
   weekday: 'short',
@@ -75,4 +75,9 @@ export function formatWarmup(minutes: number | null, matchTime: string): string 
   if (!minutes) return ''
   const duration = formatDuration(minutes)
   return matchTime ? `${duration} (desde ${timeMinus(matchTime, minutes)})` : duration
+}
+
+/** Name shown for a season; a season without a name shows its start year. */
+export function seasonLabel(season: Season): string {
+  return season.name || `Temporada ${season.startedOn.slice(0, 4)}`
 }

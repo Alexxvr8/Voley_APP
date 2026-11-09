@@ -176,11 +176,11 @@ La pieza clave es `team_members`: une usuario, equipo y rol, y todas las reglas 
 | Tabla | Campos principales | Notas |
 | --- | --- | --- |
 | `profiles` | id (= auth user), username, display\_name | Uno por cuenta |
-| `teams` | id, name, category, season, color, default\_system, enabled\_modules, mvp\_ranking\_visible, created\_by | `enabled_modules` = lista de módulos activos; `mvp_ranking_visible` = si las jugadoras ven el ranking de MVP |
+| `teams` | id, name, category, season, current\_season\_id, color, default\_system, enabled\_modules, mvp\_ranking\_visible, created\_by | `enabled_modules` = lista de módulos activos; `mvp_ranking_visible` = si las jugadoras ven el ranking de MVP |
 | `team_members` | team\_id, user\_id, role, player\_id | role: coach / assistant / player; player\_id enlaza con la ficha |
 | `join_codes` | team\_id, code, role, active, expires\_at | Un código por rol, regenerable |
-| `players` | id, team\_id, first\_name, last\_name, birth\_year, number, main\_position, other\_positions, training\_days, competes | Ficha de plantilla, puede no tener cuenta. `competes = false`: solo entrena |
-| `matches` | id, team\_id, opponent, date, match\_time, warmup\_minutes, venue, maps\_url, home\_away, status, sets\_format, sets\_result, final\_score, notes, mvp\_status, mvp\_closes\_at, mvp\_winners | status: scheduled / played / cancelled; sets\_format: best\_of\_5 / best\_of\_3 / fixed\_3 / fixed\_1; final\_score `{us, them}` cuando solo se apunta el marcador; mvp\_status: closed / open / tie\_pending / finished |
+| `players` | id, team\_id, first\_name, last\_name, birth\_year, number, main\_position, other\_positions, training\_days, competes, active | Ficha de plantilla, puede no tener cuenta. `competes = false`: solo entrena. `active = false`: baja de una temporada anterior (solo historial) |
+| `matches` | id, team\_id, season\_id, opponent, date, match\_time, warmup\_minutes, venue, maps\_url, home\_away, status, sets\_format, sets\_result, final\_score, notes, mvp\_status, mvp\_closes\_at, mvp\_winners | status: scheduled / played / cancelled; sets\_format: best\_of\_5 / best\_of\_3 / fixed\_3 / fixed\_1; final\_score `{us, them}` cuando solo se apunta el marcador; mvp\_status: closed / open / tie\_pending / finished |
 | `availability` | match\_id, player\_id, status, comment, updated\_at | status: yes / no / maybe |
 | `callups` | match\_id, player\_id, number, positions | Convocados; dorsal y posiciones del partido (vacío = los de la ficha) |
 | `training_slots` | id, team\_id, weekday, start\_time, end\_time, venue, maps\_url | Horario semanal de entrenamientos |
@@ -192,7 +192,8 @@ La pieza clave es `team_members`: une usuario, equipo y rol, y todas las reglas 
 | `team_opponents` | id, team\_id, name | Rivales habituales |
 | `set_plans` | id, match\_id, set\_number, system, start\_rotation, rotation, libero\_id, second\_libero\_id, planned\_subs, updated\_at, updated\_by | rotation = zona 1–6 → player\_id |
 | `mvp_votes` | match\_id, voter\_user\_id, voted\_player\_id, created\_at | Única por votante y votada; máx. 2 por votante. Sin acceso directo: solo vía RPC |
-| `league_table` | team\_id, rows, updated\_at | Tabla no oficial, filas en JSON |
+| `league_table` | season\_id, team\_id, rows, updated\_at | Tabla no oficial de cada temporada, filas en JSON |
+| `seasons` | id, team\_id, name, started\_on | Temporadas del equipo; `teams.current_season_id` es la actual y `teams.season` su nombre |
 
 Posiciones como valores fijos: `setter` (colocador), `outside` (receptor), `middle` (central), `opposite` (opuesto), `libero`. Los nombres en pantalla van en español.
 
@@ -275,11 +276,14 @@ Cada decisión cerrada se añade aquí con su fecha; este documento es la refere
 | 2026-11-07 | Calidad de código: ESLint (flat config, typescript-eslint, reglas de hooks) y Prettier en `frontend/` |
 | 2026-11-09 | MVP: la votación se cierra de forma perezosa (la primera pantalla o voto tras las 48 h la cierra), sin tareas programadas |
 | 2026-11-09 | MVP: el entrenador puede abrir la votación de un partido ya jugado que no la tuvo (p. ej. si activó el módulo después) |
-| 2026-11-09 | MVP: `mvp_ranking_visible` es una columna de `teams` (no hay campo `settings`); el ranking cuenta todos los partidos del equipo hasta resolver el tema abierto de las temporadas |
+| 2026-11-09 | MVP: `mvp_ranking_visible` es una columna de `teams` (no hay campo `settings`) |
+| 2026-11-09 | Temporadas dentro del equipo. El entrenador empieza la nueva en Ajustes ("Empezar temporada nueva"); cada partido queda en la temporada actual al crearlo. Resultados, tabla de liga y ranking MVP son por temporada, con selector para ver las anteriores |
+| 2026-11-09 | Selectores propios de hora (panel con horas y minutos en botones) y de fecha (mes para tocar el día), iguales en todos los móviles; calendario con "Hoy" y días pasados en gris |
+| 2026-11-09 | Al empezar temporada el entrenador marca quién sigue. Las que no siguen pasan a baja: fuera de plantilla, convocatoria, disponibilidad y entrenamientos, y pierden el acceso, pero conservan su historial. Pueden volver ("Vuelve" o aceptándolas con su ficha) |
 
 **Temas abiertos**
 
-- [ ] ¿Temporadas dentro del equipo o un equipo nuevo cada año? (el ranking de MVP "de temporada" depende de esto)
+- [x] ¿Temporadas dentro del equipo o un equipo nuevo cada año? → Dentro del equipo (2026-11-09)
 - [x] ¿Los jugadores ven la rotación planificada o solo el entrenador? → Solo el staff (2026-11-08)
 - [ ] Nombre de la app
 - [ ] ¿Registrar en el modo partido el resultado punto a punto o solo por set?

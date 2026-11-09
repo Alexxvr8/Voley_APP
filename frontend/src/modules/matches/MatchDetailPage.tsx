@@ -42,7 +42,7 @@ export function MatchDetailPage() {
 
   const isStaff = hasRole(role, 'assistant')
   const me = players.data.find((player) => player.id === playerId)
-  const competing = players.data.filter((player) => player.competes)
+  const competing = players.data.filter((player) => player.competes && player.active)
   const answers = competing.map((player) => availability.data[player.id]?.status)
 
   return (

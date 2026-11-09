@@ -1,5 +1,6 @@
-// The app menu: the user's teams (each card filled with its colour) and a "+" to add one. On PC the
-// open team unfolds its sections below its name; on phones those are already in the bottom tabs.
+// The app menu: the user's teams (each card filled with its colour, the others dimmed) and a "+" to
+// add one. On PC the open team unfolds its sections below its name; on phones those are already in
+// the bottom tabs.
 import { Link, NavLink } from 'react-router'
 import { useMyTeams } from '@/core/teams/api'
 import { ROLE_LABELS } from '@/shared/domain/labels'
@@ -54,7 +55,7 @@ export function TeamsMenu({ onNavigate, showSections = true }: TeamsMenuProps) {
                   onClick={onNavigate}
                   style={{ backgroundColor: team.color }}
                   aria-current={isOpen ? 'true' : undefined}
-                  className={`block rounded-lg px-3 py-2 text-white hover:brightness-110 ${isOpen ? 'ring-2 ring-white' : ''}`}
+                  className={`block rounded-lg px-3 py-2 text-white hover:brightness-110 ${isOpen ? '' : 'opacity-70 hover:opacity-100'}`}
                 >
                   <span className="block truncate font-semibold">{team.name}</span>
                   <span className="block text-xs text-white/80">

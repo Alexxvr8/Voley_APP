@@ -8,6 +8,7 @@ const NOW = new Date('2026-11-09T12:00:00Z')
 function match(overrides: Partial<Match>): Match {
   return {
     id: 'm',
+    seasonId: 's1',
     opponent: 'Rival',
     date: '2026-11-08',
     matchTime: '',
@@ -27,7 +28,7 @@ function match(overrides: Partial<Match>): Match {
   }
 }
 
-function player(id: string, firstName: string, competes = true): Player {
+function player(id: string, firstName: string, competes = true, active = true): Player {
   return {
     id,
     firstName,
@@ -37,6 +38,7 @@ function player(id: string, firstName: string, competes = true): Player {
     mainPosition: 'outside',
     otherPositions: [],
     competes,
+    active,
   }
 }
 
@@ -90,6 +92,7 @@ describe('seasonRanking', () => {
     player('b', 'Bea'),
     player('c', 'Carla'),
     player('t', 'Tina', false),
+    player('x', 'Xenia', true, false),
   ]
   const matches = [
     match({ id: '1', mvpStatus: 'finished', mvpWinners: ['b'] }),
@@ -105,7 +108,7 @@ describe('seasonRanking', () => {
     ])
   })
 
-  it('lists every competing player for the coach', () => {
+  it('lists every competing player still in the team for the coach', () => {
     expect(seasonRanking(matches, players, true).map((e) => [e.player.id, e.wins])).toEqual([
       ['b', 2],
       ['a', 1],

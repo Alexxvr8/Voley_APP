@@ -8,6 +8,8 @@ import { EMPTY_ROW, sortTable, type LeagueRow } from '../leagueTable'
 
 interface LeagueTableCardProps {
   teamId: string
+  /** Season the table belongs to. */
+  seasonId: string
   table: LeagueTable | null
   /** Staff can edit; players only read. */
   editable: boolean
@@ -21,9 +23,9 @@ const NUMBER_FIELDS: { key: Exclude<keyof LeagueRow, 'team'>; label: string }[] 
   { key: 'points', label: 'Pts' },
 ]
 
-export function LeagueTableCard({ teamId, table, editable }: LeagueTableCardProps) {
-  const save = useSaveLeagueTable(teamId)
-  const remove = useRemoveLeagueTable(teamId)
+export function LeagueTableCard({ teamId, seasonId, table, editable }: LeagueTableCardProps) {
+  const save = useSaveLeagueTable(teamId, seasonId)
+  const remove = useRemoveLeagueTable(seasonId)
   const [draft, setDraft] = useState<LeagueRow[] | null>(null)
   const [confirmingRemove, setConfirmingRemove] = useState(false)
 

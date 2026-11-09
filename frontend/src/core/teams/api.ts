@@ -2,7 +2,14 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { queryClient } from '@/core/query/queryClient'
 import { supabase } from '@/core/supabase/client'
-import { toMyTeam, toTeam, type MyTeamRow, type TeamRow } from '@/shared/domain/rows'
+import {
+  toMyTeam,
+  toSeason,
+  toTeam,
+  type MyTeamRow,
+  type SeasonRow,
+  type TeamRow,
+} from '@/shared/domain/rows'
 
 export const MY_TEAMS_KEY = ['my-teams']
 
@@ -70,5 +77,25 @@ export function useJoinTeam() {
       return data as string
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: MY_TEAMS_KEY }),
+  })
+}
+
+/** Key of a team's seasons, to refresh them after starting a new one. */
+export const seasonsKey = (teamId: string) => ['seasons', teamId]
+
+/** The team's seasons, newest first (the first one is usually the current one). */
+export function useSeasons(teamId: string) {
+  return useQuery({
+    queryKey: seasonsKey(teamId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('seasons')
+        .select('id, name, started_on')
+        .eq('team_id', teamId)
+        .order('started_on', { ascending: false })
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return (data as SeasonRow[]).map(toSeason)
+    },
   })
 }

@@ -1,8 +1,10 @@
-// "MVP": open votes, ties waiting for the coach, past MVPs and the season ranking.
+// "MVP": open votes, ties waiting for the coach, past MVPs and the ranking of the chosen season.
 import { useState } from 'react'
+import { useSeasons } from '@/core/teams/api'
 import { hasRole, useCurrentTeam, useTeamPath } from '@/core/teams/currentTeam'
 import type { Match, Player } from '@/shared/domain/types'
 import { PageMessage } from '@/shared/ui/PageMessage'
+import { SeasonSelect } from '@/shared/ui/SeasonSelect'
 import { playerName } from '@/shared/utils/format'
 import { useMatches, useMyCallups, usePlayers, useSettleExpiredVotes } from './api'
 import { MatchVotesCard } from './components/MatchVotesCard'
@@ -22,6 +24,8 @@ export function MvpPage() {
   const { team, role, playerId } = useCurrentTeam()
   const teamPath = useTeamPath()
   const [now] = useState(() => new Date())
+  const [seasonId, setSeasonId] = useState(team.currentSeasonId)
+  const seasons = useSeasons(team.id)
   const matches = useMatches(team.id)
   const players = usePlayers(team.id)
   const myCallups = useMyCallups(role === 'player' ? playerId : null)
@@ -40,13 +44,22 @@ export function MvpPage() {
   const playersById = new Map(players.data.map((player) => [player.id, player]))
   const newestFirst = [...played].sort((a, b) => b.date.localeCompare(a.date))
   const byPhase = (phase: string) => newestFirst.filter((match) => votePhase(match, now) === phase)
+  const inSeason = (list: Match[]) => list.filter((match) => match.seasonId === seasonId)
   const canVote = (match: Match) => isCoach || Boolean(myCallups.data?.includes(match.id))
   const matchHref = (matchId: string) => teamPath(`mvp/${matchId}`)
   const showRanking = isCoach || team.mvpRankingVisible
 
   return (
     <section className="space-y-4">
-      <h1 className="text-xl font-bold text-slate-900 lg:text-2xl">MVP</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-xl font-bold text-slate-900 lg:text-2xl">MVP</h1>
+        <SeasonSelect
+          seasons={seasons.data ?? []}
+          value={seasonId}
+          onChange={setSeasonId}
+          currentSeasonId={team.currentSeasonId}
+        />
+      </div>
       <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
         <div className="space-y-4">
           <MatchVotesCard
@@ -67,7 +80,7 @@ export function MvpPage() {
           {isCoach && (
             <MatchVotesCard
               title="Partidos sin votación"
-              matches={byPhase('none')}
+              matches={inSeason(byPhase('none'))}
               detail={() => 'No se ha votado'}
               action={() => 'Abrir'}
               matchHref={matchHref}
@@ -75,7 +88,7 @@ export function MvpPage() {
           )}
           <MatchVotesCard
             title="MVP de cada partido"
-            matches={byPhase('finished')}
+            matches={inSeason(byPhase('finished'))}
             detail={(match) => winnersLabel(match, playersById)}
             matchHref={matchHref}
           />
@@ -83,7 +96,7 @@ export function MvpPage() {
         {showRanking && (
           <RankingCard
             teamId={team.id}
-            ranking={seasonRanking(matches.data, players.data, isCoach)}
+            ranking={seasonRanking(inSeason(matches.data), players.data, isCoach)}
             visible={team.mvpRankingVisible}
             editable={isCoach}
           />

@@ -21,6 +21,16 @@ export interface Team {
   enabledModules: string[]
   /** Whether players see the season MVP ranking (the coach always does). */
   mvpRankingVisible: boolean
+  /** Season new matches go to; `season` is its name. */
+  currentSeasonId: string
+}
+
+/** A season of a team. Matches, results, league table and MVP ranking are per season. */
+export interface Season {
+  id: string
+  name: string
+  /** Local date, `YYYY-MM-DD`. */
+  startedOn: string
 }
 
 /** One of the current user's teams, as listed after signing in. */
@@ -47,6 +57,11 @@ export interface Player {
   otherPositions: Position[]
   /** False for players who only train: they are left out of availability and call-ups. */
   competes: boolean
+  /**
+   * False for players who left the team at the start of a season ("bajas"): kept only for their
+   * history (past call-ups, MVP…), out of the roster and of every current list.
+   */
+  active: boolean
 }
 
 /** Points of one set, from the team's point of view. */
@@ -74,6 +89,7 @@ export interface FinalScore {
 
 export interface Match {
   id: string
+  seasonId: string
   opponent: string
   /** Local date, `YYYY-MM-DD`. */
   date: string

@@ -2,6 +2,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { queryClient } from '@/core/query/queryClient'
 import { supabase } from '@/core/supabase/client'
+import { seasonsKey } from '@/core/teams/api'
 import {
   toPlayer,
   toTeamVenue,
@@ -259,7 +260,10 @@ export function useUpdateTeamDetails(teamId: string) {
           })
           .eq('id', teamId),
       ),
-    onSuccess: () => refreshTeam(teamId),
+    onSuccess: () => {
+      refreshTeam(teamId)
+      queryClient.invalidateQueries({ queryKey: seasonsKey(teamId) })
+    },
   })
 }
 
@@ -394,5 +398,33 @@ export function useSetTeamColor(teamId: string) {
     mutationFn: async (color: string) =>
       check(await supabase.from('teams').update({ color }).eq('id', teamId)),
     ...optimisticTeamUpdate<string>(teamId, (team, color) => ({ ...team, color })),
+  })
+}
+
+/**
+ * Starts a new season: it becomes the current one and the given roster entries leave the team
+ * (they keep their history; players with an account lose access).
+ */
+export function useStartSeason(teamId: string) {
+  return useMutation({
+    mutationFn: async ({ name, leaving }: { name: string; leaving: string[] }) =>
+      check(
+        await supabase.rpc('start_season', { team: teamId, season_name: name, leaving }),
+      ) as string,
+    onSuccess: () => {
+      refreshTeam(teamId)
+      queryClient.invalidateQueries({ queryKey: seasonsKey(teamId) })
+      queryClient.invalidateQueries({ queryKey: keys.players(teamId) })
+      queryClient.invalidateQueries({ queryKey: keys.members(teamId) })
+    },
+  })
+}
+
+/** Brings a leaver back to the roster (or marks someone as leaver by hand). */
+export function useSetPlayerActive(teamId: string) {
+  return useMutation({
+    mutationFn: async ({ playerId, active }: { playerId: string; active: boolean }) =>
+      check(await supabase.from('players').update({ active }).eq('id', playerId)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.players(teamId) }),
   })
 }

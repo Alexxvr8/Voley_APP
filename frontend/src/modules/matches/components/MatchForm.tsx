@@ -11,6 +11,7 @@ import {
   LABEL_TEXT_CLASS,
   PRIMARY_BUTTON_CLASS,
 } from '@/shared/ui/form'
+import { DatePicker } from '@/shared/ui/DatePicker'
 import { TimeSelect } from '@/shared/ui/TimeSelect'
 import { VenuePicker } from '@/shared/ui/VenuePicker'
 import { isValidMapsUrl } from '@/shared/utils/maps'
@@ -93,16 +94,14 @@ export function MatchForm({
         </label>
       )}
 
-      <label className={LABEL_CLASS}>
+      <div className={LABEL_CLASS}>
         <span className={LABEL_TEXT_CLASS}>Fecha</span>
-        <input
-          className={INPUT_CLASS}
-          type="date"
+        <DatePicker
           value={match.date}
-          onChange={(e) => update({ date: e.target.value })}
-          required
+          onChange={(date) => update({ date })}
+          label="Fecha del partido"
         />
-      </label>
+      </div>
 
       <div className="flex flex-wrap gap-4">
         <div className={LABEL_CLASS}>

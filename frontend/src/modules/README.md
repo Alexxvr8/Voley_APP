@@ -7,7 +7,7 @@ Cada carpeta es una funcionalidad independiente que un equipo puede activar o de
 | `matches/` | Calendario mensual (partidos y entrenamientos, con asistencia Sí / No / Duda a cada entrenamiento), crear, editar y borrar partidos, info con mapa y resultado (solo marcador o puntos por set), disponibilidad y la pestaña Gestión (convocatoria con dorsal y posiciones del partido) | Partidos | Jugador | No |
 | `roster/` | Plantilla. El staff edita jugadores (dorsal y posiciones) y marca quién compite o solo entrena; los jugadores la ven sin poder cambiarla. Se descarga para verla sin conexión | Plantilla | Jugador | Solo lectura |
 | `lineup/` | Pestaña Rotación del partido (plan por set guardado en el servidor) y modo partido. Funciona sin conexión | — (pestaña y botón "Ir al partido") | Segundo entrenador | Sí |
-| `results/` | Partidos jugados con su resultado y tabla de liga no oficial (rellena a mano, con "Actualizada el dd/mm") | Resultados | Jugador | No |
+| `results/` | Partidos jugados con su resultado y tabla de liga no oficial (rellena a mano, con "Actualizada el dd/mm"), por temporada | Resultados | Jugador | No |
 | `mvp/` | Votación secreta de la MVP de cada partido jugado (1 o 2 convocadas, 48 h), empates que resuelve el entrenador y ranking de la temporada. Opcional: se activa en Ajustes | MVP | Jugador | No |
 | `teams/` | Ajustes del equipo: datos y sistema predeterminado, color, secciones activas, códigos, solicitudes, jugadores sin cuenta, miembros (quitar, transferir), horario, pabellones, rivales y borrar el equipo | Ajustes | Entrenador | No |
 
@@ -34,7 +34,7 @@ No hace falta tener todas las piezas: un módulo pequeño puede ser solo `index.
 
 ## Regla de oro
 
-Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mismo, va a `shared/` (UI, utilidades, tipos) o a `core/` (infraestructura). Entre módulos solo se enlaza por URL (por ejemplo, las pestañas del partido apuntan a `partidos/<id>/gestion`, de `matches`, y a `partidos/<id>/rotacion`, de `lineup`). Varios módulos piden los mismos datos (`players`, `matches`) con la misma clave de caché, así que se comparten sin importarse.
+Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mismo, va a `shared/` (UI, utilidades, tipos) o a `core/` (infraestructura). Entre módulos solo se enlaza por URL (por ejemplo, las pestañas del partido apuntan a `partidos/<id>/gestion`, de `matches`, y a `partidos/<id>/rotacion`, de `lineup`). Varios módulos piden los mismos datos (`players`, `matches`, `opponents`…) con la misma clave de caché, así que se comparten sin importarse: la consulta tiene que guardar **la misma forma de datos** en todos (si un módulo necesita otra, la saca con `select` de TanStack Query). Las fichas de baja (`active = false`) se quedan fuera de toda lista actual (plantilla, convocatoria, respuestas, entrenamientos) pero siguen en la caché para el historial.
 
 ## Ficheros del módulo `matches`
 
@@ -51,7 +51,7 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 | `api.ts` | Partidos, entrenamientos y cancelaciones, asistencia a entrenamientos, disponibilidad y convocatoria. Disponibilidad, asistencia y convocatoria se actualizan al momento en pantalla y se deshacen si el servidor falla |
 | `calendarEvents.ts` | Qué hay cada día y próximos partidos |
 | `trainingAnswers.ts` | Próximos entrenamientos (sin los cancelados), la respuesta de un jugador y quién ha dicho Sí / No / Duda o no ha respondido |
-| `components/MonthCalendar.tsx` | Mes de lunes a domingo; burbuja azul = partido, verde = entrenamiento. Las burbujas crecen con el ancho del propio calendario (container queries): punto, hora, u hora y texto |
+| `components/MonthCalendar.tsx` | Mes de lunes a domingo con botón "Hoy" y los días pasados en gris; burbuja azul = partido, verde = entrenamiento. Las burbujas crecen con el ancho del propio calendario (container queries): punto, hora, u hora y texto |
 | `components/MatchEventCard.tsx`, `TrainingEventCard.tsx` | Tarjetas de partido y de entrenamiento; la de entrenamiento lleva "¿Vienes?" para el jugador y, para el staff, el recuento con "Ver quién" |
 | `components/MatchInfoCard.tsx` | Horarios, pabellón (enlace a Maps), local o visitante, notas |
 | `components/MyAvailabilityCard.tsx` | "¿Puedes venir?" para el jugador, con comentario opcional |
@@ -87,13 +87,15 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 | Fichero | Qué hace |
 | --- | --- |
 | `TeamSettingsPage.tsx` | Ajustes del equipo (entrenador) |
+| `components/SeasonCard.tsx` | Temporada actual y "Empezar temporada nueva": nombre (sugerido por `seasonName.ts`: 2026-27 → 2027-28) y quién sigue; las desmarcadas pasan a baja (RPC `start_season`) |
+| `components/FormerPlayersCard.tsx` | Bajas de temporadas anteriores con "Vuelve". Al aceptar a alguien con la ficha de una baja, vuelve a la plantilla |
 | `members.ts` | Miembros del equipo y cómo separar pendientes, activos y fichas ya enlazadas |
 | `components/PendingRequestsCard.tsx` + `AcceptMemberDialog.tsx` | Solicitudes de jugadores: aceptar (vincular a una ficha sin cuenta, propuesta por el nombre, o crear una nueva) o rechazar |
 | `playerMatch.ts` | Qué ficha sin cuenta es probablemente la de quien acaba de entrar (nombre sin tildes ni mayúsculas) |
 | `components/MergePlayersCard.tsx` | Juntar fichas repetidas de la misma persona (RPC `merge_players`) |
 | `components/ManualPlayerCard.tsx` | Jugadores sin cuenta: crear a mano la ficha de quien no usa la app |
 | `components/JoinCodesCard.tsx` | Códigos de jugador y de segundo entrenador: crear, renovar, activar o desactivar |
-| `components/TeamDetailsCard.tsx` | Nombre, categoría y temporada |
+| `components/TeamDetailsCard.tsx` | Nombre, categoría y nombre de la temporada actual |
 | `components/TrainingScheduleCard.tsx` | Horario semanal de entrenamientos (24 h, de 15 en 15 min) con pabellón de la lista u otro |
 | `components/TeamColorCard.tsx` | 20 colores para el equipo (rellenan su tarjeta en la lista y el menú) |
 | `components/ModulesCard.tsx` | Activar o desactivar secciones (Ajustes siempre activo) |
@@ -105,7 +107,7 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 
 | Fichero | Qué hace |
 | --- | --- |
-| `ResultsPage.tsx` | Partidos jugados y tabla de liga |
+| `ResultsPage.tsx` | Partidos jugados y tabla de liga de la temporada elegida (la actual por defecto). Las tablas de temporadas pasadas no se editan |
 | `components/PlayedMatchesCard.tsx` | Jugados, del más reciente al más antiguo, con "3-1", los puntos de cada set y el balance ganados/perdidos |
 | `components/LeagueTableCard.tsx` | Tabla no oficial (PJ, PG, PP, Pts) con "Actualizada el dd/mm". El staff la añade, edita o quita |
 | `leagueTable.ts` | Orden de la tabla: puntos, partidos ganados y nombre |
@@ -114,7 +116,7 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 
 | Fichero | Qué hace |
 | --- | --- |
-| `MvpPage.tsx` | Votaciones abiertas (con "Votar" si puedes votar), empates por resolver, partidos sin votación (entrenador, para abrirla), la MVP de cada partido y el ranking. Cierra las votaciones que ya pasaron sus 48 h |
+| `MvpPage.tsx` | Selector de temporada (para la MVP de cada partido, los partidos sin votación y el ranking), votaciones abiertas (con "Votar" si puedes votar), empates por resolver, partidos sin votación (entrenador, para abrirla), la MVP de cada partido y el ranking. Cierra las votaciones que ya pasaron sus 48 h |
 | `MvpMatchPage.tsx` | Votación de un partido: votar o cambiar el voto; el entrenador ve el recuento, cierra antes de tiempo (con confirmación), abre la votación si no la hubo y resuelve el empate. Las jugadoras ven "Resultado pendiente" mientras tanto |
 | `api.ts` | Partidos, fichas y convocatoria (mismas claves de caché que los demás módulos), tu voto, las RPC del entrenador y mostrar u ocultar el ranking. `useSettleExpiredVotes` llama a `settle_mvp` para las votaciones caducadas |
 | `mvp.ts` | Estado de la votación (`votePhase`, incluida la abierta con el plazo pasado), elegir 1 o 2 (`togglePick`: con dos elegidas, tocar otra quita la primera), "Cierra en 23 h", las más votadas (`topVoted`) y el ranking (`seasonRanking`: co-MVP suma uno a cada una; sin ceros para las jugadoras) |

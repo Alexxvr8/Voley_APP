@@ -47,7 +47,7 @@ export function ManagementPage() {
       />
       <div className="lg:max-w-3xl">
         <CallupList
-          players={players.data.filter((player) => player.competes)}
+          players={players.data.filter((player) => player.competes && player.active)}
           answers={availability.data}
           callups={callups.data}
           onToggle={(id) =>

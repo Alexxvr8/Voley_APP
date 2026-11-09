@@ -460,18 +460,22 @@ export function useTeamVenues(teamId: string) {
   })
 }
 
-/** Names of the team's usual opponents, suggested in the match form. */
+/**
+ * Names of the team's usual opponents, suggested in the match form. The cache stores the same rows
+ * as Ajustes (`id, name`, shared key) and this hook only picks the names.
+ */
 export function useTeamOpponents(teamId: string) {
   return useQuery({
     queryKey: ['opponents', teamId],
     queryFn: async () =>
-      (
-        check(
-          await supabase.from('team_opponents').select('name').eq('team_id', teamId).order('name'),
-        ) as {
-          name: string
-        }[]
-      ).map((row) => row.name),
+      check(
+        await supabase
+          .from('team_opponents')
+          .select('id, name')
+          .eq('team_id', teamId)
+          .order('name'),
+      ) as { id: string; name: string }[],
+    select: (rows) => rows.map((row) => row.name),
   })
 }
 

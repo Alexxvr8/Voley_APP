@@ -1,4 +1,4 @@
-// Server calls of the results module: played matches and the unofficial league table.
+// Server calls of the results module: played matches and the unofficial league table of each season.
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { queryClient } from '@/core/query/queryClient'
 import { supabase } from '@/core/supabase/client'
@@ -7,7 +7,7 @@ import type { LeagueRow } from './leagueTable'
 
 const keys = {
   matches: (teamId: string) => ['matches', teamId],
-  table: (teamId: string) => ['league-table', teamId],
+  table: (seasonId: string) => ['league-table', seasonId],
 }
 
 /** Throws the Supabase error, so TanStack Query marks the call as failed. */
@@ -40,16 +40,16 @@ export interface LeagueTable {
   updatedAt: string
 }
 
-/** The team's league table, or null if the coach has not added one. */
-export function useLeagueTable(teamId: string) {
+/** A season's league table, or null if the coach has not added one. */
+export function useLeagueTable(seasonId: string) {
   return useQuery({
-    queryKey: keys.table(teamId),
+    queryKey: keys.table(seasonId),
     queryFn: async () => {
       const row = check(
         await supabase
           .from('league_table')
           .select('rows, updated_at')
-          .eq('team_id', teamId)
+          .eq('season_id', seasonId)
           .maybeSingle(),
       ) as { rows: LeagueRow[]; updated_at: string } | null
       return row ? ({ rows: row.rows, updatedAt: row.updated_at } as LeagueTable) : null
@@ -57,22 +57,28 @@ export function useLeagueTable(teamId: string) {
   })
 }
 
-export function useSaveLeagueTable(teamId: string) {
+export function useSaveLeagueTable(teamId: string, seasonId: string) {
   return useMutation({
     mutationFn: async (rows: LeagueRow[]) =>
       check(
-        await supabase
-          .from('league_table')
-          .upsert({ team_id: teamId, rows, updated_at: new Date().toISOString() }),
+        await supabase.from('league_table').upsert(
+          {
+            team_id: teamId,
+            season_id: seasonId,
+            rows,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'season_id' },
+        ),
       ),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.table(teamId) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.table(seasonId) }),
   })
 }
 
-export function useRemoveLeagueTable(teamId: string) {
+export function useRemoveLeagueTable(seasonId: string) {
   return useMutation({
     mutationFn: async () =>
-      check(await supabase.from('league_table').delete().eq('team_id', teamId)),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.table(teamId) }),
+      check(await supabase.from('league_table').delete().eq('season_id', seasonId)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.table(seasonId) }),
   })
 }

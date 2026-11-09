@@ -51,7 +51,8 @@ export interface RankingEntry {
 
 /**
  * Season ranking from the finished votes, most wins first (ties by name). With `includeZeros`
- * (coach view) every competing player is listed; otherwise only those with at least one MVP.
+ * (coach view) every competing player still in the team is listed; otherwise only those with at
+ * least one MVP. Pass the matches of one season.
  */
 export function seasonRanking(
   matches: Match[],
@@ -65,7 +66,9 @@ export function seasonRanking(
   }
   return players
     .filter((player) =>
-      includeZeros ? player.competes || wins.has(player.id) : wins.has(player.id),
+      includeZeros
+        ? (player.competes && player.active) || wins.has(player.id)
+        : wins.has(player.id),
     )
     .map((player) => ({ player, wins: wins.get(player.id) ?? 0 }))
     .sort(

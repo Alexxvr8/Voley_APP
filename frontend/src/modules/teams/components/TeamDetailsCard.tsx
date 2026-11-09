@@ -59,7 +59,7 @@ export function TeamDetailsCard({ team }: { team: Team }) {
           />
         </label>
         <label className={LABEL_CLASS}>
-          <span className={LABEL_TEXT_CLASS}>Temporada</span>
+          <span className={LABEL_TEXT_CLASS}>Nombre de la temporada actual</span>
           <input
             className={INPUT_CLASS}
             value={season}
