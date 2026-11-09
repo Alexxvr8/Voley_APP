@@ -4,6 +4,7 @@ import { queryClient } from '@/core/query/queryClient'
 import { supabase } from '@/core/supabase/client'
 import { seasonsKey } from '@/core/teams/api'
 import {
+  playerInputRow,
   toPlayer,
   toTeamVenue,
   toTrainingSlot,
@@ -96,17 +97,7 @@ export interface NewPlayer {
 export function useAddPlayer(teamId: string) {
   return useMutation({
     mutationFn: async (player: PlayerInput) =>
-      check(
-        await supabase.from('players').insert({
-          team_id: teamId,
-          first_name: player.firstName,
-          last_name: player.lastName,
-          birth_year: player.birthYear,
-          number: player.number,
-          main_position: player.mainPosition,
-          other_positions: player.otherPositions,
-        }),
-      ),
+      check(await supabase.from('players').insert({ team_id: teamId, ...playerInputRow(player) })),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.players(teamId) }),
   })
 }

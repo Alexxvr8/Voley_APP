@@ -1,13 +1,22 @@
-// One roster row: shirt number, name, birth year and all positions. Staff also get the "compite"
+// One roster row: shirt number, name, birth year (and when a guest comes) and all positions. Staff also get the "compite"
 // switch and "Editar", which opens the player form in place (with "Borrar ficha").
 import { useState } from 'react'
 import type { Player } from '@/shared/domain/types'
 import { PositionBadge } from '@/shared/ui/PositionBadge'
-import { playerName, shirtNumber } from '@/shared/utils/format'
+import { WEEKDAY_LABELS } from '@/shared/domain/labels'
+import { formatShortDate, playerName, shirtNumber } from '@/shared/utils/format'
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog'
 import { useDeletePlayer, useUpdatePlayer } from '../api'
 import { CompetesSwitch } from './CompetesSwitch'
 import { PlayerForm } from '@/shared/ui/PlayerForm'
+
+/** When a guest comes: "Lu, Mi" or "sáb 14 nov"; empty for team members. */
+function visitLabel(player: Player): string {
+  if (player.membership === 'regular')
+    return player.visitWeekdays.map((day) => WEEKDAY_LABELS[day].slice(0, 2)).join(', ')
+  if (player.membership === 'one_off' && player.visitDate) return formatShortDate(player.visitDate)
+  return ''
+}
 
 interface PlayerRowProps {
   teamId: string
@@ -70,7 +79,9 @@ export function PlayerRow({ teamId, player, editable }: PlayerRowProps) {
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium text-slate-900">{playerName(player)}</p>
-        {player.birthYear && <p className="text-xs text-slate-500">{player.birthYear}</p>}
+        <p className="text-xs text-slate-500">
+          {[player.birthYear, visitLabel(player)].filter(Boolean).join(' · ')}
+        </p>
       </div>
       <div className="flex flex-wrap justify-end gap-1">
         <PositionBadge position={player.mainPosition} />

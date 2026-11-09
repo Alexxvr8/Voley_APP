@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { hasRole, useCurrentTeam, useTeamPath } from '@/core/teams/currentTeam'
+import { playsMatchOn, trainsOn } from '@/shared/domain/membership'
 import type { AvailabilityStatus, Match } from '@/shared/domain/types'
 import type { TrainingOnDate } from '@/shared/utils/calendar'
 import { PRIMARY_BUTTON_CLASS } from '@/shared/ui/form'
@@ -56,14 +57,16 @@ export function CalendarPage() {
   }
 
   const isStaff = hasRole(role, 'assistant')
-  // Only players who compete answer availability; the ones who only train just see the calendar.
-  const competes = players.data.find((player) => player.id === playerId)?.competes ?? false
+  // Only players who can play a match answer its availability (members and regulars who compete,
+  // one-offs on their day); trainings are asked to whoever is expected that day.
+  const me = players.data.find((player) => player.id === playerId)
   const eventsFor = (date: string) => eventsOn(date, matches.data, slots.data, cancellations.data)
   const selected = eventsFor(selectedDate)
 
   function availabilityFor(match: Match) {
     // Played matches no longer ask for availability.
-    if (!playerId || !competes || match.status === 'played') return undefined
+    if (!playerId || !me || !playsMatchOn(me, match.date) || match.status === 'played')
+      return undefined
     return {
       status: myAvailability.data?.[match.id],
       calledUp: myCallups.data?.includes(match.id) ?? false,
@@ -83,14 +86,22 @@ export function CalendarPage() {
     return {
       training,
       attendance:
-        playerId && !isPast
+        playerId && me && trainsOn(me, training.date) && !isPast
           ? {
               status: answerOf(answers, { slotId, date: training.date }, playerId),
               onChange: (status: AvailabilityStatus) =>
                 setTrainingAnswer.mutate({ slotId, date: training.date, playerId, status }),
             }
           : undefined,
-      groups: isStaff && !isPast ? answerGroups(answers, roster, slotId, training.date) : undefined,
+      groups:
+        isStaff && !isPast
+          ? answerGroups(
+              answers,
+              roster.filter((player) => trainsOn(player, training.date)),
+              slotId,
+              training.date,
+            )
+          : undefined,
       onToggleCancelled: isStaff
         ? () => setCancelled.mutate({ slotId, date: training.date, cancelled: !training.cancelled })
         : undefined,

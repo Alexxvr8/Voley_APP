@@ -3,6 +3,7 @@
 // roster); staff see a summary of the answers, record the result and edit the match.
 import { Link, useParams } from 'react-router'
 import { hasRole, useCurrentTeam, useTeamPath } from '@/core/teams/currentTeam'
+import { playsMatchOn } from '@/shared/domain/membership'
 import { Card } from '@/shared/ui/Card'
 import { SECONDARY_BUTTON_CLASS } from '@/shared/ui/form'
 import { MatchHeader } from '@/shared/ui/MatchHeader'
@@ -42,7 +43,8 @@ export function MatchDetailPage() {
 
   const isStaff = hasRole(role, 'assistant')
   const me = players.data.find((player) => player.id === playerId)
-  const competing = players.data.filter((player) => player.competes && player.active)
+  const competing = players.data.filter((player) => playsMatchOn(player, match.date))
+  const iPlay = me !== undefined && playsMatchOn(me, match.date)
   const answers = competing.map((player) => availability.data[player.id]?.status)
 
   return (
@@ -110,7 +112,7 @@ export function MatchDetailPage() {
           </div>
         )}
 
-        {isStaff && me?.competes && match.status !== 'played' && (
+        {isStaff && me && iPlay && match.status !== 'played' && (
           <MyAvailabilityCard
             answer={availability.data[me.id]}
             isCalledUp={callups.data.some((callup) => callup.playerId === me.id)}
@@ -122,7 +124,7 @@ export function MatchDetailPage() {
 
         {!isStaff &&
           match.status !== 'played' &&
-          (me?.competes ? (
+          (me && iPlay ? (
             <MyAvailabilityCard
               answer={availability.data[me.id]}
               isCalledUp={callups.data.some((callup) => callup.playerId === me.id)}
@@ -132,7 +134,9 @@ export function MatchDetailPage() {
             />
           ) : (
             <PageMessage>
-              Estás en la plantilla como "solo entrena", así que no juegas partidos.
+              {me && !me.competes
+                ? 'Estás en la plantilla como "solo entrena", así que no juegas partidos.'
+                : 'Este partido no es de tu día, así que no se te pregunta.'}
             </PageMessage>
           ))}
       </div>

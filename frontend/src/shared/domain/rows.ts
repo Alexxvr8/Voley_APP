@@ -5,9 +5,11 @@ import type {
   GameSystem,
   Match,
   MatchStatus,
+  Membership,
   MvpStatus,
   MyTeam,
   Player,
+  PlayerInput,
   Position,
   SetScore,
   Season,
@@ -86,6 +88,9 @@ export interface PlayerRow {
   other_positions: string[]
   competes: boolean
   active: boolean
+  membership: string
+  visit_weekdays: number[]
+  visit_date: string | null
 }
 
 export function toPlayer(row: PlayerRow): Player {
@@ -99,6 +104,9 @@ export function toPlayer(row: PlayerRow): Player {
     otherPositions: row.other_positions as Position[],
     competes: row.competes,
     active: row.active,
+    membership: row.membership as Membership,
+    visitWeekdays: row.visit_weekdays,
+    visitDate: row.visit_date,
   }
 }
 
@@ -199,4 +207,19 @@ export interface SeasonRow {
 
 export function toSeason(row: SeasonRow): Season {
   return { id: row.id, name: row.name, startedOn: row.started_on }
+}
+
+/** Columns written when a roster entry is created or edited from the player form. */
+export function playerInputRow(player: PlayerInput) {
+  return {
+    first_name: player.firstName,
+    last_name: player.lastName,
+    birth_year: player.birthYear,
+    number: player.number,
+    main_position: player.mainPosition,
+    other_positions: player.otherPositions,
+    membership: player.membership,
+    visit_weekdays: player.membership === 'regular' ? player.visitWeekdays : [],
+    visit_date: player.membership === 'one_off' ? player.visitDate : null,
+  }
 }

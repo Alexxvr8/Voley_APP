@@ -1,9 +1,9 @@
 // Server calls of the roster module: players of the team, edit or delete a player and switch
-// "compite". New entries without account are added from Ajustes (teams module).
+// "compite", and add entries without account (team members or guests).
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { queryClient } from '@/core/query/queryClient'
 import { supabase } from '@/core/supabase/client'
-import { toPlayer, type PlayerRow } from '@/shared/domain/rows'
+import { playerInputRow, toPlayer, type PlayerRow } from '@/shared/domain/rows'
 import type { PlayerInput } from '@/shared/domain/types'
 
 const playersKey = (teamId: string) => ['players', teamId]
@@ -32,14 +32,7 @@ export function useUpdatePlayer(teamId: string, playerId: string) {
     mutationFn: async (player: PlayerInput) => {
       const { error } = await supabase
         .from('players')
-        .update({
-          first_name: player.firstName,
-          last_name: player.lastName,
-          birth_year: player.birthYear,
-          number: player.number,
-          main_position: player.mainPosition,
-          other_positions: player.otherPositions,
-        })
+        .update(playerInputRow(player))
         .eq('id', playerId)
       if (error) throw error
     },
@@ -63,6 +56,19 @@ export function useSetCompetes(teamId: string) {
   return useMutation({
     mutationFn: async ({ playerId, competes }: { playerId: string; competes: boolean }) => {
       const { error } = await supabase.from('players').update({ competes }).eq('id', playerId)
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: playersKey(teamId) }),
+  })
+}
+
+/** Adds a roster entry without account from Plantilla (a team member or a guest). */
+export function useAddPlayer(teamId: string) {
+  return useMutation({
+    mutationFn: async (player: PlayerInput) => {
+      const { error } = await supabase
+        .from('players')
+        .insert({ team_id: teamId, ...playerInputRow(player) })
       if (error) throw error
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: playersKey(teamId) }),

@@ -47,6 +47,7 @@ Cada cambio en la base de datos es un fichero SQL nuevo en `supabase/migrations/
 | `20261108000400_merge_players.sql` | RPC `merge_players` (solo entrenador): junta dos fichas de la misma persona pasando cuenta, disponibilidad, convocatorias, asistencia y planes por set a la que se queda |
 | `20261109000000_mvp_module.sql` | Módulo MVP: `matches.mvp_status` / `mvp_closes_at` / `mvp_winners`, `teams.mvp_ranking_visible`, tabla `mvp_votes` (sin acceso directo), trigger `matches_mvp_guard`, las RPC del MVP y `merge_players` también pasa votos y MVP ganados |
 | `20261109000100_seasons.sql` | Temporadas dentro del equipo: tabla `seasons`, `teams.current_season_id`, `matches.season_id` y `league_table.season_id` (una tabla por temporada), bajas (`players.active`), RPC `start_season` y triggers que ponen la temporada actual |
+| `20261109000200_player_membership.sql` | Fichas que no son del equipo: `players.membership` (`member` / `regular` / `one_off`), `visit_weekdays` y `visit_date`; quita `training_days`, que no se usaba |
 
 Se aplican al proyecto con el conector de Supabase (`apply_migration`) o con la CLI (`supabase db push`, desde `backend/`).
 
@@ -60,7 +61,7 @@ La pieza central es `team_members`: une usuario, equipo y rol, y todas las regla
 | `teams` | Equipos: nombre, categoría, temporada, color (`#rrggbb`), sistema por defecto, módulos activos y si las jugadoras ven el ranking de MVP (`mvp_ranking_visible`) | Se crean con la RPC `create_team` |
 | `team_members` | Quién pertenece a qué equipo y con qué rol (`coach`, `assistant`, `player`) | `player_id` enlaza la cuenta con su ficha. Si está vacío, el jugador está **pendiente** |
 | `join_codes` | Código de acceso por equipo y rol | Uno por rol; se regenera con `regenerate_join_code` |
-| `players` | Fichas de la plantilla | Una ficha puede existir sin cuenta. `competes = false`: solo entrena, no puede tener disponibilidad ni ser convocado. `active = false`: baja de una temporada anterior, solo para el historial (tampoco responde ni se convoca) |
+| `players` | Fichas de la plantilla | Una ficha puede existir sin cuenta. `competes = false`: solo entrena, no puede tener disponibilidad ni ser convocado. `active = false`: baja de una temporada anterior, solo para el historial (tampoco responde ni se convoca). `membership`: `member` (del equipo), `regular` (viene los días de `visit_weekdays`, 1 = lunes) o `one_off` (viene el día `visit_date`); la app decide a quién se pregunta y convoca |
 | `matches` | Partidos (cada uno en su temporada, `season_id`; al crearlo, la actual): rival, fecha, hora, calentamiento en minutos (`warmup_minutes`, de 15 en 15), pabellón y enlace de Maps, estado, formato y resultado | `sets_format` = `best_of_5` / `best_of_3` / `fixed_3` / `fixed_1`; `sets_result` = `[{"us": 25, "them": 20}, …]` o, si solo se apunta el marcador, `final_score` = `{"us": 2, "them": 1}`; con resultado, `status = played`. MVP: `mvp_status` = `closed` / `open` / `tie_pending` / `finished`, `mvp_closes_at` y `mvp_winners` (fichas; varias = co-MVP), que solo cambian por las RPC del MVP |
 | `availability` | Respuesta de cada jugador a cada partido (`yes`, `no`, `maybe`) | |
 | `callups` | Convocados de cada partido | `number` y `positions`: dorsal y posiciones solo para ese partido (vacío = los de la ficha; la primera posición es la principal) |

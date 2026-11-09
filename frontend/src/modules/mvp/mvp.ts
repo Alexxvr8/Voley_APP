@@ -1,5 +1,6 @@
 // Pure rules of the MVP module: vote state, picking 1 or 2 players, time left and season ranking.
 import type { Match, Player } from '@/shared/domain/types'
+import { isTeamMember } from '@/shared/domain/membership'
 import { playerName } from '@/shared/utils/format'
 
 /** Most players a voter can pick. */
@@ -51,8 +52,8 @@ export interface RankingEntry {
 
 /**
  * Season ranking from the finished votes, most wins first (ties by name). With `includeZeros`
- * (coach view) every competing player still in the team is listed; otherwise only those with at
- * least one MVP. Pass the matches of one season.
+ * (coach view) every competing team member (not guests nor leavers) is listed; otherwise only
+ * those with at least one MVP. Pass the matches of one season.
  */
 export function seasonRanking(
   matches: Match[],
@@ -67,7 +68,7 @@ export function seasonRanking(
   return players
     .filter((player) =>
       includeZeros
-        ? (player.competes && player.active) || wins.has(player.id)
+        ? (isTeamMember(player) && player.competes) || wins.has(player.id)
         : wins.has(player.id),
     )
     .map((player) => ({ player, wins: wins.get(player.id) ?? 0 }))

@@ -4,6 +4,12 @@ export type Position = 'setter' | 'outside' | 'middle' | 'opposite' | 'libero'
 
 export type AvailabilityStatus = 'yes' | 'no' | 'maybe'
 
+/**
+ * How a roster entry belongs to the team: `member` (part of the team), `regular` (comes on some
+ * weekdays, e.g. a younger player who trains on Mondays) or `one_off` (comes on one specific day).
+ */
+export type Membership = 'member' | 'regular' | 'one_off'
+
 export type GameSystem = '5-1' | '6-0' | '4-2' | '6-2'
 
 /** Team role, ordered from least to most privileged (see spec "Permisos por rol"). */
@@ -62,6 +68,11 @@ export interface Player {
    * history (past call-ups, MVP…), out of the roster and of every current list.
    */
   active: boolean
+  membership: Membership
+  /** Weekdays a `regular` comes (1 = Monday … 7 = Sunday). */
+  visitWeekdays: number[]
+  /** Day a `one_off` comes, `YYYY-MM-DD`. */
+  visitDate: string | null
 }
 
 /** Points of one set, from the team's point of view. */
@@ -152,6 +163,9 @@ export interface PlayerInput {
   number: number | null
   mainPosition: Position
   otherPositions: Position[]
+  membership: Membership
+  visitWeekdays: number[]
+  visitDate: string | null
 }
 
 /** A player's answer for one training on one date. */

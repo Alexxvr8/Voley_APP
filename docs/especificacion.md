@@ -76,8 +76,9 @@ Siete módulos forman el núcleo; el plan de partido por set es el que más trab
 
 ### 3. Plantilla (entrenador)
 
-- Ficha: nombre, apellidos, año de nacimiento, dorsal, posiciones, días de entrenamiento. Las posiciones se marcan en una lista de casillas; la primera marcada es la principal y el resto, las secundarias (igual al aceptar a un jugador creando su ficha).
-- Las fichas llegan al aceptar a quien entra con código. Para alguien que no usa la app, el entrenador crea la ficha a mano en **Ajustes → Jugadores sin cuenta**; en Plantilla ya no hay botón de añadir.
+- Ficha: nombre, apellidos, año de nacimiento, dorsal, posiciones y **si es del equipo**. Las posiciones se marcan en una lista de casillas; la primera marcada es la principal y el resto, las secundarias (igual al aceptar a un jugador creando su ficha).
+- Las fichas llegan al aceptar a quien entra con código, o el staff las crea a mano con **+ Añadir** en Plantilla (o en Ajustes → Jugadores sin cuenta).
+- **¿Es del equipo?** Del equipo; **viene algunos días** (se marcan los días de la semana, p. ej. un infantil que viene los lunes: se le pregunta por los entrenamientos de esos días y se le puede convocar a cualquier partido); o **día suelto** (una fecha: solo sale en la convocatoria de un partido de ese día y en los entrenamientos de ese día). La plantilla los muestra en bloques separados y no cuentan en el ranking MVP con cero.
 - Vinculación ficha ↔ cuenta de usuario (una ficha puede existir sin cuenta).
 - **Compite / solo entrena:** el entrenador lo marca o desmarca con doble comprobación. Quien solo entrena no aparece en la disponibilidad ni en la convocatoria de los partidos, pero ve el calendario.
 - **Sistema de juego predeterminado** del equipo: cada set nuevo arranca con él.
@@ -87,7 +88,7 @@ Siete módulos forman el núcleo; el plan de partido por set es el que más trab
 - Crear, editar y borrar partidos (borrar pide confirmación). Al crear se elige el formato (al mejor de 5, al mejor de 3, 3 sets fijos o 1 set); por defecto, el del último partido del equipo. Rotación y modo partido solo muestran los sets de ese formato.
 - Marcar el resultado: primero el **formato** (al mejor de 5, al mejor de 3, 3 sets fijos o 1 set) y después, o bien **solo el marcador** con un toque (los resultados posibles del formato: 3-0, 3-1…), o bien los **puntos de cada set** (tantas filas como sets permite el formato). El partido pasa a jugado y se ve "Ganado 3-1" en el calendario y en el detalle; los puntos por set solo se muestran si se apuntaron.
 - El partido tiene tres pestañas: **Info** (datos y disponibilidad), **Gestión** y **Rotación** (plan por set). Gestión y Rotación son del staff.
-- **Gestión:** ver disponibilidad de los que compiten y convocar a cualquiera, haya respondido o no; para cada convocado, cambiar dorsal y las posiciones (varias a la vez) solo en ese partido. En la rotación, cada set es independiente: un jugador puede ir en una posición distinta en cada set.
+- **Gestión:** ver disponibilidad de los que pueden jugar ese partido y convocar a cualquiera, haya respondido o no; los convocados suben arriba ordenados por posición (colocador, receptor, central, opuesto, líbero) y los invitados llevan su etiqueta; para cada convocado, cambiar dorsal y las posiciones (varias a la vez) solo en ese partido. En la rotación, cada set es independiente: un jugador puede ir en una posición distinta en cada set.
 - Botón **Ir al partido** → modo partido (fase 2).
 
 ### 5. Plan de partido por set (entrenador, funciona offline)
@@ -179,7 +180,7 @@ La pieza clave es `team_members`: une usuario, equipo y rol, y todas las reglas 
 | `teams` | id, name, category, season, current\_season\_id, color, default\_system, enabled\_modules, mvp\_ranking\_visible, created\_by | `enabled_modules` = lista de módulos activos; `mvp_ranking_visible` = si las jugadoras ven el ranking de MVP |
 | `team_members` | team\_id, user\_id, role, player\_id | role: coach / assistant / player; player\_id enlaza con la ficha |
 | `join_codes` | team\_id, code, role, active, expires\_at | Un código por rol, regenerable |
-| `players` | id, team\_id, first\_name, last\_name, birth\_year, number, main\_position, other\_positions, training\_days, competes, active | Ficha de plantilla, puede no tener cuenta. `competes = false`: solo entrena. `active = false`: baja de una temporada anterior (solo historial) |
+| `players` | id, team\_id, first\_name, last\_name, birth\_year, number, main\_position, other\_positions, competes, active, membership, visit\_weekdays, visit\_date | Ficha de plantilla, puede no tener cuenta. `competes = false`: solo entrena. `active = false`: baja de una temporada anterior (solo historial). membership: member / regular (con `visit_weekdays`, 1 = lunes) / one\_off (con `visit_date`) |
 | `matches` | id, team\_id, season\_id, opponent, date, match\_time, warmup\_minutes, venue, maps\_url, home\_away, status, sets\_format, sets\_result, final\_score, notes, mvp\_status, mvp\_closes\_at, mvp\_winners | status: scheduled / played / cancelled; sets\_format: best\_of\_5 / best\_of\_3 / fixed\_3 / fixed\_1; final\_score `{us, them}` cuando solo se apunta el marcador; mvp\_status: closed / open / tie\_pending / finished |
 | `availability` | match\_id, player\_id, status, comment, updated\_at | status: yes / no / maybe |
 | `callups` | match\_id, player\_id, number, positions | Convocados; dorsal y posiciones del partido (vacío = los de la ficha) |
@@ -280,6 +281,8 @@ Cada decisión cerrada se añade aquí con su fecha; este documento es la refere
 | 2026-11-09 | Temporadas dentro del equipo. El entrenador empieza la nueva en Ajustes ("Empezar temporada nueva"); cada partido queda en la temporada actual al crearlo. Resultados, tabla de liga y ranking MVP son por temporada, con selector para ver las anteriores |
 | 2026-11-09 | Selectores propios de hora (panel con horas y minutos en botones) y de fecha (mes para tocar el día), iguales en todos los móviles; calendario con "Hoy" y días pasados en gris |
 | 2026-11-09 | Al empezar temporada el entrenador marca quién sigue. Las que no siguen pasan a baja: fuera de plantilla, convocatoria, disponibilidad y entrenamientos, y pierden el acceso, pero conservan su historial. Pueden volver ("Vuelve" o aceptándolas con su ficha) |
+| 2026-11-09 | Jugadores que no son del equipo: "viene algunos días" (días de la semana) y "día suelto" (una fecha), creados desde Plantilla. Se convocan como los demás (los de día suelto, solo a partidos de su día) y solo se les pregunta por los entrenamientos de sus días |
+| 2026-11-09 | En Gestión, los convocados suben arriba ordenados por posición |
 
 **Temas abiertos**
 

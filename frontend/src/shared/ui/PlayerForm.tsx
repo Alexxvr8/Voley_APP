@@ -1,5 +1,6 @@
-// Roster entry form, used to add a player (Ajustes) and to edit one (Plantilla): name, number, year and every position
-// they can play (the first one checked is the main one).
+// Roster entry form, used to add a player (Ajustes, Plantilla) and to edit one (Plantilla): name,
+// number, year, every position they can play (the first one checked is the main one) and whether
+// they are part of the team or come on some days / one day.
 import { useState, type FormEvent } from 'react'
 import { fromPositionList, toPositionList } from '@/shared/domain/positions'
 import type { Player, PlayerInput, Position } from '@/shared/domain/types'
@@ -12,6 +13,8 @@ import {
   PRIMARY_BUTTON_CLASS,
   SECONDARY_BUTTON_CLASS,
 } from './form'
+import { membershipComplete, type MembershipValue } from '@/shared/domain/membership'
+import { MembershipFields } from './MembershipFields'
 import { PositionChecklist } from './PositionChecklist'
 
 interface PlayerFormProps {
@@ -41,12 +44,19 @@ export function PlayerForm({
   const [positions, setPositions] = useState<Position[]>(
     initial ? toPositionList(initial.mainPosition, initial.otherPositions) : [],
   )
+  const [membership, setMembership] = useState<MembershipValue>({
+    membership: initial?.membership ?? 'member',
+    visitWeekdays: initial?.visitWeekdays ?? [],
+    visitDate: initial?.visitDate ?? null,
+  })
   const chosen = fromPositionList(positions)
+  const ready = Boolean(chosen) && membershipComplete(membership)
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    if (!chosen) return
+    if (!chosen || !ready) return
     onSubmit({
+      ...membership,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       number: number ? Number(number) : null,
@@ -99,11 +109,12 @@ export function PlayerForm({
           />
         </label>
         <PositionChecklist value={positions} onChange={setPositions} className="col-span-2" />
+        <MembershipFields value={membership} onChange={setMembership} className="col-span-2" />
         {failed && <p className={`col-span-2 ${ERROR_CLASS}`}>No se ha podido guardar.</p>}
         <button type="button" onClick={onCancel} className={SECONDARY_BUTTON_CLASS}>
           Cancelar
         </button>
-        <button type="submit" disabled={busy || !chosen} className={PRIMARY_BUTTON_CLASS}>
+        <button type="submit" disabled={busy || !ready} className={PRIMARY_BUTTON_CLASS}>
           {busy ? 'Guardando…' : submitLabel}
         </button>
       </form>

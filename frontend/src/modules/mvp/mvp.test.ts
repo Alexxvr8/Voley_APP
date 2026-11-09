@@ -39,6 +39,9 @@ function player(id: string, firstName: string, competes = true, active = true): 
     otherPositions: [],
     competes,
     active,
+    membership: 'member',
+    visitWeekdays: [],
+    visitDate: null,
   }
 }
 

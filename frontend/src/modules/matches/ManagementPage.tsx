@@ -2,6 +2,7 @@
 // positions for this match.
 import { useParams } from 'react-router'
 import { hasRole, useCurrentTeam, useTeamPath } from '@/core/teams/currentTeam'
+import { playsMatchOn } from '@/shared/domain/membership'
 import { MatchHeader } from '@/shared/ui/MatchHeader'
 import { PageMessage } from '@/shared/ui/PageMessage'
 import {
@@ -47,7 +48,11 @@ export function ManagementPage() {
       />
       <div className="lg:max-w-3xl">
         <CallupList
-          players={players.data.filter((player) => player.competes && player.active)}
+          players={players.data.filter(
+            (player) =>
+              playsMatchOn(player, match.date) ||
+              callups.data.some((callup) => callup.playerId === player.id),
+          )}
           answers={availability.data}
           callups={callups.data}
           onToggle={(id) =>

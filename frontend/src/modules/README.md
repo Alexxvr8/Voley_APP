@@ -5,7 +5,7 @@ Cada carpeta es una funcionalidad independiente que un equipo puede activar o de
 | Módulo | Para qué sirve | En el menú | Rol mínimo | Sin conexión |
 | --- | --- | --- | --- | --- |
 | `matches/` | Calendario mensual (partidos y entrenamientos, con asistencia Sí / No / Duda a cada entrenamiento), crear, editar y borrar partidos, info con mapa y resultado (solo marcador o puntos por set), disponibilidad y la pestaña Gestión (convocatoria con dorsal y posiciones del partido) | Partidos | Jugador | No |
-| `roster/` | Plantilla. El staff edita jugadores (dorsal y posiciones) y marca quién compite o solo entrena; los jugadores la ven sin poder cambiarla. Se descarga para verla sin conexión | Plantilla | Jugador | Solo lectura |
+| `roster/` | Plantilla en bloques: equipo, vienen algunos días y días sueltos. El staff añade fichas, las edita (dorsal, posiciones, si es del equipo) y marca quién compite o solo entrena; los jugadores la ven sin poder cambiarla. Se descarga para verla sin conexión | Plantilla | Jugador | Solo lectura |
 | `lineup/` | Pestaña Rotación del partido (plan por set guardado en el servidor) y modo partido. Funciona sin conexión | — (pestaña y botón "Ir al partido") | Segundo entrenador | Sí |
 | `results/` | Partidos jugados con su resultado y tabla de liga no oficial (rellena a mano, con "Actualizada el dd/mm"), por temporada | Resultados | Jugador | No |
 | `mvp/` | Votación secreta de la MVP de cada partido jugado (1 o 2 convocadas, 48 h), empates que resuelve el entrenador y ranking de la temporada. Opcional: se activa en Ajustes | MVP | Jugador | No |
@@ -46,7 +46,7 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 | `components/MatchForm.tsx` | Formulario común de crear y editar: rival sugerido de la lista o escrito (con "guardar en la lista"), hora en 24 h, calentamiento en pasos de 15 min, formato del partido y pabellón de la lista u otro con su enlace de Maps |
 | `components/ResultEditor.tsx`, `ResultSummary.tsx` | Formato del partido y resultado: solo el marcador con un toque (3-0, 3-1…) o los puntos de cada set (tantos como permite el formato); y "Ganado 3-1" con el detalle si lo hay |
 | `resultDraft.ts` | Conversión entre los puntos guardados y las casillas del editor |
-| `ManagementPage.tsx` | Pestaña Gestión (staff): convocatoria entre los que compiten, con dorsal y posiciones solo para ese partido. Cada cambio envía solo el campo tocado, para que dos cambios seguidos no se pisen |
+| `ManagementPage.tsx` | Pestaña Gestión (staff): convocatoria entre los que pueden jugar ese partido (también invitados que vienen algunos días y los de día suelto de esa fecha), con dorsal y posiciones solo para ese partido. Cada cambio envía solo el campo tocado, para que dos cambios seguidos no se pisen |
 | `NewMatchPage.tsx` | Formulario de partido nuevo (staff) |
 | `api.ts` | Partidos, entrenamientos y cancelaciones, asistencia a entrenamientos, disponibilidad y convocatoria. Disponibilidad, asistencia y convocatoria se actualizan al momento en pantalla y se deshacen si el servidor falla |
 | `calendarEvents.ts` | Qué hay cada día y próximos partidos |
@@ -55,7 +55,8 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 | `components/MatchEventCard.tsx`, `TrainingEventCard.tsx` | Tarjetas de partido y de entrenamiento; la de entrenamiento lleva "¿Vienes?" para el jugador y, para el staff, el recuento con "Ver quién" |
 | `components/MatchInfoCard.tsx` | Horarios, pabellón (enlace a Maps), local o visitante, notas |
 | `components/MyAvailabilityCard.tsx` | "¿Puedes venir?" para el jugador, con comentario opcional |
-| `components/CallupList.tsx` + `CallupDetailsEditor.tsx` | Jugadores con su respuesta y la casilla para convocar; bajo cada convocado, dorsal y las posiciones (varias a la vez) que cubre en este partido |
+| `callupOrder.ts` | Orden de Gestión: convocados arriba por posición del partido y dorsal, luego el resto por dorsal |
+| `components/CallupList.tsx` + `CallupDetailsEditor.tsx` | Jugadores con su respuesta, etiqueta si son invitados y la casilla para convocar; bajo cada convocado, dorsal y las posiciones (varias a la vez) que cubre en este partido |
 
 ## Ficheros del módulo `lineup`
 
@@ -78,8 +79,8 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 
 | Fichero | Qué hace |
 | --- | --- |
-| `RosterPage.tsx` | Plantilla por dorsal. Las fichas nuevas llegan al aceptar cuentas o desde Ajustes → Jugadores sin cuenta |
-| `components/PlayerRow.tsx` | Fila de jugador; para el staff, con el interruptor "Compite / Solo entrena", "Editar" y "Borrar ficha" |
+| `RosterPage.tsx` | Plantilla en bloques (Equipo, Vienen algunos días, Días sueltos), cada uno por dorsal, sin las bajas. "+ Añadir" (staff) crea una ficha sin cuenta; también llegan al aceptar cuentas o desde Ajustes |
+| `components/PlayerRow.tsx` | Fila de jugador (con los días o la fecha si es invitado); para el staff, con el interruptor "Compite / Solo entrena", "Editar" y "Borrar ficha" |
 | `components/CompetesSwitch.tsx` | El interruptor, con confirmación antes de cambiar (doble comprobación) |
 
 ## Ficheros del módulo `teams`

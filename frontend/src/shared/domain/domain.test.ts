@@ -21,6 +21,9 @@ const player: Player = {
   otherPositions: ['libero'],
   competes: true,
   active: true,
+  membership: 'member',
+  visitWeekdays: [],
+  visitDate: null,
 }
 
 describe('results', () => {
