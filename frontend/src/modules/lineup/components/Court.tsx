@@ -1,8 +1,10 @@
 // Starting lineup editor: the six zones drawn as on court, each colored by the role the
-// system and rotation expect there, plus two grey boxes below for the liberos.
-import { POSITION_COLORS, POSITION_LABELS } from '@/shared/domain/labels'
+// system and rotation expect there, plus two grey boxes below for the liberos. Each box shows the
+// number big and the (nick)name below; tapping anywhere on it opens the phone's player list.
+import { POSITION_COLORS, POSITION_LABELS, POSITION_SHORT_LABELS } from '@/shared/domain/labels'
 import type { GameSystem, Player } from '@/shared/domain/types'
 import { PlayerSelect } from '@/shared/ui/PlayerSelect'
+import { shortName } from '@/shared/utils/format'
 import { canPlay, type LiberoSlots } from '../setPlan'
 import { COURT_ROWS, zoneRoles, type Zone } from '../systems'
 
@@ -19,7 +21,22 @@ interface CourtProps {
   onAssignLibero: (slot: 0 | 1, playerId: string | undefined) => void
 }
 
-const SELECT_CLASS = 'w-full rounded-lg bg-white/90 px-1 py-1.5 text-sm font-medium text-slate-900'
+/** The native list covers the whole box but is invisible: the box itself shows the choice. */
+const SELECT_CLASS = 'absolute inset-0 h-full w-full cursor-pointer opacity-0'
+
+/** Number and name of the chosen player, or a hint to choose one. */
+function SlotContent({ player }: { player: Player | undefined }) {
+  return (
+    <span className="flex flex-col items-center rounded-lg bg-white/85 px-1 py-1 text-slate-900">
+      <span className="text-xl leading-tight font-black">
+        {player ? (player.number ?? '–') : '+'}
+      </span>
+      <span className="w-full truncate text-center text-xs font-semibold">
+        {player ? shortName(player) : 'Elegir'}
+      </span>
+    </span>
+  )
+}
 const LIBERO_SLOTS = [0, 1] as const
 
 export function Court({
@@ -33,6 +50,8 @@ export function Court({
   onAssignLibero,
 }: CourtProps) {
   const roles = zoneRoles(system, startRotation)
+  const byId = (playerId: string | undefined) =>
+    playerId ? candidates.find((player) => player.id === playerId) : undefined
 
   /** Ids already used anywhere in the lineup (zones and libero boxes). */
   const usedIds = new Set([...Object.values(rotation), ...liberos].filter(Boolean))
@@ -56,16 +75,19 @@ export function Court({
           return (
             <label
               key={zone}
-              className={`flex flex-col gap-1 rounded-xl p-2 ${POSITION_COLORS[role]}`}
+              title={POSITION_LABELS[role]}
+              className={`relative flex flex-col gap-1 rounded-xl p-1.5 ${POSITION_COLORS[role]}`}
             >
-              <span className="text-[11px] font-semibold uppercase opacity-90">
-                Z{zone} · {POSITION_LABELS[role]}
+              <span className="text-[11px] font-semibold opacity-90">
+                Z{zone} · {POSITION_SHORT_LABELS[role]}
               </span>
+              <SlotContent player={byId(rotation[zone])} />
               <PlayerSelect
                 players={optionsFor(rotation[zone], (player) => canPlay(player, role))}
                 value={rotation[zone]}
                 onChange={(playerId) => onAssign(zone, playerId)}
                 className={SELECT_CLASS}
+                placeholder="— Vacía —"
               />
             </label>
           )
@@ -77,16 +99,16 @@ export function Court({
           {LIBERO_SLOTS.map((slot) => (
             <label
               key={slot}
-              className="flex flex-col gap-1 rounded-xl bg-slate-400 p-2 text-white"
+              className="relative flex flex-col gap-1 rounded-xl bg-slate-400 p-1.5 text-white"
             >
-              <span className="text-[11px] font-semibold uppercase opacity-90">
-                Líbero {slot + 1}
-              </span>
+              <span className="text-[11px] font-semibold opacity-90">LB {slot + 1}</span>
+              <SlotContent player={byId(liberos[slot])} />
               <PlayerSelect
                 players={optionsFor(liberos[slot], (player) => canPlay(player, 'libero'))}
                 value={liberos[slot]}
                 onChange={(playerId) => onAssignLibero(slot, playerId)}
                 className={SELECT_CLASS}
+                placeholder="— Vacía —"
               />
             </label>
           ))}

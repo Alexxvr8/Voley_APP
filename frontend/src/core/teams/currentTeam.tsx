@@ -3,6 +3,8 @@ import { createContext, useContext, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router'
 import type { MyTeam, Team, TeamRole } from '@/shared/domain/types'
 import { PageMessage } from '@/shared/ui/PageMessage'
+import { queriesProblem } from '@/core/query/status'
+import { QueryProblemMessage } from '@/shared/ui/QueryProblemMessage'
 import { useMyTeams, useTeam } from './api'
 
 const ROLE_RANK: Record<TeamRole, number> = { player: 0, assistant: 1, coach: 2 }
@@ -27,9 +29,8 @@ export function CurrentTeamProvider({ children }: { children: ReactNode }) {
   const membership: MyTeam | undefined = myTeams.data?.find((team) => team.id === teamId)
   const team = useTeam(teamId, Boolean(membership && !membership.pending))
 
-  if (myTeams.isPending) return <PageMessage>Cargando…</PageMessage>
-  if (myTeams.isError)
-    return <PageMessage>No se ha podido cargar el equipo. ¿Hay conexión?</PageMessage>
+  const teamsProblem = queriesProblem(myTeams)
+  if (teamsProblem) return <QueryProblemMessage problem={teamsProblem} />
   if (!membership) {
     return (
       <PageMessage>
@@ -51,9 +52,8 @@ export function CurrentTeamProvider({ children }: { children: ReactNode }) {
       </PageMessage>
     )
   }
-  if (team.isPending) return <PageMessage>Cargando…</PageMessage>
-  if (team.isError)
-    return <PageMessage>No se ha podido cargar el equipo. ¿Hay conexión?</PageMessage>
+  const teamProblem = queriesProblem(team)
+  if (teamProblem || !team.data) return <QueryProblemMessage problem={teamProblem ?? 'loading'} />
 
   return (
     <CurrentTeamContext.Provider

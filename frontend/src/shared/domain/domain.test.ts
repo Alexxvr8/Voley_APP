@@ -15,6 +15,7 @@ const player: Player = {
   id: 'p',
   firstName: 'Ana',
   lastName: '',
+  nickname: '',
   birthYear: null,
   number: 7,
   mainPosition: 'outside',

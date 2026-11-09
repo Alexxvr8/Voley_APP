@@ -1,6 +1,5 @@
 // Tests for the rotations of each system and how the lineup moves between them.
 import { describe, expect, it } from 'vitest'
-import { replacementPositions } from './setPlan'
 import { availableRotations, rotatePlayers, zoneRoles } from './systems'
 
 describe('availableRotations', () => {
@@ -27,12 +26,5 @@ describe('rotatePlayers', () => {
       Number(Object.entries(rotated).find(([, p]) => p === id)?.[0]) as 1
     expect(roles[zoneOf('setter-id')]).toBe('setter')
     expect(roles[zoneOf('middle-id')]).toBe('middle')
-  })
-})
-
-describe('replacementPositions', () => {
-  it('allows the setter ↔ opposite double switch and nothing else across positions', () => {
-    expect(replacementPositions('setter')).toEqual(['setter', 'opposite'])
-    expect(replacementPositions('middle')).toEqual(['middle'])
   })
 })

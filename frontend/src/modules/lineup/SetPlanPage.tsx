@@ -10,6 +10,8 @@ import { asCalledUp } from '@/shared/domain/callups'
 import type { GameSystem, Match, Player, Team } from '@/shared/domain/types'
 import { Card } from '@/shared/ui/Card'
 import { PageMessage } from '@/shared/ui/PageMessage'
+import { QueryProblemMessage } from '@/shared/ui/QueryProblemMessage'
+import { queriesProblem } from '@/core/query/status'
 import { MatchHeader } from '@/shared/ui/MatchHeader'
 import { savePlan, useCallups, useMatches, usePlayers, useSetPlans } from './api'
 import { Court } from './components/Court'
@@ -18,11 +20,10 @@ import { SetTabs } from './components/SetTabs'
 import { setNumbersFor } from '@/shared/domain/results'
 import { SystemPicker } from './components/SystemPicker'
 import {
-  canPlay,
   chosenLiberos,
   newSetPlan,
   playersOnCourt,
-  replacementPositions,
+  doubleSwitchPair,
   roleOnCourt,
   validStartRotation,
   type LiberoSlots,
@@ -43,11 +44,9 @@ export function SetPlanPage() {
 
   if (!hasRole(role, 'assistant'))
     return <PageMessage>No tienes acceso a esta sección.</PageMessage>
-  if (matches.isPending || players.isPending || callups.isPending || setPlans.isPending) {
-    return <PageMessage>Cargando…</PageMessage>
-  }
-  if (matches.isError || players.isError || callups.isError || setPlans.isError) {
-    return <PageMessage>No se ha podido cargar. ¿Hay conexión?</PageMessage>
+  const problem = queriesProblem(matches, players, callups, setPlans)
+  if (problem || !matches.data || !players.data || !callups.data || !setPlans.data) {
+    return <QueryProblemMessage problem={problem ?? 'loading'} />
   }
   const match = matches.data.find((m) => m.id === matchId)
   if (!match) return <PageMessage>Partido no encontrado.</PageMessage>
@@ -126,13 +125,17 @@ function SetPlanEditor({ team, match, players, calledUp, stored }: SetPlanEditor
     (setNumber) => setNumber !== currentSet && plans[setNumber],
   )
 
-  /** Bench players who can cover the position the outgoing player has in the lineup. */
-  function substitutesFor(outId: string) {
-    const role = roleOnCourt(plan, outId)
-    if (!role) return []
-    const allowed = replacementPositions(role)
-    return bench.filter((player) => allowed.some((position) => canPlay(player, position)))
-  }
+  // Setter and opposite of the lineup, for the double switch (5-1 only).
+  const pair = doubleSwitchPair(plan)
+  const doublePair =
+    pair &&
+    calledUp.find((p) => p.id === pair.setterId) &&
+    calledUp.find((p) => p.id === pair.oppositeId)
+      ? {
+          setter: calledUp.find((p) => p.id === pair.setterId)!,
+          opposite: calledUp.find((p) => p.id === pair.oppositeId)!,
+        }
+      : null
 
   return (
     <section className="space-y-4">
@@ -205,7 +208,9 @@ function SetPlanEditor({ team, match, players, calledUp, stored }: SetPlanEditor
         <PlannedSubsCard
           subs={plan.subs}
           onCourt={onCourt}
-          substitutesFor={substitutesFor}
+          bench={bench}
+          roleOf={(playerId) => roleOnCourt(plan, playerId)}
+          doublePair={doublePair}
           allPlayers={players}
           onChange={(subs) => updatePlan({ subs })}
         />

@@ -40,9 +40,11 @@ export function CallupList({
 
   return (
     <Card className="space-y-1">
-      <div className="mb-2 flex items-baseline justify-between">
-        <p className="font-semibold">Disponibilidad y convocatoria</p>
-        <span className="text-sm text-slate-500">{callups.length} convocados</span>
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <p className="font-semibold">Convocatoria</p>
+        <span className="shrink-0 text-sm whitespace-nowrap text-slate-500">
+          {callups.length} convocados
+        </span>
       </div>
 
       {entries.map(({ rosterPlayer, player, callup }, index) => {
@@ -59,32 +61,32 @@ export function CallupList({
                 {callup ? 'Convocados' : 'Sin convocar'}
               </p>
             )}
-            <label className="flex items-center gap-3 py-2">
+            <label className="flex items-center gap-2 py-2">
               <input
                 type="checkbox"
                 checked={callup !== undefined}
                 onChange={() => onToggle(player.id)}
-                className="size-5 accent-blue-800"
+                className="size-5 shrink-0 accent-blue-800"
               />
-              <span className="w-6 text-right text-sm font-bold text-slate-400">
+              <span className="w-6 shrink-0 text-right text-sm font-bold text-slate-400">
                 {shirtNumber(player)}
               </span>
-              <span className="flex-1">
-                <span className="block text-sm font-medium">
-                  {playerName(player)}
-                  {player.membership !== 'member' && (
-                    <span className="ml-1.5 rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-800">
-                      {MEMBERSHIP_LABELS[player.membership]}
-                    </span>
-                  )}
-                </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium">{playerName(player)}</span>
+                {player.membership !== 'member' && (
+                  <span className="mt-0.5 inline-block rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-800">
+                    {MEMBERSHIP_LABELS[player.membership]}
+                  </span>
+                )}
                 {answer?.comment && (
-                  <span className="block text-xs text-slate-500">{answer.comment}</span>
+                  <span className="line-clamp-2 block text-xs text-slate-500">
+                    {answer.comment}
+                  </span>
                 )}
               </span>
               <PositionBadge position={player.mainPosition} short />
               <span
-                className={`w-16 rounded-full py-0.5 text-center text-xs font-semibold ${
+                className={`w-12 shrink-0 rounded-full py-0.5 text-center text-xs font-semibold ${
                   answer ? STATUS_STYLES[answer.status] : 'bg-slate-100 text-slate-500'
                 }`}
               >

@@ -12,7 +12,7 @@ import {
   SECONDARY_BUTTON_CLASS,
 } from '@/shared/ui/form'
 import { PositionChecklist } from '@/shared/ui/PositionChecklist'
-import { playerName, shirtNumber } from '@/shared/utils/format'
+import { fullName, shirtNumber } from '@/shared/utils/format'
 import { useAcceptMember } from '../api'
 import type { Member } from '../members'
 import { suggestPlayer } from '../playerMatch'
@@ -92,7 +92,7 @@ export function AcceptMemberDialog({
             </option>
             {freePlayers.map((player) => (
               <option key={player.id} value={player.id}>
-                {shirtNumber(player)}. {playerName(player)}
+                {shirtNumber(player)}. {fullName(player)}
                 {player.active ? '' : ' (baja, vuelve)'}
               </option>
             ))}
@@ -102,8 +102,8 @@ export function AcceptMemberDialog({
 
         {suggested && choice === suggested.id && (
           <p className="rounded-xl bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
-            Parece que es <strong>{playerName(suggested)}</strong>. Al unirlo a su ficha conserva
-            sus convocatorias, respuestas y entrenamientos.
+            Parece que es <strong>{fullName(suggested)}</strong>. Al unirlo a su ficha conserva sus
+            convocatorias, respuestas y entrenamientos.
           </p>
         )}
         {choice === NEW_PLAYER && freePlayers.length > 0 && (

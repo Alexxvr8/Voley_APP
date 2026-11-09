@@ -8,6 +8,8 @@ import type { Membership, Player } from '@/shared/domain/types'
 import { Card } from '@/shared/ui/Card'
 import { PRIMARY_BUTTON_CLASS } from '@/shared/ui/form'
 import { PageMessage } from '@/shared/ui/PageMessage'
+import { QueryProblemMessage } from '@/shared/ui/QueryProblemMessage'
+import { queriesProblem } from '@/core/query/status'
 import { PlayerForm } from '@/shared/ui/PlayerForm'
 import { byShirtNumber } from '@/shared/utils/format'
 import { useAddPlayer, usePlayers } from './api'
@@ -26,9 +28,8 @@ export function RosterPage() {
   const addPlayer = useAddPlayer(team.id)
   const [adding, setAdding] = useState(false)
 
-  if (players.isPending) return <PageMessage>Cargando…</PageMessage>
-  if (players.isError)
-    return <PageMessage>No se ha podido cargar la plantilla. ¿Hay conexión?</PageMessage>
+  const problem = queriesProblem(players)
+  if (problem || !players.data) return <QueryProblemMessage problem={problem ?? 'loading'} />
 
   // Players who left in a past season ("bajas") are only kept for their history.
   const active = players.data.filter((player) => player.active)

@@ -82,6 +82,7 @@ export interface PlayerRow {
   id: string
   first_name: string
   last_name: string
+  nickname: string
   birth_year: number | null
   number: number | null
   main_position: string
@@ -98,6 +99,7 @@ export function toPlayer(row: PlayerRow): Player {
     id: row.id,
     firstName: row.first_name,
     lastName: row.last_name,
+    nickname: row.nickname ?? '',
     birthYear: row.birth_year,
     number: row.number,
     mainPosition: row.main_position as Position,
@@ -214,6 +216,7 @@ export function playerInputRow(player: PlayerInput) {
   return {
     first_name: player.firstName,
     last_name: player.lastName,
+    nickname: player.nickname.trim(),
     birth_year: player.birthYear,
     number: player.number,
     main_position: player.mainPosition,

@@ -12,6 +12,8 @@ import { AppShell } from '@/core/layout/AppShell'
 import { ModuleCatalogContext } from '@/core/modules/catalog'
 import { modules } from '@/core/modules/registry'
 import type { ModuleDefinition } from '@/core/modules/types'
+import { OfflineSection } from '@/core/offline/components/OfflineSection'
+import { useOnline } from '@/core/offline/online'
 import { setOfflineModules } from '@/core/offline/prepare'
 import { startOutbox } from '@/core/offline/outbox'
 import { PERSIST_MAX_AGE, queryPersister } from '@/core/offline/persister'
@@ -22,12 +24,17 @@ import { TeamHome } from '@/core/teams/TeamHome'
 import { TeamsPage } from '@/core/teams/TeamsPage'
 import { PageMessage } from '@/shared/ui/PageMessage'
 
-/** Renders a module screen only if the module is enabled for the team and the role is allowed. */
+/**
+ * Renders a module screen only if the module is enabled for the team and the role is allowed.
+ * Without network, sections that need it show what can be used offline instead.
+ */
 function ModuleGuard({ module, children }: { module: ModuleDefinition; children: ReactNode }) {
   const { team, role } = useCurrentTeam()
+  const online = useOnline()
   if (!team.enabledModules.includes(module.id) || !hasRole(role, module.minRole)) {
     return <PageMessage>No tienes acceso a esta sección.</PageMessage>
   }
+  if (!online && !module.offline) return <OfflineSection />
   return children
 }
 

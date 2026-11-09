@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { Player } from '@/shared/domain/types'
 import { PositionBadge } from '@/shared/ui/PositionBadge'
 import { WEEKDAY_LABELS } from '@/shared/domain/labels'
-import { formatShortDate, playerName, shirtNumber } from '@/shared/utils/format'
+import { formatShortDate, fullName, playerName, shirtNumber } from '@/shared/utils/format'
 import { ConfirmDialog } from '@/shared/ui/ConfirmDialog'
 import { useDeletePlayer, useUpdatePlayer } from '../api'
 import { CompetesSwitch } from './CompetesSwitch'
@@ -70,44 +70,48 @@ export function PlayerRow({ teamId, player, editable }: PlayerRowProps) {
     )
   }
 
+  // Two lines: who it is (number, name, positions) and, for staff, the controls under it, so the
+  // name keeps its room on narrow phones.
   return (
-    <div
-      className={`flex flex-wrap items-center gap-3 px-4 py-3 ${player.competes ? '' : 'bg-slate-50'}`}
-    >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-900 font-bold text-white">
-        {shirtNumber(player)}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-medium text-slate-900">{playerName(player)}</p>
-        <p className="text-xs text-slate-500">
-          {[player.birthYear, visitLabel(player)].filter(Boolean).join(' · ')}
-        </p>
-      </div>
-      <div className="flex flex-wrap justify-end gap-1">
-        <PositionBadge position={player.mainPosition} />
-        {player.otherPositions.map((position) => (
-          <span key={position} className="opacity-60">
-            <PositionBadge position={position} short />
+    <div className={`space-y-2 px-4 py-3 ${player.competes ? '' : 'bg-slate-50'}`}>
+      <div className="flex items-center gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-900 font-bold text-white">
+          {shirtNumber(player)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-medium text-slate-900">{playerName(player)}</p>
+          <p className="truncate text-xs text-slate-500">
+            {[player.nickname && fullName(player), player.birthYear, visitLabel(player)]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+        </div>
+        {/* Short labels (Co, Re…); the first one is the main position. */}
+        <div className="flex shrink-0 flex-wrap justify-end gap-1">
+          <PositionBadge position={player.mainPosition} short />
+          {player.otherPositions.map((position) => (
+            <span key={position} className="opacity-60">
+              <PositionBadge position={position} short />
+            </span>
+          ))}
+        </div>
+        {!editable && !player.competes && (
+          <span className="shrink-0 rounded-full bg-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600">
+            Solo entrena
           </span>
-        ))}
+        )}
       </div>
-      {editable ? (
-        <>
+      {editable && (
+        <div className="flex items-center justify-end gap-4 pl-13">
           <CompetesSwitch teamId={teamId} player={player} />
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="text-xs font-medium text-blue-800 underline"
+            className="text-sm font-medium text-blue-800 underline"
           >
             Editar
           </button>
-        </>
-      ) : (
-        !player.competes && (
-          <span className="rounded-full bg-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600">
-            Solo entrena
-          </span>
-        )
+        </div>
       )}
     </div>
   )

@@ -11,22 +11,29 @@ import { SYSTEM_LABELS } from '@/shared/domain/labels'
 import type { GameSystem, Player } from '@/shared/domain/types'
 import { Card } from '@/shared/ui/Card'
 import { PageMessage } from '@/shared/ui/PageMessage'
+import { QueryProblemMessage } from '@/shared/ui/QueryProblemMessage'
+import { queriesProblem } from '@/core/query/status'
 import { savePlan, useCallups, useMatches, usePlayers, useSetPlans } from './api'
 import { LiveCourt } from './components/LiveCourt'
 import { LiveSubsCard } from './components/LiveSubsCard'
 import { SetTabs } from './components/SetTabs'
 import { SystemPicker } from './components/SystemPicker'
 import {
+  advanceSub,
+  hasStarted,
   INITIAL_MATCH_MODE,
   liveLineup,
   NO_PROGRESS,
-  toggleSub,
+  readProgress,
+  roleSteps,
+  undoSub,
   type MatchModeState,
   type SetProgress,
 } from './matchMode'
 import { setNumbersFor } from '@/shared/domain/results'
 import { newSetPlan, validStartRotation, type SetPlans } from './setPlan'
 import { rotatePlayers, rotationAfter, zoneRolesAfter } from './systems'
+import { shortName } from '@/shared/utils/format'
 
 /** Progress of the match mode for a match, loaded from and saved to the device. */
 function useMatchModeState(matchId: string) {
@@ -57,15 +64,9 @@ export function MatchModePage() {
 
   if (!hasRole(role, 'assistant'))
     return <PageMessage>No tienes acceso a esta sección.</PageMessage>
-  if (matches.isPending || players.isPending || callups.isPending || setPlans.isPending || !state) {
-    return <PageMessage>Cargando…</PageMessage>
-  }
-  if (matches.isError || players.isError || callups.isError || setPlans.isError) {
-    return (
-      <PageMessage>
-        Este partido no está descargado. Ábrelo con conexión una vez para tenerlo sin red.
-      </PageMessage>
-    )
+  const problem = queriesProblem(matches, players, callups, setPlans)
+  if (problem || !matches.data || !players.data || !callups.data || !setPlans.data || !state) {
+    return <QueryProblemMessage problem={problem ?? 'loading'} />
   }
   const match = matches.data.find((m) => m.id === matchId)
   if (!match) return <PageMessage>Partido no encontrado.</PageMessage>
@@ -82,12 +83,13 @@ export function MatchModePage() {
   ) as SetPlans
   const set = state.currentSet
   const plan = plans[set] ?? newSetPlan(plans[set - 1], team.defaultSystem)
-  const progress: SetProgress = state.sets[set] ?? NO_PROGRESS
-  const started = progress.steps > 0 || progress.subsDone.length > 0
+  const progress: SetProgress = readProgress(state.sets[set])
+  const started = hasStarted(progress)
 
   const lineup = liveLineup(plan, progress)
-  const roles = zoneRolesAfter(plan.system, plan.startRotation, progress.steps)
-  const rotationNumber = rotationAfter(plan.system, plan.startRotation, progress.steps)
+  // A double switch in effect moves the setter role to the opposite's zone (R4 → R1).
+  const roles = zoneRolesAfter(plan.system, plan.startRotation, roleSteps(plan, progress))
+  const rotationNumber = rotationAfter(plan.system, plan.startRotation, roleSteps(plan, progress))
   const liberos = plan.liberos.flatMap((id) =>
     id && playersById.get(id) ? [playersById.get(id)!] : [],
   )
@@ -163,15 +165,16 @@ export function MatchModePage() {
 
       {liberos.length > 0 && (
         <p className="rounded-xl bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
-          Líbero: {liberos.map((p) => `${p.number ?? '–'} ${p.firstName}`).join(' · ')}
+          Líbero: {liberos.map((p) => `${p.number ?? '–'} ${shortName(p)}`).join(' · ')}
         </p>
       )}
 
       <LiveSubsCard
         subs={plan.subs}
-        done={progress.subsDone}
+        stepsDone={progress.subSteps}
         playersById={playersById}
-        onToggle={(index) => setProgress(toggleSub(progress, index))}
+        onAdvance={(index) => setProgress(advanceSub(progress, plan, index))}
+        onUndo={(index) => setProgress(undoSub(progress, index))}
       />
 
       {!started && (

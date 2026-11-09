@@ -1,7 +1,7 @@
 // Converts a set plan between the editor's shape and the `set_plans` table / `save_set_plan()` RPC
 // (no React here).
 import type { GameSystem } from '@/shared/domain/types'
-import type { PlannedSub, SetPlan } from './setPlan'
+import type { PlannedSub, SetPlan, SubKind } from './setPlan'
 import type { Zone } from './systems'
 
 /** A plan as stored on the server, with the version it was saved as. */
@@ -14,6 +14,22 @@ export interface StoredSetPlan {
 /** Plans of a match by set number. */
 export type StoredSetPlans = Partial<Record<number, StoredSetPlan>>
 
+/** A planned change as saved: `{kind, swaps, note}`; older rows saved `{out, in, note}`. */
+type StoredSub =
+  | { kind: SubKind; swaps: { out: string; in: string }[]; note: string }
+  | { out: string; in: string; note: string }
+
+function toPlannedSub(stored: StoredSub): PlannedSub {
+  if ('swaps' in stored) {
+    return {
+      kind: stored.kind,
+      swaps: stored.swaps.map((swap) => ({ outId: swap.out, inId: swap.in })),
+      note: stored.note,
+    }
+  }
+  return { kind: 'normal', swaps: [{ outId: stored.out, inId: stored.in }], note: stored.note }
+}
+
 export interface SetPlanRow {
   set_number: number
   system: string
@@ -21,7 +37,7 @@ export interface SetPlanRow {
   rotation: Record<string, string>
   libero_id: string | null
   second_libero_id: string | null
-  planned_subs: { out: string; in: string; note: string }[]
+  planned_subs: StoredSub[]
   updated_at: string
 }
 
@@ -36,11 +52,7 @@ export function toStoredSetPlan(row: SetPlanRow): StoredSetPlan {
       startRotation: row.start_rotation,
       rotation,
       liberos: [row.libero_id ?? undefined, row.second_libero_id ?? undefined],
-      subs: row.planned_subs.map((sub): PlannedSub => ({
-        outId: sub.out,
-        inId: sub.in,
-        note: sub.note,
-      })),
+      subs: (row.planned_subs ?? []).map(toPlannedSub),
     },
     updatedAt: row.updated_at,
   }
@@ -61,7 +73,11 @@ export function toSaveArgs(
     rotation: Object.fromEntries(Object.entries(plan.rotation).filter(([, id]) => id)),
     libero_id: plan.liberos[0] ?? null,
     second_libero_id: plan.liberos[1] ?? null,
-    planned_subs: plan.subs.map((sub) => ({ out: sub.outId, in: sub.inId, note: sub.note })),
+    planned_subs: plan.subs.map((sub) => ({
+      kind: sub.kind,
+      swaps: sub.swaps.map((swap) => ({ out: swap.outId, in: swap.inId })),
+      note: sub.note,
+    })),
     base_updated_at: baseUpdatedAt,
   }
 }

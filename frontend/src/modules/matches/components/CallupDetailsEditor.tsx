@@ -67,7 +67,7 @@ export function CallupDetailsEditor({ player, callup, onChange }: CallupDetailsE
               aria-pressed={on}
               title={POSITION_LABELS[position]}
               onClick={() => togglePosition(position)}
-              className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${
+              className={`w-10 rounded-full py-1 text-center text-xs font-semibold ring-1 ${
                 on
                   ? 'bg-blue-800 text-white ring-blue-800'
                   : 'bg-white text-slate-500 ring-slate-300'

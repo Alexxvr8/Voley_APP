@@ -34,7 +34,7 @@ No hace falta tener todas las piezas: un módulo pequeño puede ser solo `index.
 
 ## Regla de oro
 
-Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mismo, va a `shared/` (UI, utilidades, tipos) o a `core/` (infraestructura). Entre módulos solo se enlaza por URL (por ejemplo, las pestañas del partido apuntan a `partidos/<id>/gestion`, de `matches`, y a `partidos/<id>/rotacion`, de `lineup`). Varios módulos piden los mismos datos (`players`, `matches`, `opponents`…) con la misma clave de caché, así que se comparten sin importarse: la consulta tiene que guardar **la misma forma de datos** en todos (si un módulo necesita otra, la saca con `select` de TanStack Query). Las fichas de baja (`active = false`) se quedan fuera de toda lista actual (plantilla, convocatoria, respuestas, entrenamientos) pero siguen en la caché para el historial.
+Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mismo, va a `shared/` (UI, utilidades, tipos) o a `core/` (infraestructura). Entre módulos solo se enlaza por URL (por ejemplo, las pestañas del partido apuntan a `partidos/<id>/gestion`, de `matches`, y a `partidos/<id>/rotacion`, de `lineup`). Varios módulos piden los mismos datos (`players`, `matches`, `team-opponents`…) con la misma clave de caché, así que se comparten sin importarse: la consulta tiene que guardar **la misma forma de datos** en todos (si un módulo necesita otra, la saca con `select` de TanStack Query). Las fichas de baja (`active = false`) se quedan fuera de toda lista actual (plantilla, convocatoria, respuestas, entrenamientos) pero siguen en la caché para el historial.
 
 ## Ficheros del módulo `matches`
 
@@ -43,7 +43,7 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 | `CalendarPage.tsx` | Calendario del mes, lo que pasa el día elegido, los próximos partidos y los próximos entrenamientos. El jugador que compite responde a los partidos ahí mismo y todo jugador dice si va a cada entrenamiento; el staff crea partidos, ve cuántos van a entrenar y cancela un entrenamiento suelto |
 | `MatchDetailPage.tsx` | Pestaña Info: datos, mapa y resultado; si se ha jugado y el equipo tiene MVP, enlace a su votación (`components/MvpLinkCard.tsx`: abierta, empate, ganadora o "Abrir votación" para el entrenador). Jugador: "¿Puedes venir?" mientras no se haya jugado (o aviso si solo entrena). Staff: recuento de respuestas, resultado por sets y "Editar o borrar partido" |
 | `EditMatchPage.tsx` | Editar los datos del partido o borrarlo (con confirmación) |
-| `components/MatchForm.tsx` | Formulario común de crear y editar: rival sugerido de la lista o escrito (con "guardar en la lista"), hora en 24 h, calentamiento en pasos de 15 min, formato del partido y pabellón de la lista u otro con su enlace de Maps |
+| `components/MatchForm.tsx` | Formulario común de crear y editar: rival escrito o tocado de los botones de tu lista (con "guardar en la lista"), fecha y hora con los selectores propios, y en botones el calentamiento (de 15 en 15 min), el pabellón de la lista u otro con su enlace de Maps, local/visitante y el formato |
 | `components/ResultEditor.tsx`, `ResultSummary.tsx` | Formato del partido y resultado: solo el marcador con un toque (3-0, 3-1…) o los puntos de cada set (tantos como permite el formato); y "Ganado 3-1" con el detalle si lo hay |
 | `resultDraft.ts` | Conversión entre los puntos guardados y las casillas del editor |
 | `ManagementPage.tsx` | Pestaña Gestión (staff): convocatoria entre los que pueden jugar ese partido (también invitados que vienen algunos días y los de día suelto de esa fecha), con dorsal y posiciones solo para ese partido. Cada cambio envía solo el campo tocado, para que dos cambios seguidos no se pisen |
@@ -63,24 +63,24 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 | Fichero | Qué hace |
 | --- | --- |
 | `SetPlanPage.tsx` | Pestaña Rotación. Carga partido y convocados (con el dorsal y las posiciones del partido) y edita el plan de cada set; cada cambio se guarda solo. Cada set es independiente: un jugador con varias posiciones puede ir en una zona distinta en cada set. `?set=3` abre ese set |
-| `MatchModePage.tsx` | Modo partido: set y R actuales en grande, pista con dorsales y nombres, Rotar / Atrás, líberos, hacer o deshacer los cambios previstos, sistema y R inicial antes de empezar cada set y "Terminar set". Recuerda por dónde iba (en el móvil) |
-| `matchMode.ts` | Estado del modo partido y quién está en pista: alineación rotada con los cambios hechos |
+| `MatchModePage.tsx` | Modo partido: set y R actuales en grande, pista con dorsales y nombres, Rotar / Atrás, líberos, cambios previstos paso a paso ("Hacer cambio", "Entra al saque" → "Vuelve", "Hacer doble cambio" → "Deshacer doble cambio", ↺ para deshacer; el doble cambio cambia la R mostrada), sistema y R inicial antes de empezar cada set y "Terminar set". Recuerda por dónde iba (en el móvil) |
+| `matchMode.ts` | Estado del modo partido (pasos hechos de cada cambio) y quién está en pista: alineación rotada con los cambios en juego. `roleSteps` suma tres rotaciones por cada doble cambio en juego para los roles y la R. Lee el progreso guardado por versiones anteriores |
 | `api.ts` | Jugadores, partidos, convocatoria y planes. `savePlan` mete el cambio en la bandeja de salida; `useSetPlans` muestra el servidor con los cambios pendientes encima; `prepareLineupOffline` descarga los 5 próximos partidos con convocatoria y planes |
-| `setPlanRows.ts` | Conversión entre el plan del editor y la tabla `set_plans` / la RPC `save_set_plan` |
+| `setPlanRows.ts` | Conversión entre el plan del editor y la tabla `set_plans` / la RPC `save_set_plan` (también lee los cambios guardados con el formato antiguo) |
 | `components/LiveCourt.tsx`, `LiveSubsCard.tsx` | Pista grande y cambios previstos del modo partido |
-| `setPlan.ts` | `SetPlan`, `PlannedSub`, `newSetPlan` (hereda el sistema del set anterior), `canPlay`, `replacementPositions` (misma posición, o colocador ↔ opuesto) |
+| `setPlan.ts` | `SetPlan`, `PlannedSub` (grupo: `normal`, `serve` o `double`, con sus `swaps`), `newSetPlan` (hereda el sistema del set anterior), `canPlay`, `substitutesByFit` (banquillo, primero quien juega esa posición) y `doubleSwitchPair` (colocadora y opuesta de la alineación, solo en 5-1) |
 | `systems.ts` | Plantilla de roles por zona de cada sistema (5-1, 6-0, 4-2, 6-2) y cómo gira. La R es la zona del colocador que coloca (`availableRotations`: R1–R6 en 5-1, R2–R4 en 4-2, R1/R5/R6 en 6-2, ninguna en 6-0). Al rotar, la R va R1 → R6 → R5 → R4 → R3 → R2 (`advanceLineup`, `rotationAfter`, `zoneRolesAfter`) |
 | `components/SetTabs.tsx` | Pestañas de los sets que permite el formato del partido (5, 3 o ninguna con 1 set) |
 | `components/SystemPicker.tsx` | Selector de sistema, de rotación inicial (R1, R2…) y "copiar de otro set" |
-| `components/Court.tsx` | Pista con las 6 zonas coloreadas según sistema y R, y dos casillas grises para líberos |
-| `components/PlannedSubsCard.tsx` | Cambios previstos, solo entre jugadores de la misma posición (colocador y opuesto se pueden cruzar) |
+| `components/Court.tsx` | Pista con las 6 zonas coloreadas según sistema y R ("Z4 · Op"), y dos casillas grises para líberos. Cada zona muestra el dorsal grande y el apodo o nombre; se toca entera para elegir jugador |
+| `components/PlannedSubsCard.tsx` | Cambios previstos en grupos: cambio (con la posición de la zona: Ce, Re…), al saque (vuelve al perder el saque) y doble cambio Co ↔ Op (cambia la R). Los desplegables muestran la posición de cada jugador |
 
 ## Ficheros del módulo `roster`
 
 | Fichero | Qué hace |
 | --- | --- |
 | `RosterPage.tsx` | Plantilla en bloques (Equipo, Vienen algunos días, Días sueltos), cada uno por dorsal, sin las bajas. "+ Añadir" (staff) crea una ficha sin cuenta; también llegan al aceptar cuentas o desde Ajustes |
-| `components/PlayerRow.tsx` | Fila de jugador (con los días o la fecha si es invitado); para el staff, con el interruptor "Compite / Solo entrena", "Editar" y "Borrar ficha" |
+| `components/PlayerRow.tsx` | Fila de jugador en dos líneas: dorsal, apodo o nombre (con el nombre completo debajo si tiene apodo), posiciones abreviadas y, debajo, los botones del staff (con los días o la fecha si es invitado); para el staff, con el interruptor "Compite / Solo entrena", "Editar" y "Borrar ficha" |
 | `components/CompetesSwitch.tsx` | El interruptor, con confirmación antes de cambiar (doble comprobación) |
 
 ## Ficheros del módulo `teams`

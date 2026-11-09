@@ -76,7 +76,7 @@ Siete módulos forman el núcleo; el plan de partido por set es el que más trab
 
 ### 3. Plantilla (entrenador)
 
-- Ficha: nombre, apellidos, año de nacimiento, dorsal, posiciones y **si es del equipo**. Las posiciones se marcan en una lista de casillas; la primera marcada es la principal y el resto, las secundarias (igual al aceptar a un jugador creando su ficha).
+- Ficha: nombre, apellidos, **apodo** (opcional: "Solis", "Rodri"; si lo hay, sale en vez del nombre completo en convocatoria, pista, cambios y MVP), año de nacimiento, dorsal, posiciones y **si es del equipo**. Las posiciones se marcan en una lista de casillas; la primera marcada es la principal y el resto, las secundarias (igual al aceptar a un jugador creando su ficha).
 - Las fichas llegan al aceptar a quien entra con código, o el staff las crea a mano con **+ Añadir** en Plantilla (o en Ajustes → Jugadores sin cuenta).
 - **¿Es del equipo?** Del equipo; **viene algunos días** (se marcan los días de la semana, p. ej. un infantil que viene los lunes: se le pregunta por los entrenamientos de esos días y se le puede convocar a cualquier partido); o **día suelto** (una fecha: solo sale en la convocatoria de un partido de ese día y en los entrenamientos de ese día). La plantilla los muestra en bloques separados y no cuentan en el ranking MVP con cero.
 - Vinculación ficha ↔ cuenta de usuario (una ficha puede existir sin cuenta).
@@ -99,7 +99,10 @@ Para cada set se guarda un plan independiente:
 - **Rotación inicial:** campo con zonas 1–6 coloreadas por rol (colocador, receptor, central, opuesto, líbero). Cada zona solo ofrece convocados con esa posición, con opción de "mostrar todos".
 - **R inicial:** junto al sistema se elige en qué R empieza el set. La R es la zona donde está el colocador que coloca: R1–R6 en 5-1, R2–R4 en 4-2 (coloca el delantero), R1/R5/R6 en 6-2 (coloca el zaguero). En 6-0 todos son receptores y no hay R.
 - **Líberos:** hasta dos casillas grises bajo la pista, solo si hay jugadores que puedan jugar de líbero. No se indica por quién entran.
-- **Cambios previstos:** pares sale → entra, solo entre jugadores de la misma posición (colocador y opuesto se pueden cruzar para pasar de una R a otra), con nota opcional ("si falla recepción", "en rotación 3").
+- **Cambios previstos**, en grupos y con nota opcional ("si falla recepción", "en R4"):
+  - **Cambio:** sale → entra, marcado con la posición de la zona (p. ej. "Ce"). Puede entrar cualquiera del banquillo, primero se ofrecen los que juegan esa posición (una receptora puede entrar por una central en la zaga). La R no cambia.
+  - **Al saque:** entra al saque y vuelve al perder el saque (en el modo partido: "Entra al saque" y "Vuelve").
+  - **Doble cambio (Co ↔ Op):** salen a la vez la colocadora y la opuesta de la pista y entran una opuesta y una colocadora del banquillo. La colocadora nueva coloca desde la zona de la opuesta, así que la R salta tres posiciones (R4 → R1). Es el único cambio que modifica la R; se puede deshacer después.
 - **Copiar plan de otro set** para no empezar de cero.
 
 ### 6. Modo partido (entrenador, funciona offline)
@@ -180,7 +183,7 @@ La pieza clave es `team_members`: une usuario, equipo y rol, y todas las reglas 
 | `teams` | id, name, category, season, current\_season\_id, color, default\_system, enabled\_modules, mvp\_ranking\_visible, created\_by | `enabled_modules` = lista de módulos activos; `mvp_ranking_visible` = si las jugadoras ven el ranking de MVP |
 | `team_members` | team\_id, user\_id, role, player\_id | role: coach / assistant / player; player\_id enlaza con la ficha |
 | `join_codes` | team\_id, code, role, active, expires\_at | Un código por rol, regenerable |
-| `players` | id, team\_id, first\_name, last\_name, birth\_year, number, main\_position, other\_positions, competes, active, membership, visit\_weekdays, visit\_date | Ficha de plantilla, puede no tener cuenta. `competes = false`: solo entrena. `active = false`: baja de una temporada anterior (solo historial). membership: member / regular (con `visit_weekdays`, 1 = lunes) / one\_off (con `visit_date`) |
+| `players` | id, team\_id, first\_name, last\_name, nickname, birth\_year, number, main\_position, other\_positions, competes, active, membership, visit\_weekdays, visit\_date | Ficha de plantilla, puede no tener cuenta. `competes = false`: solo entrena. `active = false`: baja de una temporada anterior (solo historial). membership: member / regular (con `visit_weekdays`, 1 = lunes) / one\_off (con `visit_date`) |
 | `matches` | id, team\_id, season\_id, opponent, date, match\_time, warmup\_minutes, venue, maps\_url, home\_away, status, sets\_format, sets\_result, final\_score, notes, mvp\_status, mvp\_closes\_at, mvp\_winners | status: scheduled / played / cancelled; sets\_format: best\_of\_5 / best\_of\_3 / fixed\_3 / fixed\_1; final\_score `{us, them}` cuando solo se apunta el marcador; mvp\_status: closed / open / tie\_pending / finished |
 | `availability` | match\_id, player\_id, status, comment, updated\_at | status: yes / no / maybe |
 | `callups` | match\_id, player\_id, number, positions | Convocados; dorsal y posiciones del partido (vacío = los de la ficha) |
@@ -283,6 +286,11 @@ Cada decisión cerrada se añade aquí con su fecha; este documento es la refere
 | 2026-11-09 | Al empezar temporada el entrenador marca quién sigue. Las que no siguen pasan a baja: fuera de plantilla, convocatoria, disponibilidad y entrenamientos, y pierden el acceso, pero conservan su historial. Pueden volver ("Vuelve" o aceptándolas con su ficha) |
 | 2026-11-09 | Jugadores que no son del equipo: "viene algunos días" (días de la semana) y "día suelto" (una fecha), creados desde Plantilla. Se convocan como los demás (los de día suelto, solo a partidos de su día) y solo se les pregunta por los entrenamientos de sus días |
 | 2026-11-09 | En Gestión, los convocados suben arriba ordenados por posición |
+| 2026-11-09 | Posiciones abreviadas Co, Re, Ce, Op y LB; todas las etiquetas de posición del mismo ancho. Opciones cortas del formulario de partido y del horario en botones en vez de desplegables |
+| 2026-11-09 | Seguridad: funciones auxiliares de permisos en el esquema `private`, fuera de la API. La protección de contraseñas filtradas de Supabase requiere plan Pro y no se activa |
+| 2026-11-09 | Sin conexión, las secciones que necesitan internet muestran la plantilla y los partidos descargados con "Rotación" e "Ir al partido"; con mala cobertura se enseña lo guardado en vez de un error. En la pista de rotación, posiciones abreviadas (Co, Re, Ce, Op, LB) |
+| 2026-11-09 | Cambios previstos en grupos: cambio normal (cualquiera del banquillo, marcado con la posición de la zona; sustituye a la regla de "misma posición" del 2026-10-27), al saque (entra y vuelve) y doble cambio Co ↔ Op, el único que cambia la R (R4 → R1). `set_plans.planned_subs` pasa a `[{kind, swaps: [{out, in}], note}]`; las filas antiguas `{out, in, note}` se leen como cambio normal |
+| 2026-11-09 | Apodo en la ficha (lo pone el staff). Revisión en móvil (360–412 px): en Gestión y Plantilla los nombres se recortan con "…" en vez de partirse, posiciones abreviadas; en la pista de rotación cada zona muestra dorsal grande y apodo o nombre, y se toca entera para elegir |
 
 **Temas abiertos**
 

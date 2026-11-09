@@ -6,6 +6,7 @@ Infraestructura que comparten todas las pantallas: login, equipos del usuario, n
 | --- | --- |
 | `App.tsx` | Raíz de la app. Sin sesión muestra el login; con sesión, el router. Fuera de un equipo: "Mis equipos" (`/`), añadir equipo (`/equipos/nuevo`) y "Mi cuenta" (`/cuenta`). Dentro de `/equipos/:teamId/…`, las pantallas de los módulos activos que permite el rol |
 | `supabase/client.ts` | Crea el cliente único de Supabase con las variables de entorno. La sesión se guarda en el móvil y se renueva sola |
+| `query/status.ts` | `queriesProblem()`: qué enseña una pantalla sin datos: los guardados aunque refrescarlos falle (mala cobertura), o "cargando", "sin conexión y no guardado" o error |
 | `query/queryClient.ts` | Cliente de TanStack Query: caché de los datos del servidor (se guarda una semana en el móvil). Arranca con el estado real de la red. Se vacía al cerrar sesión |
 | `offline/` | Todo lo de "sin conexión" (ver abajo) |
 | `auth/auth.tsx` | `AuthProvider` y `useAuth()`: usuario, `signIn`, `signUp` (con correo opcional), `resetPassword` (código), `resetPasswordWithEmail` (enlace del correo), `signOut` y el aviso con el código que se muestra una vez |
@@ -36,7 +37,7 @@ Infraestructura que comparten todas las pantallas: login, equipos del usuario, n
 | `offline/outbox.ts` | **Bandeja de salida.** Cada cambio hecho en el móvil se escribe aquí al momento (una fila por cosa cambiada; un cambio nuevo sustituye al anterior) y se envía en orden cuando hay red: al arrancar y al volver la conexión. Si no hay red se reintenta después; si el servidor lo rechaza, se avisa y se descarta. Los módulos registran cómo se envía cada tipo (`registerOutboxHandler`) |
 | `offline/prepare.ts` | Descarga automática al abrir la app con red (como mucho cada 10 min) y bajo demanda: ejecuta el `prepareOffline` de cada módulo que funciona sin red y apunta qué partidos quedan disponibles |
 | `offline/online.ts`, `notices.ts` | Estado de la red y avisos flotantes (`notify`) |
-| `offline/components/` | Franja "Sin conexión / N cambios pendientes", avisos y "Disponible sin conexión · hh:mm" con "Preparar para sin conexión" |
+| `offline/components/` | Franja "Sin conexión / N cambios pendientes", avisos, "Disponible sin conexión · hh:mm" con "Preparar para sin conexión" y `OfflineSection`: sin red, las secciones que necesitan internet muestran en su lugar la plantilla y los partidos descargados con "Rotación" e "Ir al partido" (si no, no habría camino hasta ellos) |
 
 La app entera (HTML, JS, CSS) la guarda el service worker de la PWA, así que se abre en modo avión. La sesión de Supabase queda en `localStorage` y no se pierde sin red aunque el token haya caducado: se renueva al volver la conexión.
 

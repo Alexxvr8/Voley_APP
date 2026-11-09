@@ -1,6 +1,6 @@
-// Match fields form, shared by "Nuevo partido" and "Editar partido": opponent (suggested from the
-// team's list or typed), date, 24 h match time, warm-up duration, venue (team list or another), format
-// (how many sets) and notes.
+// Match fields form, shared by "Nuevo partido" and "Editar partido": opponent (typed, or tapped from
+// the team's list), date, 24 h match time, warm-up, venue (team list or another), home/away, format
+// (how many sets) and notes. Short choices are buttons, not dropdowns.
 import { useState, type FormEvent } from 'react'
 import { SETS_FORMATS, SETS_FORMAT_LABELS } from '@/shared/domain/results'
 import type { TeamVenue } from '@/shared/domain/types'
@@ -11,6 +11,7 @@ import {
   LABEL_TEXT_CLASS,
   PRIMARY_BUTTON_CLASS,
 } from '@/shared/ui/form'
+import { ChoiceChips } from '@/shared/ui/ChoiceChips'
 import { DatePicker } from '@/shared/ui/DatePicker'
 import { TimeSelect } from '@/shared/ui/TimeSelect'
 import { VenuePicker } from '@/shared/ui/VenuePicker'
@@ -18,8 +19,21 @@ import { isValidMapsUrl } from '@/shared/utils/maps'
 import { formatDuration } from '@/shared/utils/format'
 import type { MatchInput } from '../api'
 
-/** Warm-up choices: none, then every 15 minutes up to 2 hours. */
-const WARMUP_OPTIONS = Array.from({ length: 8 }, (_, i) => (i + 1) * 15)
+/** Warm-up choices: none, then every 15 minutes up to 2 hours (0 = not set). */
+const WARMUP_CHOICES = [
+  { value: 0, label: 'No' },
+  ...Array.from({ length: 8 }, (_, i) => ({
+    value: (i + 1) * 15,
+    label: formatDuration((i + 1) * 15).replace(' min', '′'),
+  })),
+]
+
+/** Saved opponents shown as buttons: all of them, or the ones matching what is being typed. */
+function suggestedOpponents(opponents: string[], typed: string): string[] {
+  const text = typed.trim().toLowerCase()
+  if (!text || opponents.some((name) => name.toLowerCase() === text)) return opponents
+  return opponents.filter((name) => name.toLowerCase().includes(text))
+}
 
 interface MatchFormProps {
   initial: MatchInput
@@ -65,23 +79,32 @@ export function MatchForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <label className={LABEL_CLASS}>
-        <span className={LABEL_TEXT_CLASS}>Rival</span>
-        <input
-          className={INPUT_CLASS}
-          list="team-opponents"
-          value={match.opponent}
-          onChange={(e) => update({ opponent: e.target.value })}
-          placeholder={opponents.length ? 'Elige de tu lista o escribe otro' : 'Nombre del rival'}
-          autoComplete="off"
-          required
-        />
-        <datalist id="team-opponents">
-          {opponents.map((name) => (
-            <option key={name} value={name} />
-          ))}
-        </datalist>
-      </label>
+      <div className={LABEL_CLASS}>
+        <label className={LABEL_CLASS}>
+          <span className={LABEL_TEXT_CLASS}>Rival</span>
+          <input
+            className={INPUT_CLASS}
+            value={match.opponent}
+            onChange={(e) => update({ opponent: e.target.value })}
+            placeholder={
+              opponents.length ? 'Toca uno de tu lista o escribe otro' : 'Nombre del rival'
+            }
+            autoComplete="off"
+            required
+          />
+        </label>
+        {opponents.length > 0 && (
+          <ChoiceChips
+            label="Rivales de tu lista"
+            choices={suggestedOpponents(opponents, match.opponent).map((name) => ({
+              value: name,
+              label: name,
+            }))}
+            value={match.opponent.trim()}
+            onChange={(opponent) => update({ opponent })}
+          />
+        )}
+      </div>
       {newOpponent && (
         <label className="flex items-center gap-2 text-sm text-slate-600">
           <input
@@ -103,34 +126,25 @@ export function MatchForm({
         />
       </div>
 
-      <div className="flex flex-wrap gap-4">
-        <div className={LABEL_CLASS}>
-          <span className={LABEL_TEXT_CLASS}>Hora del partido</span>
-          <TimeSelect
-            value={match.matchTime}
-            onChange={(matchTime) => update({ matchTime })}
-            step={5}
-            label="Hora del partido"
-            optional
-          />
-        </div>
-        <label className={LABEL_CLASS}>
-          <span className={LABEL_TEXT_CLASS}>Calentamiento</span>
-          <select
-            className={INPUT_CLASS}
-            value={match.warmupMinutes ?? ''}
-            onChange={(e) =>
-              update({ warmupMinutes: e.target.value ? Number(e.target.value) : null })
-            }
-          >
-            <option value="">Sin indicar</option>
-            {WARMUP_OPTIONS.map((minutes) => (
-              <option key={minutes} value={minutes}>
-                {formatDuration(minutes)} antes
-              </option>
-            ))}
-          </select>
-        </label>
+      <div className={LABEL_CLASS}>
+        <span className={LABEL_TEXT_CLASS}>Hora del partido</span>
+        <TimeSelect
+          value={match.matchTime}
+          onChange={(matchTime) => update({ matchTime })}
+          step={5}
+          label="Hora del partido"
+          optional
+        />
+      </div>
+      <div className={LABEL_CLASS}>
+        <span className={LABEL_TEXT_CLASS}>Calentamiento (antes del partido)</span>
+        <ChoiceChips
+          label="Calentamiento"
+          columns={5}
+          choices={WARMUP_CHOICES}
+          value={match.warmupMinutes ?? 0}
+          onChange={(minutes) => update({ warmupMinutes: minutes || null })}
+        />
       </div>
 
       <VenuePicker
@@ -140,45 +154,32 @@ export function MatchForm({
         label="Pabellón"
       />
 
-      <fieldset>
-        <legend className={LABEL_TEXT_CLASS}>Juega</legend>
-        <div className="mt-2 grid grid-cols-2 gap-2">
-          {(['home', 'away'] as const).map((value) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => update({ homeAway: value })}
-              className={`rounded-xl py-2.5 text-sm font-semibold ring-1 ${
-                match.homeAway === value
-                  ? 'bg-blue-800 text-white ring-blue-800'
-                  : 'bg-white text-slate-700 ring-slate-300'
-              }`}
-            >
-              {value === 'home' ? 'Local' : 'Visitante'}
-            </button>
-          ))}
-        </div>
-      </fieldset>
-      <fieldset>
-        <legend className={LABEL_TEXT_CLASS}>Formato</legend>
-        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {SETS_FORMATS.map((format) => (
-            <button
-              key={format}
-              type="button"
-              onClick={() => update({ setsFormat: format })}
-              aria-pressed={match.setsFormat === format}
-              className={`rounded-xl py-2.5 text-sm font-semibold ring-1 ${
-                match.setsFormat === format
-                  ? 'bg-blue-800 text-white ring-blue-800'
-                  : 'bg-white text-slate-700 ring-slate-300'
-              }`}
-            >
-              {SETS_FORMAT_LABELS[format]}
-            </button>
-          ))}
-        </div>
-      </fieldset>
+      <div className={LABEL_CLASS}>
+        <span className={LABEL_TEXT_CLASS}>Juega</span>
+        <ChoiceChips
+          label="Juega"
+          columns={2}
+          choices={[
+            { value: 'home', label: 'Local' },
+            { value: 'away', label: 'Visitante' },
+          ]}
+          value={match.homeAway}
+          onChange={(homeAway) => update({ homeAway })}
+        />
+      </div>
+      <div className={LABEL_CLASS}>
+        <span className={LABEL_TEXT_CLASS}>Formato</span>
+        <ChoiceChips
+          label="Formato"
+          columns={4}
+          choices={SETS_FORMATS.map((format) => ({
+            value: format,
+            label: SETS_FORMAT_LABELS[format],
+          }))}
+          value={match.setsFormat}
+          onChange={(setsFormat) => update({ setsFormat })}
+        />
+      </div>
 
       <label className={LABEL_CLASS}>
         <span className={LABEL_TEXT_CLASS}>Notas (opcional)</span>

@@ -33,6 +33,7 @@ function player(id: string, firstName: string, competes = true, active = true): 
     id,
     firstName,
     lastName: '',
+    nickname: '',
     birthYear: null,
     number: null,
     mainPosition: 'outside',

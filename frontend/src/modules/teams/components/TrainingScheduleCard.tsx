@@ -3,13 +3,8 @@
 import { useState, type FormEvent } from 'react'
 import { WEEKDAY_LABELS } from '@/shared/domain/labels'
 import { Card } from '@/shared/ui/Card'
-import {
-  ERROR_CLASS,
-  INPUT_CLASS,
-  LABEL_CLASS,
-  LABEL_TEXT_CLASS,
-  PRIMARY_BUTTON_CLASS,
-} from '@/shared/ui/form'
+import { ChoiceChips } from '@/shared/ui/ChoiceChips'
+import { ERROR_CLASS, LABEL_CLASS, LABEL_TEXT_CLASS, PRIMARY_BUTTON_CLASS } from '@/shared/ui/form'
 import { TimeSelect } from '@/shared/ui/TimeSelect'
 import { VenuePicker, type VenueValue } from '@/shared/ui/VenuePicker'
 import { isValidMapsUrl } from '@/shared/utils/maps'
@@ -76,20 +71,18 @@ export function TrainingScheduleCard({ teamId }: { teamId: string }) {
       ))}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3 border-t border-slate-100 pt-3">
-        <label className={LABEL_CLASS}>
+        <div className={LABEL_CLASS}>
           <span className={LABEL_TEXT_CLASS}>Día</span>
-          <select
-            className={INPUT_CLASS}
+          <ChoiceChips
+            label="Día del entrenamiento"
+            choices={WEEKDAYS.map((day) => ({
+              value: day,
+              label: WEEKDAY_LABELS[day].slice(0, 3),
+            }))}
             value={weekday}
-            onChange={(e) => setWeekday(Number(e.target.value))}
-          >
-            {WEEKDAYS.map((day) => (
-              <option key={day} value={day}>
-                {WEEKDAY_LABELS[day]}
-              </option>
-            ))}
-          </select>
-        </label>
+            onChange={setWeekday}
+          />
+        </div>
         <div className="flex flex-wrap gap-4">
           <div className={LABEL_CLASS}>
             <span className={LABEL_TEXT_CLASS}>Desde</span>

@@ -40,9 +40,19 @@ export function formatLongDate(isoDate: string): string {
   return longDateFormatter.format(parseLocalDate(isoDate))
 }
 
-/** Full name as shown in lists: first name and last name. */
-export function playerName(player: Player): string {
+/** Full name: first name and last name (roster, forms, accepting members). */
+export function fullName(player: Player): string {
   return `${player.firstName} ${player.lastName}`.trim()
+}
+
+/** Name shown in lists: the nickname if the staff set one ("Solis"), otherwise the full name. */
+export function playerName(player: Player): string {
+  return player.nickname || fullName(player)
+}
+
+/** Shortest name, for the court and tight rows: the nickname, or the first name. */
+export function shortName(player: Player): string {
+  return player.nickname || player.firstName
 }
 
 /** Shirt number for display; a dash when the player has none yet. */

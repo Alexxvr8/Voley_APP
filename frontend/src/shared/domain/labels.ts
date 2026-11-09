@@ -10,11 +10,11 @@ export const POSITION_LABELS: Record<Position, string> = {
 }
 
 export const POSITION_SHORT_LABELS: Record<Position, string> = {
-  setter: 'COL',
-  outside: 'REC',
-  middle: 'CEN',
-  opposite: 'OPU',
-  libero: 'LÍB',
+  setter: 'Co',
+  outside: 'Re',
+  middle: 'Ce',
+  opposite: 'Op',
+  libero: 'LB',
 }
 
 /** Background/text classes per position, shared by badges and the court. */

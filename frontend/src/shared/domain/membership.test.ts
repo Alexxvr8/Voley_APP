@@ -8,6 +8,7 @@ function player(overrides: Partial<Player>): Player {
     id: 'p',
     firstName: 'Ana',
     lastName: '',
+    nickname: '',
     birthYear: null,
     number: null,
     mainPosition: 'outside',

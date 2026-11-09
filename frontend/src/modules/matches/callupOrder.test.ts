@@ -8,6 +8,7 @@ function player(id: string, number: number, mainPosition: Position): Player {
     id,
     firstName: id,
     lastName: '',
+    nickname: '',
     birthYear: null,
     number,
     mainPosition,

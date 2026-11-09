@@ -1,5 +1,5 @@
 // Roster entry form, used to add a player (Ajustes, Plantilla) and to edit one (Plantilla): name,
-// number, year, every position they can play (the first one checked is the main one) and whether
+// nickname (shown instead of the full name), number, year, every position they can play (the first one checked is the main one) and whether
 // they are part of the team or come on some days / one day.
 import { useState, type FormEvent } from 'react'
 import { fromPositionList, toPositionList } from '@/shared/domain/positions'
@@ -39,6 +39,7 @@ export function PlayerForm({
 }: PlayerFormProps) {
   const [firstName, setFirstName] = useState(initial?.firstName ?? '')
   const [lastName, setLastName] = useState(initial?.lastName ?? '')
+  const [nickname, setNickname] = useState(initial?.nickname ?? '')
   const [number, setNumber] = useState(initial?.number?.toString() ?? '')
   const [birthYear, setBirthYear] = useState(initial?.birthYear?.toString() ?? '')
   const [positions, setPositions] = useState<Position[]>(
@@ -59,6 +60,7 @@ export function PlayerForm({
       ...membership,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
+      nickname: nickname.trim(),
       number: number ? Number(number) : null,
       birthYear: birthYear ? Number(birthYear) : null,
       ...chosen,
@@ -84,6 +86,16 @@ export function PlayerForm({
             className={INPUT_CLASS}
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
+          />
+        </label>
+        <label className={`col-span-2 ${LABEL_CLASS}`}>
+          <span className={LABEL_TEXT_CLASS}>Apodo (opcional)</span>
+          <input
+            className={INPUT_CLASS}
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            maxLength={20}
+            placeholder="Cómo la llamáis: Solis, Rodri… Sale en vez del nombre completo"
           />
         </label>
         <label className={LABEL_CLASS}>

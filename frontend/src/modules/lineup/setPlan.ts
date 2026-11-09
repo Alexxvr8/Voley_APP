@@ -3,13 +3,33 @@
 import type { GameSystem, Player, Position } from '@/shared/domain/types'
 import { availableRotations, zoneRoles, type Zone } from './systems'
 
-/** A substitution the coach plans in advance: `outId` leaves the court, `inId` comes in. */
-export interface PlannedSub {
+/** One player for another: `outId` leaves the court, `inId` comes into their zone. */
+export interface SubSwap {
   outId: string
   inId: string
-  /** Optional reminder, e.g. "si falla recepción" or "en rotación 3". */
+}
+
+/**
+ * Kind of planned change:
+ * - `normal`: one player for another, done once. The incoming player covers the zone's role (a
+ *   receiver can come in for a middle in the back row); the rotation does not change.
+ * - `serve`: X → Y to serve, then "Vuelve": Y → X when the team loses the serve.
+ * - `double`: double switch, setter ↔ opposite at once (two swaps). The incoming setter takes over
+ *   in the opposite's zone, so the rotation jumps three places (R4 → R1). It can be undone later.
+ */
+export type SubKind = 'normal' | 'serve' | 'double'
+
+/** A group of substitutions the coach plans in advance (spec module 5). */
+export interface PlannedSub {
+  kind: SubKind
+  /** One swap, or two for a double switch (setter out first, then opposite out). */
+  swaps: SubSwap[]
+  /** Optional reminder, e.g. "si falla recepción" or "en R4". */
   note: string
 }
+
+/** Steps of each kind in the match mode: do it, and for `serve` / `double` also go back. */
+export const SUB_STEP_COUNT: Record<SubKind, number> = { normal: 1, serve: 2, double: 2 }
 
 /** Up to two liberos per set; either slot can be empty. */
 export type LiberoSlots = [string | undefined, string | undefined]
@@ -71,12 +91,23 @@ export function canPlay(player: Player, position: Position): boolean {
   return player.mainPosition === position || player.otherPositions.includes(position)
 }
 
+/** Bench players for a zone of `role`: those who can play it first (by number), then the rest. */
+export function substitutesByFit(bench: Player[], role: Position): Player[] {
+  const fits = bench.filter((player) => canPlay(player, role))
+  return [...fits, ...bench.filter((player) => !canPlay(player, role))]
+}
+
 /**
- * Positions that may come in for a player covering `role`: the same one, plus setter ↔ opposite,
- * the double switch coaches use to jump from one rotation to another.
+ * The setter and opposite of the starting lineup, for a double switch. Null when the system has no
+ * opposite (6-0, 4-2, 6-2) or those zones are still empty.
  */
-export function replacementPositions(role: Position): Position[] {
-  if (role === 'setter') return ['setter', 'opposite']
-  if (role === 'opposite') return ['opposite', 'setter']
-  return [role]
+export function doubleSwitchPair(plan: SetPlan): { setterId: string; oppositeId: string } | null {
+  const roles = zoneRoles(plan.system, plan.startRotation)
+  const zoneOf = (role: Position) =>
+    (Object.keys(roles).map(Number) as Zone[]).find((zone) => roles[zone] === role)
+  const setterZone = zoneOf('setter')
+  const oppositeZone = zoneOf('opposite')
+  const setterId = setterZone && plan.rotation[setterZone]
+  const oppositeId = oppositeZone && plan.rotation[oppositeZone]
+  return setterId && oppositeId ? { setterId, oppositeId } : null
 }

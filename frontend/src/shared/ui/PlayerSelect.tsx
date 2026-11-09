@@ -1,5 +1,6 @@
 // Dropdown to pick one player, used wherever a screen asks "who?" (zones, libero, substitutions).
 import type { Player } from '@/shared/domain/types'
+import { shortName } from '@/shared/utils/format'
 
 interface PlayerSelectProps {
   /** Players offered as options, in the order given. */
@@ -11,6 +12,8 @@ interface PlayerSelectProps {
   /** Text of the empty option. */
   placeholder?: string
   className?: string
+  /** Extra text after each name, e.g. the position "(Ce)". */
+  describe?: (player: Player) => string
 }
 
 const DEFAULT_CLASS = 'w-full rounded-lg border border-slate-300 bg-white px-2 py-2'
@@ -22,6 +25,7 @@ export function PlayerSelect({
   onChange,
   placeholder = '—',
   className = DEFAULT_CLASS,
+  describe,
 }: PlayerSelectProps) {
   return (
     <select
@@ -32,7 +36,8 @@ export function PlayerSelect({
       <option value="">{placeholder}</option>
       {players.map((player) => (
         <option key={player.id} value={player.id}>
-          {player.number ?? '–'}. {player.firstName}
+          {player.number ?? '–'}. {shortName(player)}
+          {describe ? ` ${describe(player)}` : ''}
         </option>
       ))}
     </select>

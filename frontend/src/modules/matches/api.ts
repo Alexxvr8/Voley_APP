@@ -466,7 +466,7 @@ export function useTeamVenues(teamId: string) {
  */
 export function useTeamOpponents(teamId: string) {
   return useQuery({
-    queryKey: ['opponents', teamId],
+    queryKey: ['team-opponents', teamId],
     queryFn: async () =>
       check(
         await supabase
@@ -484,6 +484,6 @@ export function useSaveOpponent(teamId: string) {
   return useMutation({
     mutationFn: async (name: string) =>
       check(await supabase.from('team_opponents').insert({ team_id: teamId, name })),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['opponents', teamId] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['team-opponents', teamId] }),
   })
 }

@@ -11,7 +11,7 @@ import {
   LABEL_TEXT_CLASS,
   SECONDARY_BUTTON_CLASS,
 } from '@/shared/ui/form'
-import { byShirtNumber, playerName, shirtNumber } from '@/shared/utils/format'
+import { byShirtNumber, fullName, shirtNumber } from '@/shared/utils/format'
 import { useMergePlayers } from '../api'
 
 interface MergePlayersCardProps {
@@ -22,7 +22,7 @@ interface MergePlayersCardProps {
 }
 
 function optionLabel(player: Player, linked: Set<string>): string {
-  return `${shirtNumber(player)}. ${playerName(player)}${linked.has(player.id) ? ' (con cuenta)' : ''}`
+  return `${shirtNumber(player)}. ${fullName(player)}${linked.has(player.id) ? ' (con cuenta)' : ''}`
 }
 
 export function MergePlayersCard({ teamId, players, linked }: MergePlayersCardProps) {
@@ -101,7 +101,7 @@ export function MergePlayersCard({ teamId, players, linked }: MergePlayersCardPr
 
       {confirming && keep && duplicate && (
         <ConfirmDialog
-          title={`¿Juntar ${playerName(duplicate)} en ${playerName(keep)}?`}
+          title={`¿Juntar ${fullName(duplicate)} en ${fullName(keep)}?`}
           confirmLabel="Juntar"
           busy={merge.isPending}
           onCancel={() => setConfirming(false)}
@@ -110,7 +110,7 @@ export function MergePlayersCard({ teamId, players, linked }: MergePlayersCardPr
               { keep: keep.id, duplicate: duplicate.id },
               {
                 onSuccess: () => {
-                  setDone(playerName(keep))
+                  setDone(fullName(keep))
                   setKeepId('')
                   setDuplicateId('')
                 },
@@ -119,8 +119,8 @@ export function MergePlayersCard({ teamId, players, linked }: MergePlayersCardPr
             )
           }
         >
-          Todo lo de {playerName(duplicate)} pasa a {playerName(keep)} y la ficha de{' '}
-          {playerName(duplicate)} se borra. No se puede deshacer.
+          Todo lo de {fullName(duplicate)} pasa a {fullName(keep)} y la ficha de{' '}
+          {fullName(duplicate)} se borra. No se puede deshacer.
         </ConfirmDialog>
       )}
     </Card>

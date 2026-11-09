@@ -57,6 +57,8 @@ export interface Player {
   id: string
   firstName: string
   lastName: string
+  /** Short name the staff chose ("Solis", "Rodri"); empty if none. */
+  nickname: string
   birthYear: number | null
   number: number | null
   mainPosition: Position
@@ -159,6 +161,7 @@ export interface TrainingSlot {
 export interface PlayerInput {
   firstName: string
   lastName: string
+  nickname: string
   birthYear: number | null
   number: number | null
   mainPosition: Position

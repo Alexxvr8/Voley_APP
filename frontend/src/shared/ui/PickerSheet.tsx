@@ -25,7 +25,7 @@ export function PickerSheet({ title, onClose, children }: PickerSheetProps) {
         aria-modal="true"
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
-        className="w-full max-w-sm space-y-4 rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl sm:rounded-3xl"
+        className="w-full space-y-4 rounded-t-3xl sm:max-w-sm bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl sm:rounded-3xl"
       >
         <div className="mx-auto h-1.5 w-10 rounded-full bg-slate-200 sm:hidden" />
         <div className="flex items-center justify-between">

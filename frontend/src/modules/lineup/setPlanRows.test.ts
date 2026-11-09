@@ -8,7 +8,7 @@ const plan: SetPlan = {
   startRotation: 4,
   rotation: { 1: 'a', 4: 'b' },
   liberos: ['l1', undefined],
-  subs: [{ outId: 'b', inId: 'c', note: 'si falla recepción' }],
+  subs: [{ kind: 'normal', swaps: [{ outId: 'b', inId: 'c' }], note: 'si falla recepción' }],
 }
 
 describe('set plan rows', () => {
@@ -27,5 +27,21 @@ describe('set plan rows', () => {
       updated_at: '2026-11-08T10:00:00Z',
     }
     expect(toStoredSetPlan(row)).toEqual({ plan, updatedAt: '2026-11-08T10:00:00Z' })
+  })
+
+  it('reads changes saved in the old format', () => {
+    const row = {
+      set_number: 1,
+      system: '5-1',
+      start_rotation: 1,
+      rotation: {},
+      libero_id: null,
+      second_libero_id: null,
+      planned_subs: [{ out: 'b', in: 'c', note: '' }],
+      updated_at: '2026-11-08T10:00:00Z',
+    }
+    expect(toStoredSetPlan(row).plan.subs).toEqual([
+      { kind: 'normal', swaps: [{ outId: 'b', inId: 'c' }], note: '' },
+    ])
   })
 })

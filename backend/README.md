@@ -48,6 +48,8 @@ Cada cambio en la base de datos es un fichero SQL nuevo en `supabase/migrations/
 | `20261109000000_mvp_module.sql` | Módulo MVP: `matches.mvp_status` / `mvp_closes_at` / `mvp_winners`, `teams.mvp_ranking_visible`, tabla `mvp_votes` (sin acceso directo), trigger `matches_mvp_guard`, las RPC del MVP y `merge_players` también pasa votos y MVP ganados |
 | `20261109000100_seasons.sql` | Temporadas dentro del equipo: tabla `seasons`, `teams.current_season_id`, `matches.season_id` y `league_table.season_id` (una tabla por temporada), bajas (`players.active`), RPC `start_season` y triggers que ponen la temporada actual |
 | `20261109000200_player_membership.sql` | Fichas que no son del equipo: `players.membership` (`member` / `regular` / `one_off`), `visit_weekdays` y `visit_date`; quita `training_days`, que no se usaba |
+| `20261109000300_private_policy_helpers.sql` | Seguridad: las funciones auxiliares de las políticas pasan al esquema `private` (la API no lo expone), así que ya no se pueden llamar como `/rest/v1/rpc/...`. Quedan en `public` dos envoltorios (`has_team_role`, `match_team`) que solo usan las RPC |
+| `20261109000400_player_nickname.sql` | `players.nickname`: apodo que pone el staff (hasta 20 caracteres); la app lo muestra en vez del nombre completo |
 
 Se aplican al proyecto con el conector de Supabase (`apply_migration`) o con la CLI (`supabase db push`, desde `backend/`).
 
@@ -65,7 +67,7 @@ La pieza central es `team_members`: une usuario, equipo y rol, y todas las regla
 | `matches` | Partidos (cada uno en su temporada, `season_id`; al crearlo, la actual): rival, fecha, hora, calentamiento en minutos (`warmup_minutes`, de 15 en 15), pabellón y enlace de Maps, estado, formato y resultado | `sets_format` = `best_of_5` / `best_of_3` / `fixed_3` / `fixed_1`; `sets_result` = `[{"us": 25, "them": 20}, …]` o, si solo se apunta el marcador, `final_score` = `{"us": 2, "them": 1}`; con resultado, `status = played`. MVP: `mvp_status` = `closed` / `open` / `tie_pending` / `finished`, `mvp_closes_at` y `mvp_winners` (fichas; varias = co-MVP), que solo cambian por las RPC del MVP |
 | `availability` | Respuesta de cada jugador a cada partido (`yes`, `no`, `maybe`) | |
 | `callups` | Convocados de cada partido | `number` y `positions`: dorsal y posiciones solo para ese partido (vacío = los de la ficha; la primera posición es la principal) |
-| `set_plans` | Plan de cada set: sistema, rotación inicial, alineación, líberos, cambios previstos | `start_rotation` = 1–6 (R1…R6); `rotation` = `{"1": player_id, …, "6": player_id}`; `libero_id` y `second_libero_id`; `planned_subs` = `[{"out", "in", "note"}]` |
+| `set_plans` | Plan de cada set: sistema, rotación inicial, alineación, líberos, cambios previstos | `start_rotation` = 1–6 (R1…R6); `rotation` = `{"1": player_id, …, "6": player_id}`; `libero_id` y `second_libero_id`; `planned_subs` = `[{"kind": "normal" | "serve" | "double", "swaps": [{"out", "in"}], "note"}]` (las filas antiguas `{"out", "in", "note"}` se leen como cambio normal) |
 | `league_table` | Tabla de liga no oficial, rellenada a mano, una por temporada | Clave `season_id`; filas en JSON |
 | `seasons` | Temporadas del equipo: nombre y fecha de inicio | Solo lectura para el equipo; se crean al crear el equipo (trigger) y con `start_season`. `teams.current_season_id` es la actual y `teams.season` su nombre (renombrarlo renombra la temporada) |
 | `training_slots` | Horario semanal de entrenamientos: día (1 = lunes … 7 = domingo), hora de inicio y fin, lugar y enlace de Google Maps | Se repite cada semana en el calendario |
@@ -98,16 +100,16 @@ Los jugadores no ven los planes por set: rotaciones y modo partido son solo del 
 
 ### Funciones auxiliares de las políticas
 
-Son `security definer`: se ejecutan con permisos del propietario para poder consultar `team_members` sin que RLS entre en bucle. Solo devuelven sí/no sobre el propio usuario.
+Viven en el esquema `private`, que la API no expone: las políticas las usan, pero nadie las puede llamar como RPC. Son `security definer`: se ejecutan con permisos del propietario para poder consultar `team_members` sin que RLS entre en bucle. Solo devuelven sí/no sobre el propio usuario. Las RPC llaman a `public.has_team_role` y `public.match_team`, envoltorios que solo puede ejecutar el propietario.
 
 | Función | Devuelve |
 | --- | --- |
-| `role_rank(role)` | 0 jugador, 1 segundo, 2 entrenador. Permite comparar roles ("al menos segundo") |
-| `has_team_role(team, min_role)` | ¿El usuario actual está en el equipo con al menos ese rol? Un jugador pendiente (sin ficha enlazada) no cuenta |
-| `match_team(match)` | Equipo al que pertenece un partido |
-| `is_own_player(match, player)` | ¿Esa ficha es la del usuario actual en el equipo del partido? |
-| `player_in_match_team(match, player)` | ¿La ficha es del mismo equipo que el partido y compite? Evita mezclar equipos y deja fuera a quien solo entrena |
-| `slot_team(slot)` | Equipo al que pertenece un entrenamiento del horario |
+| `private.role_rank(role)` | 0 jugador, 1 segundo, 2 entrenador. Permite comparar roles ("al menos segundo") |
+| `private.has_team_role(team, min_role)` | ¿El usuario actual está en el equipo con al menos ese rol? Un jugador pendiente (sin ficha enlazada) no cuenta |
+| `private.match_team(match)` | Equipo al que pertenece un partido |
+| `private.is_own_player(match, player)` | ¿Esa ficha es la del usuario actual en el equipo del partido? |
+| `private.player_in_match_team(match, player)` | ¿La ficha es del mismo equipo que el partido, compite y sigue en el equipo? Evita mezclar equipos y deja fuera a quien solo entrena |
+| `private.slot_team(slot)` | Equipo al que pertenece un entrenamiento del horario |
 
 ## Funciones RPC (llamables desde el frontend)
 

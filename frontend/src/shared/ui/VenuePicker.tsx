@@ -1,6 +1,8 @@
-// Venue field: pick one of the team's usual venues (with its Google Maps link) or type another one.
+// Venue field: tap one of the team's usual venues (with its Google Maps link) or "Otro" to type
+// another one with its link.
 import { useState } from 'react'
 import type { TeamVenue } from '@/shared/domain/types'
+import { ChoiceChips } from '@/shared/ui/ChoiceChips'
 import { INPUT_CLASS, LABEL_CLASS, LABEL_TEXT_CLASS } from '@/shared/ui/form'
 import { isValidMapsUrl } from '@/shared/utils/maps'
 
@@ -17,6 +19,7 @@ interface VenuePickerProps {
   label: string
 }
 
+const NONE = 'none'
 const OTHER = 'other'
 
 function findVenue(venues: TeamVenue[], value: VenueValue): TeamVenue | undefined {
@@ -44,22 +47,19 @@ export function VenuePicker({ venues, value, onChange, label }: VenuePickerProps
   return (
     <div className="flex flex-col gap-3">
       {venues.length > 0 && (
-        <label className={LABEL_CLASS}>
+        <div className={LABEL_CLASS}>
           <span className={LABEL_TEXT_CLASS}>{label}</span>
-          <select
-            className={INPUT_CLASS}
-            value={custom ? OTHER : (selected?.id ?? '')}
-            onChange={(e) => pick(e.target.value)}
-          >
-            <option value="">Sin indicar</option>
-            {venues.map((venue) => (
-              <option key={venue.id} value={venue.id}>
-                {venue.name}
-              </option>
-            ))}
-            <option value={OTHER}>Otro…</option>
-          </select>
-        </label>
+          <ChoiceChips
+            label={label}
+            choices={[
+              ...venues.map((venue) => ({ value: venue.id, label: venue.name })),
+              { value: OTHER, label: 'Otro…' },
+              { value: NONE, label: 'Sin indicar' },
+            ]}
+            value={custom ? OTHER : (selected?.id ?? NONE)}
+            onChange={pick}
+          />
+        </div>
       )}
 
       {custom && (
