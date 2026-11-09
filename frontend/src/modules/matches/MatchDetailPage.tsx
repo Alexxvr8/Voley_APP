@@ -1,6 +1,6 @@
-// "Info" tab of a match: practical details, map and result. Competing players answer their
-// availability here (also staff who are on the roster); staff see a summary of the answers, record
-// the result and edit the match.
+// "Info" tab of a match: practical details, map, result and (played, with the MVP section on) a link
+// to its MVP vote. Competing players answer their availability here (also staff who are on the
+// roster); staff see a summary of the answers, record the result and edit the match.
 import { Link, useParams } from 'react-router'
 import { hasRole, useCurrentTeam, useTeamPath } from '@/core/teams/currentTeam'
 import { Card } from '@/shared/ui/Card'
@@ -16,6 +16,7 @@ import {
   useSetMatchResult,
 } from './api'
 import { MatchInfoCard } from './components/MatchInfoCard'
+import { MvpLinkCard } from './components/MvpLinkCard'
 import { MyAvailabilityCard } from './components/MyAvailabilityCard'
 import { ResultEditor } from './components/ResultEditor'
 
@@ -55,7 +56,17 @@ export function MatchDetailPage() {
       />
 
       <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-        <MatchInfoCard match={match} />
+        <div className="space-y-4">
+          <MatchInfoCard match={match} />
+          {match.status === 'played' && team.enabledModules.includes('mvp') && (
+            <MvpLinkCard
+              match={match}
+              players={players.data}
+              isCoach={hasRole(role, 'coach')}
+              href={teamPath(`mvp/${match.id}`)}
+            />
+          )}
+        </div>
 
         {isStaff && (
           <div className="space-y-4">

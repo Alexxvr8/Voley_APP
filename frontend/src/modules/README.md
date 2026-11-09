@@ -41,7 +41,7 @@ Un módulo **no importa nada de otro módulo**. Si dos módulos necesitan lo mis
 | Fichero | Qué hace |
 | --- | --- |
 | `CalendarPage.tsx` | Calendario del mes, lo que pasa el día elegido, los próximos partidos y los próximos entrenamientos. El jugador que compite responde a los partidos ahí mismo y todo jugador dice si va a cada entrenamiento; el staff crea partidos, ve cuántos van a entrenar y cancela un entrenamiento suelto |
-| `MatchDetailPage.tsx` | Pestaña Info: datos, mapa y resultado. Jugador: "¿Puedes venir?" mientras no se haya jugado (o aviso si solo entrena). Staff: recuento de respuestas, resultado por sets y "Editar o borrar partido" |
+| `MatchDetailPage.tsx` | Pestaña Info: datos, mapa y resultado; si se ha jugado y el equipo tiene MVP, enlace a su votación (`components/MvpLinkCard.tsx`: abierta, empate, ganadora o "Abrir votación" para el entrenador). Jugador: "¿Puedes venir?" mientras no se haya jugado (o aviso si solo entrena). Staff: recuento de respuestas, resultado por sets y "Editar o borrar partido" |
 | `EditMatchPage.tsx` | Editar los datos del partido o borrarlo (con confirmación) |
 | `components/MatchForm.tsx` | Formulario común de crear y editar: rival sugerido de la lista o escrito (con "guardar en la lista"), hora en 24 h, calentamiento en pasos de 15 min, formato del partido y pabellón de la lista u otro con su enlace de Maps |
 | `components/ResultEditor.tsx`, `ResultSummary.tsx` | Formato del partido y resultado: solo el marcador con un toque (3-0, 3-1…) o los puntos de cada set (tantos como permite el formato); y "Ganado 3-1" con el detalle si lo hay |
